@@ -9,7 +9,6 @@ from dolfin.function.expression import (
     _select_element,
     _InterfaceExpression,
 )
-# from scar.problem.Case import *
 
 ######################
 # FENICS Expressions #

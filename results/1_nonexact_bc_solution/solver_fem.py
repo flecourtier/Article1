@@ -6,8 +6,8 @@ print_time=False
 # Imports #
 ###########
 
-from article.fenics_expressions import *
-from article.Problem import HomoSolOnUnitSquare
+from fenics_expressions import *
+from Problem import HomoSolOnUnitSquare
 
 from dolfin import *
 import dolfin as df
