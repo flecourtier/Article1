@@ -47,11 +47,9 @@ class Poisson_2D(pdes.AbstractPDEx):
         mu1,mu2 = self.get_parameters(mu)
         u_xx = self.get_variables(w, "w_xx")
         u_yy = self.get_variables(w, "w_yy")
-        f =  -torch.exp(-((x1 - mu1)**2 + (x2 - mu2)**2)/2) * \
-                (((x1**2 - 2*mu1*x1 + mu1**2 - 5)*torch.sin(2*x1) + (4*mu1 - 4*x1)*torch.cos(2*x1)) * torch.sin(2*x2) \
-                + torch.sin(2*x1) * ((x2**2 - 2*mu2*x2 + mu2**2 - 5)*torch.sin(2*x2) + (4*mu2 - 4*x2)*torch.cos(2*x2)))
-        ### TOOO DOOOO compute the good  (we change the frequency of the sinus)
-        return u_xx + u_yy + f
+        # f = -torch.exp(-((x1 - mu1)**2 + (x2 - mu2)**2)/2) * (((x1**2 - 2*mu1*x1 + mu1**2 - 5)*torch.sin(2*x1) + (4*mu1 - 4*x1)*torch.cos(2*x1)) * torch.sin(2*x2) + torch.sin(2*x1) * ((x2**2 - 2*mu2*x2 + mu2**2 - 5)*torch.sin(2*x2) + (4*mu2 - 4*x2)*torch.cos(2*x2)))
+        
+        f = torch.exp(-((x1-mu1)**2.0 - (x2-mu2)**2.0)/2.0) * (16.0*(x1-mu1)*torch.sin(8*x2)*torch.cos(8*x1) - 1.0*(x1-mu1)**2.0*torch.sin(8*x1)*torch.sin(8*x2) + 16.0*(x2-mu2)*torch.sin(8*x1)*torch.cos(8*x2) - 1.0*(x2-mu2)**2.0*torch.sin(8*x1)*torch.sin(8*x2) + 130.0*torch.sin(8*x1)*torch.sin(8*x2))
 
     def post_processing(self, x, mu, w):
         x1, x2 = x.get_coordinates()

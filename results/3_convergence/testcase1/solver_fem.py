@@ -7,7 +7,7 @@ print_time=False
 ###########
 
 from fenics_expressions import *
-from Geometry import Square
+from geometry import Square
 
 from dolfin import *
 import dolfin as df

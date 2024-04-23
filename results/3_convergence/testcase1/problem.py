@@ -1,4 +1,4 @@
-from Geometry import Square1
+from geometry import Square1
 
 class TestCase1:
     def __init__(self):

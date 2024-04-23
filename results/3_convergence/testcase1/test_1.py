@@ -10,8 +10,8 @@ import scimba.sampling.uniform_sampling as uniform_sampling
 import torch
 from scimba.equations import domain, pdes
 
-from Geometry import Square
-from Problem import TestCase1
+from geometry import Square
+from problem import TestCase1
 
 current = Path(__file__).parent.parent#.parent.parent
 
