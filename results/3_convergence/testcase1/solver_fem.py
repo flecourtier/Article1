@@ -35,10 +35,13 @@ class FEMSolver():
         self.params = params
         self.pb_considered = problem
         self.degree = degree
-
+        self.high_degree = 10 # to compute error
+        
         self.times_fem = {}
         self.times_corr_add = {}
         self.mesh,self.V,self.dx = self.__create_FEM_domain()
+        
+        self.V_ex = FunctionSpace(self.mesh, "CG", self.high_degree)
 
     def __create_FEM_domain(self):
         nb_vert = self.N+1
@@ -69,8 +72,8 @@ class FEMSolver():
         boundary = "on_boundary"
 
         params = self.params[i]
-        f_expr = FExpr(params, degree=10, domain=self.mesh, pb_considered=self.pb_considered)
-        u_ex = UexExpr(params, degree=10, domain=self.mesh, pb_considered=self.pb_considered)
+        f_expr = FExpr(params, degree=self.high_degree, domain=self.mesh, pb_considered=self.pb_considered)
+        u_ex = UexExpr(params, degree=self.high_degree, domain=self.mesh, pb_considered=self.pb_considered)
             
         if cd=="homo":
             g = Constant("0.0")
@@ -107,7 +110,9 @@ class FEMSolver():
             print("Time to solve the system :",end-start)
         self.times_fem["solve"] = end-start
 
-        norme_L2 = (assemble((((u_ex - sol)) ** 2) * self.dx) ** (0.5)) / (assemble((((u_ex)) ** 2) * self.dx) ** (0.5))
+        uex_Vex = interpolate(u_ex,self.V_ex)
+        sol_Vex = interpolate(sol,self.V_ex)
+        norme_L2 = (assemble((((uex_Vex - sol_Vex)) ** 2) * self.dx) ** (0.5)) / (assemble((((uex_Vex)) ** 2) * self.dx) ** (0.5))
 
         return sol,norme_L2
 
@@ -115,8 +120,8 @@ class FEMSolver():
         boundary = "on_boundary"
 
         params = self.params[i]
-        f_expr = FExpr(params, degree=10, domain=self.mesh, pb_considered=self.pb_considered)
-        u_ex = UexExpr(params, degree=10, domain=self.mesh, pb_considered=self.pb_considered)
+        f_expr = FExpr(params, degree=self.high_degree, domain=self.mesh, pb_considered=self.pb_considered)
+        u_ex = UexExpr(params, degree=self.high_degree, domain=self.mesh, pb_considered=self.pb_considered)
         f_tild = f_expr + div(grad(phi_tild))
 
         g = Constant(0.0)
@@ -155,7 +160,13 @@ class FEMSolver():
 
         sol = C_tild + phi_tild
 
-        norme_L2 = (assemble((((u_ex - sol)) ** 2) * self.dx) ** (0.5)) / (assemble((((u_ex)) ** 2) * self.dx) ** (0.5))
+        uex_Vex = interpolate(u_ex,self.V_ex)
+        
+        C_Vex = interpolate(C_tild,self.V_ex)
+        sol_Vex = Function(self.V_ex)
+        sol_Vex.vector()[:] = (C_Vex.vector()[:])+phi_tild.vector()[:]
+        
+        norme_L2 = (assemble((((uex_Vex - sol_Vex)) ** 2) * self.dx) ** (0.5)) / (assemble((((uex_Vex)) ** 2) * self.dx) ** (0.5))
         
         return sol,C_tild,norme_L2
     
