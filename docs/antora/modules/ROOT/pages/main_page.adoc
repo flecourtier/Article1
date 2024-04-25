@@ -1,5 +1,7 @@
 # Article 1
 
+par Frédérique Lecourtier, Emmanuel Franck, Michel Duprez, Vanessa Lleras, Victor Michel-Dansac
+
 ## Introduction
 
 L'idée ici est de regrouper tous les résultats obtenus dans le cadre de l'Article 1, dont le sujet principale est la correction de prédiciton de réseaux de neuronnes.
