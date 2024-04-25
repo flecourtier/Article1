@@ -9,6 +9,8 @@ on:
 jobs:
   activate:
     runs-on: ubuntu-latest
+    env:
+      GIT_CREDENTIALS: ${{ secrets.GIT_CREDENTIALS }}
     if: |
       github.repository == 'flecourtier/Article1' &&
       !startsWith(github.event.head_commit.message, 'Release ') &&
