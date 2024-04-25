@@ -1,0 +1,61 @@
+# Article 1
+
+## Introduction
+
+L'idée ici est de regrouper tous les résultats obtenus dans le cadre de l'Article 1, dont le sujet principale est la correction de prédiciton de réseaux de neuronnes.
+
+On considère le problème de Poisson avec condition de Dirichlet défini par
+
+[stem]
+++++
+\left\{
+\begin{aligned}
+-\Delta u &= f, \; &&\text{dans } \; \Omega, \\
+u&=g, \; &&\text{sur } \; \Gamma.
+\end{aligned}
+\right.
+++++
+
+On commence par entraîner un PINNs à résoudre ce problème et on obtient stem:[u_\theta]. 
+
+La correction a pour but de corriger le réseau en cherchant stem:[\tilde{u}=u_\theta+\tilde{C}] par un solveur FEM et le problème s'écrit alors
+
+[stem]
+++++
+\left\{
+\begin{aligned}
+-\Delta \tilde{C} &= \tilde{f}, \; &&\text{dans } \; \Omega, \\
+\tilde{C}&=0, \; &&\text{sur } \; \Gamma.
+\end{aligned}
+\right.
+++++
+
+avec stem:[\tilde{f}=f+\Delta u_\theta] (en supposant que stem:[u_\theta=g] sur stem:[\Gamma]).
+
+## Cas tests
+
+On considerera alors différents cas tests sur lesquels on voudra tester les points suivants.
+
+### Convergence
+
+**Idée :** On se place ici dans un des cas tests proposés.
+
+On cherche à vérifier les convergences obtenues pour
+
+* FEM standard
+* le PINNs + Correction par addition
+
+On choisira d'effectuer ces convergences en P1,P2 et P3
+
+### Facteurs
+
+**Idée :** On se place ici dans un des cas tests proposés.
+
+On cherche à vérifier les gains obtenues pour
+
+* PINNs vs PINNs + Correction par addition
+* FEM vs PINNs + Correction par addition
+
+On choisira d'effectuer ces comparaisons sur 2 tailles de grilles fixées (20x20 et 40x40) en sélectionnant 50 paramètres aléatoires. 
+
+On fixera également le degré de la solution (P1,P2 ou P3).

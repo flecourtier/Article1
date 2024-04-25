@@ -1,0 +1,6 @@
+name: these2023
+title: Phi-FEM PhD
+version: '1.0.3'
+start_page: ROOT:main_page.adoc
+nav:
+- modules/ROOT/nav.adoc

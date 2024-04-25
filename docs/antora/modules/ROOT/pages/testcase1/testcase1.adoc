@@ -1,0 +1,38 @@
+:stem: latexmath
+# Cas test 1
+:training_dir: training/
+
+## Présentation
+
+On considère le problème de Poisson avec condition de Dirichlet défini par
+
+[stem]
+++++
+\left\{
+\begin{aligned}
+-\Delta u &= f, \; &&\text{dans } \; \Omega, \\
+u&=g, \; &&\text{sur } \; \Gamma.
+\end{aligned}
+\right.
+++++
+
+On définit stem:[\Omega] comme étant le carré défini par
+
+[stem]
+++++
+\Omega=[-0.5 \pi, 0.5 \pi]^2
+++++
+
+On considèrera pour ce cas test la solution analytique stem:[u_{ex}] défini par
+[stem]
+++++
+u_{ex}(x,y)=\exp(-((x-\mu_1)^2-(y-\mu_2)^2)/2)\times\sin(2x)\times\sin(2x)
+++++
+
+homogène sur stem:[\Omega] (stem:[g=0]) et stem:[\mu_1,\mu_2\sim\mathcal{U}(-0.5, 0.5)].
+
+## Entraînement
+
+On résout dans un premier temps ce problème en utilisant un PINNs et on obtient l'entraînement suivant.
+
+image::{training_dir}test_fe1.png[width=840.0,height=680.0]

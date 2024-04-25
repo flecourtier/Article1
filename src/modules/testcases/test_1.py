@@ -117,7 +117,8 @@ def Run_laplacian2D(pde, bc_loss_bool=False, training = False, w_bc=0, w_res=1.0
                 epochs=12, n_collocation=5000, n_bc_collocation=2000, n_data=0
             )
 
-    trainer.plot(20000, random=True,reference_solution=True)
+    filename = current / "networks" / "test_fe1.png"
+    trainer.plot(20000, random=True,reference_solution=True, filename=filename)
     # trainer.plot_derivative_mu(n_visu=20000)
     
     return trainer,pinn

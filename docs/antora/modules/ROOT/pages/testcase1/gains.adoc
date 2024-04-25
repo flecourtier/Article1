@@ -1,0 +1,14 @@
+# Gains obtenus
+:facteurs_dir: facteurs/
+
+**Résultats obtenus en P1 :**
+
+image::{facteurs_dir}boxplot_facteurs_case1_degree1.png[width=640.0,height=500.0]
+
+**Résultats obtenus en P2 :**
+
+image::{facteurs_dir}boxplot_facteurs_case1_degree2.png[width=640.0,height=500.0]
+
+**Résultats obtenus en P3 :**
+
+image::{facteurs_dir}boxplot_facteurs_case1_degree3.png[width=640.0,height=500.0]

@@ -149,9 +149,10 @@ def Run_laplacian2D(pde, bc_loss_bool=False, training = False, w_bc=0, w_res=1.0
             trainer.train(
                 epochs=12, n_collocation=5000, n_bc_collocation=2000, n_data=0
             )
-
-    trainer.plot(20000, random=True, reference_solution=True)
-
+    
+    filename = current / "networks" / "test_fe2.png"
+    trainer.plot(20000, random=True,reference_solution=True, filename=filename)
+    
     return trainer,pinn
 
 if __name__ == "__main__":

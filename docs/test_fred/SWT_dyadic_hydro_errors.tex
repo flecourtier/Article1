@@ -1,0 +1,76 @@
+\input{preamble.tex}
+
+\begin{document}
+	
+	\begin{tikzpicture}
+	
+		\begin{loglogaxis}[
+				smaller labels,
+				% name
+				name = left_plot,
+				% axis lines
+				axis lines = left,
+				enlarge x limits={abs=10pt},
+				enlarge y limits={abs=10pt},
+				axis x line shift = -5pt,
+				axis y line shift = -5pt,
+				% labels
+				xlabel = {$h$},
+				ylabel = {\rotatebox{270}{$L^2$ error on $h$}},
+				xlabel style={at={(ticklabel* cs:1.01)},anchor=west},
+				ylabel style={at={(ticklabel* cs:1.01)},anchor=west},
+				% ticks and labels
+				xtick=data,			
+%				xticklabels from table={Corr_case1_param1.csv}{h},
+				% size
+				width=\plotwidth, height=\plotheight,
+				% marks
+				mark options={solid, scale=1},
+				% grid
+				grid = major,
+				% legend
+				legend entries={\,P1\;, \,P2\;, \,P3\;,},
+				legend columns=4,
+				legend to name=leg:legend,
+				legend image post style={mark options={solid, scale=1}},
+			]
+	
+%			\printslope{2,3,4}{0.2}{5e-6}{0.2}
+			
+			\printinvslope{2,3,4}{0.3}{4e-6}{0.18}
+	
+	%		\addplot [restrict x to domain=3.6888:7.84776, style={solid}, mark=square*,   mark size=2, line width=0.8pt, color=graph_4            ]
+	%		table [x=N, y=h_HSR_o1_error, col sep=space]
+	%			{SWT_dyadic_hydro_errors.csv};
+	
+	%		\addplot [restrict x to domain=3.6888:7.84776, style={solid}, mark=diamond*,  mark size=2, line width=0.8pt            ]
+	%		table [x=N, y=h_HDR_o1_error, col sep=space]
+	%			{SWT_dyadic_hydro_errors.csv};
+	%
+	%		\addplot [restrict x to domain=3.6888:7.84776, style={solid},          mark=*,         mark size=1.5, color=graph_1, line width=0.8pt]
+	%		table [x=N, y=h_HDR_o2theta_error, col sep=space]
+	%			{SWT_dyadic_hydro_errors.csv};
+	%
+	%		\addplot [restrict x to domain=3.6888:7.84776, style={solid}, mark=pentagon*, mark size=2, color=graph_2, line width=0.8pt ]
+	%		table [x=N, y=h_HDR_o3theta_error, col sep=space]
+	%			{SWT_dyadic_hydro_errors.csv};
+	%%
+			\addplot [style={solid}, mark=square*, mark size=2, color=graph_1, line width=0.8pt ]
+			table [x=h, y=P1, col sep=comma]
+				{Corr_case1_param1.csv};
+				
+			\addplot [style={solid}, mark=diamond*, mark size=2, color=graph_2, line width=0.8pt ]
+			table [x=h, y=P2, col sep=comma]
+				{Corr_case1_param1.csv};
+			
+			\addplot [style={solid}, mark=pentagon*, mark size=2, color=graph_3, line width=0.8pt ]
+			table [x=h, y=P3, col sep=comma]
+				{Corr_case1_param1.csv};
+	
+		\end{loglogaxis}
+	
+		\node[yshift=-10pt] at (left_plot.outer south) {\pgfplotslegendfromname{leg:legend}};
+	
+	\end{tikzpicture}
+
+\end{document}

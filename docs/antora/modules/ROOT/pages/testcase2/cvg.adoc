@@ -1,0 +1,26 @@
+# Convergence
+:cvg_dir: cvg/
+
+**Convergence obtenue pour FEM :** pour 2 paramètres sélectionnés aléatoirement.
+
+[cols="a,a"]
+|===
+|image::{cvg_dir}FEM_case2_param1.png[width=420.0,height=340.0]
+|image::{cvg_dir}FEM_case2_param2.png[width=420.0,height=340.0]
+|===
+
+**Convergence obtenue pour la Correction :** pour les mêmes paramètres.
+
+[cols="a,a"]
+|===
+|image::{cvg_dir}Corr_case2_param1.png[width=420.0,height=340.0]
+|image::{cvg_dir}Corr_case2_param2.png[width=420.0,height=340.0]
+|===
+
+**Sur le même graphique :** 
+
+[cols="a,a"]
+|===
+|image::{cvg_dir}FEM-Corr_case2_param1.png[width=420.0,height=340.0]
+|image::{cvg_dir}FEM-Corr_case2_param2.png[width=420.0,height=340.0]
+|===
