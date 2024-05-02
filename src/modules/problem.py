@@ -1,4 +1,4 @@
-from modules.geometry import Square1
+from modules.geometry import Square1, UnitSquare
 
 class TestCase1:
     def __init__(self):
@@ -70,6 +70,54 @@ class TestCase2:
         # return pre.exp(-((x-mu1)**2.0 - (y-mu2)**2.0)/2.0) * (16.0*(x-mu1)*pre.sin(8*y)*pre.cos(8*x) - 1.0*(x-mu1)**2.0*pre.sin(8*x)*pre.sin(8*y) + 16.0*(y-mu2)*pre.sin(8*x)*pre.cos(8*y) - 1.0*(y-mu2)**2.0*pre.sin(8*x)*pre.sin(8*y) + 130.0*pre.sin(8*x)*pre.sin(8*y))
         return (16.0*(x-mu1)*pre.sin(8*y)*pre.cos(8*x) - 1.0*(x-mu1)**2.0*pre.sin(8*x)*pre.sin(8*y) + 16.0*(y-mu2)*pre.sin(8*x)*pre.cos(8*y) - 1.0*(y-mu2)**2.0*pre.sin(8*x)*pre.sin(8*y) + 130.0*pre.sin(8*x)*pre.sin(8*y))*pre.exp(-(x-mu1)**2.0/2 - (y-mu2)**2.0/2)
 
+    def g(self, pre, xy, mu):
+        """Boundary condition for the Circle domain
+
+        :param pre: Preconditioner
+        :param xy: (x,y) coordinates
+        :param mu: (S) parameter
+        :return: Boundary condition evaluated at (x,y)
+        """
+        return 0.0
+    
+class TestCase3:
+    def __init__(self):
+        self.geometry = UnitSquare() 
+        self.nb_parameters = 2
+        self.parameter_domain = [[-0.5, 0.500001],[-0.50000, 0.500001]]
+
+    def u_ex(self, pre, xy, mu):
+        pass
+
+    # def u_ex_prime(self, pre, xy, mu):
+    #     x,y=xy
+    #     du_dx = 
+    #     du_dy = 
+    #     return du_dx,du_dy
+
+    # def u_ex_prime2(self, pre, xy, mu):
+    #     x,y=xy
+    #     du_dxx = 
+    #     du_dyy = 
+    #     return du_dxx,du_dyy
+    
+    def anisotropy_matrix(self, pre, xy, mu):
+        x,y = xy
+        c1, c2, sigma, eps = mu
+
+        a11 = eps * x**2 + y**2
+        a12 = (eps - 1) * x * y
+        a21 = (eps - 1) * x * y
+        a22 = x**2 + eps * y**2
+
+        return a11, a12, a21, a22
+
+    def f(self, pre, xy, mu):
+        x,y=xy
+        c1,c2,sigma,eps = mu
+    
+        return pre.exp(-((x - c1) ** 2 + (y - c2) ** 2) / (0.025 * sigma**2))
+        
     def g(self, pre, xy, mu):
         """Boundary condition for the Circle domain
 
