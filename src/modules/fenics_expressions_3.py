@@ -33,6 +33,26 @@ class MyUserExpression(BaseExpression):
             name=None,
             label=None,
         )
+        
+class MyUserExpression22(BaseExpression):
+    """JIT Expressions"""
+
+    def __init__(self, degree, domain):
+        cell = domain.ufl_cell()
+        element = _select_element(
+            family=None, cell=cell, degree=degree, value_shape=(2,2)
+        )
+
+        self._cpp_object = _InterfaceExpression(self, (2,2))
+
+        BaseExpression.__init__(
+            self,
+            cell=cell,
+            element=element,
+            domain=domain,
+            name=None,
+            label=None,
+        )
 
 # class PhiConstructExpr(MyUserExpression):
 #     def __init__(self, degree, domain, sdf_considered):
@@ -68,12 +88,15 @@ class FExpr(MyUserExpression):
     def eval(self, value, x):
         value[0] = self.pb_considered.f(dol, x, self.mu)
         
-class MatrixExpr(MyUserExpression):
-    def __init__(self, i, j, params, degree, domain, pb_considered):
+class AnisotropyExpr(MyUserExpression22):
+    def __init__(self, params, degree, domain, pb_considered):
         super().__init__(degree, domain)
         self.mu = params
         self.pb_considered = pb_considered
-        self.i, self.j = i, j
 
     def eval(self, value, x):
-        value[0] = self.pb_considered.anisotropy_matrix(dol, x, self.mu)[self.i, self.j]
+        val = self.pb_considered.anisotropy_matrix(dol, x, self.mu)
+        value[0] = val[0]
+        value[1] = val[1]
+        value[2] = val[2]
+        value[3] = val[3]

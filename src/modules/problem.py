@@ -83,8 +83,19 @@ class TestCase2:
 class TestCase3:
     def __init__(self):
         self.geometry = UnitSquare() 
-        self.nb_parameters = 2
-        self.parameter_domain = [[-0.5, 0.500001],[-0.50000, 0.500001]]
+        self.nb_parameters = 4
+        # self.parameter_domain = [
+        #         [0.4, 0.40001],  # 0.4 < c1 < 0.6
+        #         [0.6, 0.60001],  # 0.4 < c2 < 0.6
+        #         [0.8, 0.8001],  # 0.1 < sigma < 0.8
+        #         [0.025, 0.025001],  # 0.01 < eps < 1
+        #     ]
+        self.parameter_domain = [
+                [0.4, 0.6],  # 0.4 < c1 < 0.6
+                [0.4, 0.6],  # 0.4 < c2 < 0.6
+                [0.1, 0.8],  # 0.1 < sigma < 0.8
+                [0.01, 1.0],  # 0.01 < eps < 1
+            ]
 
     def u_ex(self, pre, xy, mu):
         pass

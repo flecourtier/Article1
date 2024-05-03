@@ -10,6 +10,9 @@ import scimba.sampling.uniform_sampling as uniform_sampling
 import torch
 from scimba.equations import domain, pdes
 
+from modules.geometry import Square
+from modules.problem import TestCase3
+
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 print(f"torch loaded; device is {device}")
 
@@ -24,17 +27,18 @@ current = Path(__file__).parent.parent.parent.parent
 
 
 class Poisson_2D(pdes.AbstractPDEx):
-    def __init__(self, space_domain):
+    def __init__(self):
+        self.problem = TestCase3()
+        
+        assert isinstance(self.problem.geometry, Square)
+        
+        space_domain = domain.SpaceDomain(2, domain.SquareDomain(2, self.problem.geometry.box))
+        
         super().__init__(
             nb_unknowns=1,
             space_domain=space_domain,
-            nb_parameters=4,
-            parameter_domain=[
-                [0.4, 0.40001],  # 0.4 < c1 < 0.6
-                [0.6, 0.60001],  # 0.4 < c2 < 0.6
-                [0.8, 0.8001],  # 0.1 < sigma < 0.8
-                [0.025, 0.025001],  # 0.01 < eps < 1
-            ],
+            nb_parameters=self.problem.nb_parameters,
+            parameter_domain=self.problem.parameter_domain,
         )
 
         self.first_derivative = True
@@ -117,7 +121,7 @@ def Run_laplacian2D(pde):
     filename = current / "networks" / "test_fe3.png"
     trainer.plot(50000, random=True, filename=filename)
     
-    return network, trainer
+    return trainer, pinn
 
 
 if __name__ == "__main__":

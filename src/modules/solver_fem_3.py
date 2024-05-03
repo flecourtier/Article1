@@ -15,6 +15,7 @@ import mshr
 import time
 import numpy as np
 from pathlib import Path
+from petsc4py import PETSc
 
 parameters["ghost_mode"] = "shared_facet"
 parameters["form_compiler"]["cpp_optimize"] = True
@@ -68,19 +69,20 @@ class FEMSolver():
 
         return mesh, V, dx
     
-    def fem(self, i):
+    # -(a00 * du/dxx + (a01 + a10) * du/dxy + a11 * du/dyy) = f
+    def fem(self, i, u_ref):
         boundary = "on_boundary"
-
-        # -(a00 * du/dxx + (a01 + a10) * du/dxy + a11 * du/dyy) = f
-
         params = self.params[i]
-        a00 = MatrixExpr(0, 0, params, degree=self.high_degree, domain=self.mesh, pb_considered=self.pb_considered)
-        a01 = MatrixExpr(0, 1, params, degree=self.high_degree, domain=self.mesh, pb_considered=self.pb_considered)
-        a10 = MatrixExpr(1, 0, params, degree=self.high_degree, domain=self.mesh, pb_considered=self.pb_considered)
-        a11 = MatrixExpr(1, 1, params, degree=self.high_degree, domain=self.mesh, pb_considered=self.pb_considered)
-        f_expr = FExpr(params, degree=self.high_degree, domain=self.mesh, pb_considered=self.pb_considered)
-        # u_ex = UexExpr(params, degree=self.high_degree, domain=self.mesh, pb_considered=self.pb_considered)
-            
+        
+        mat = AnisotropyExpr(params, degree=self.high_degree, domain=self.mesh, pb_considered=self.pb_considered)        
+        
+        # mat = Expression((("eps * x[0]*x[0] + x[1]*x[1]","(eps - 1) * x[0] * x[1]"),
+        #                 ("(eps - 1) * x[0] * x[1]","x[0]*x[0] + eps * x[1]*x[1]")), 
+        #                 eps=params[3],
+        #                 degree=self.high_degree, 
+        #                 domain=self.mesh)
+        
+        f_expr = FExpr(params, degree=self.high_degree, domain=self.mesh, pb_considered=self.pb_considered)  
 
         if cd=="homo":
             g = Constant("0.0")
@@ -89,17 +91,12 @@ class FEMSolver():
         u = TrialFunction(self.V)
         v = TestFunction(self.V)
         
-        du_dxx = grad(grad(u))[0,0]
-        
-        import mat
-        
-        # du_dxy = 
-        
         # Resolution of the variationnal problem
         
         start = time.time()
 
-        # a = a00 * 
+        # a = - div(mat*grad(u)) * v * self.dx
+        a = inner(mat*grad(u),grad(v)) * self.dx
         l = f_expr * v * self.dx
 
         A = df.assemble(a)
@@ -123,24 +120,28 @@ class FEMSolver():
             print("Time to solve the system :",end-start)
         self.times_fem["solve"] = end-start
 
-        uex_Vex = interpolate(u_ex,self.V_ex)
+        uref_Vex = interpolate(u_ref,self.V_ex)
         sol_Vex = interpolate(sol,self.V_ex)
-        norme_L2 = (assemble((((uex_Vex - sol_Vex)) ** 2) * self.dx) ** (0.5)) / (assemble((((uex_Vex)) ** 2) * self.dx) ** (0.5))
+        norme_L2 = (assemble((((uref_Vex - sol_Vex)) ** 2) * self.dx) ** (0.5)) / (assemble((((uref_Vex)) ** 2) * self.dx) ** (0.5))
 
         return sol,norme_L2
 
-    def corr_add(self, i, phi_tild):
+    def corr_add(self, i, phi_tild, u_ref):
         boundary = "on_boundary"
-
         params = self.params[i]
+        
+        mat = AnisotropyExpr(params, degree=self.high_degree, domain=self.mesh, pb_considered=self.pb_considered) 
+        
+        # mat = Expression((("eps * x[0]*x[0] + x[1]*x[1]","(eps - 1) * x[0] * x[1]"),
+        #                 ("(eps - 1) * x[0] * x[1]","x[0]*x[0] + eps * x[1]*x[1]")), 
+        #                 eps=params[3],
+        #                 degree=self.high_degree, 
+        #                 domain=self.mesh)
+        
         f_expr = FExpr(params, degree=self.high_degree, domain=self.mesh, pb_considered=self.pb_considered)
-        u_ex = UexExpr(params, degree=self.high_degree, domain=self.mesh, pb_considered=self.pb_considered)
-        f_tild = f_expr + div(grad(phi_tild))
+        f_tild = f_expr + div(mat*grad(phi_tild))
 
-        g = Constant(0.0)
-        # g = Function(self.V)
-        # phi_tild_inter = interpolate(phi_tild, self.V)
-        # g.vector()[:] = (phi_tild_inter.vector()[:])        
+        g = Constant(0.0)    
         bc = DirichletBC(self.V, g, boundary)
 
         u = TrialFunction(self.V)
@@ -148,7 +149,7 @@ class FEMSolver():
         
         # Resolution of the variationnal problem
         start = time.time()
-        a = inner(grad(u), grad(v)) * self.dx
+        a = inner(mat*grad(u), grad(v)) * self.dx
         l = f_tild * v * self.dx
 
         A = df.assemble(a)
@@ -173,13 +174,13 @@ class FEMSolver():
 
         sol = C_tild + phi_tild
 
-        uex_Vex = interpolate(u_ex,self.V_ex)
+        uref_Vex = interpolate(u_ref,self.V_ex)
         
         C_Vex = interpolate(C_tild,self.V_ex)
         sol_Vex = Function(self.V_ex)
         sol_Vex.vector()[:] = (C_Vex.vector()[:])+phi_tild.vector()[:]
         
-        norme_L2 = (assemble((((uex_Vex - sol_Vex)) ** 2) * self.dx) ** (0.5)) / (assemble((((uex_Vex)) ** 2) * self.dx) ** (0.5))
+        norme_L2 = (assemble((((uref_Vex - sol_Vex)) ** 2) * self.dx) ** (0.5)) / (assemble((((uref_Vex)) ** 2) * self.dx) ** (0.5))
         
         return sol,C_tild,norme_L2
     
