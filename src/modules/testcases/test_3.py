@@ -11,7 +11,7 @@ import torch
 from scimba.equations import domain, pdes
 
 from modules.geometry import Square
-from modules.problem import TestCase3
+from modules.problem import TestCase3, TestCase3_small_param, TestCase3_medium_param
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 print(f"torch loaded; device is {device}")
@@ -27,8 +27,15 @@ current = Path(__file__).parent.parent.parent.parent
 
 
 class Poisson_2D(pdes.AbstractPDEx):
-    def __init__(self):
-        self.problem = TestCase3()
+    def __init__(self,size_param="big"):
+        assert size_param in ["small", "medium", "big"]
+        
+        if size_param == "big":
+            self.problem = TestCase3()
+        elif size_param == "medium":
+            self.problem = TestCase3_medium_param()
+        else:
+            self.problem = TestCase3_small_param()
         
         assert isinstance(self.problem.geometry, Square)
         
@@ -75,14 +82,22 @@ class Poisson_2D(pdes.AbstractPDEx):
         return (1 - x1) * x1 * x2 * (1 - x2) * w
 
 
-def Run_laplacian2D(pde):
+def Run_laplacian2D(pde,size_param="big", largenet=False):
+    assert size_param in ["small", "medium", "big"]
+    
     x_sampler = sampling_pde.XSampler(pde=pde)
     mu_sampler = sampling_parameters.MuSampler(
         sampler=uniform_sampling.UniformSampling, model=pde
     )
     sampler = sampling_pde.PdeXCartesianSampler(x_sampler, mu_sampler)
 
-    file_name = current / "networks" / "test_fe3.pth"
+    namefe3 = "test_fe3"
+    if size_param != "big":
+        namefe3 += "_"+size_param+"_param"
+    if largenet and size_param == "medium":
+        namefe3 += "_largenet"
+        
+    file_name = current / "networks" / (namefe3+".pth")
     # new_training = True
     new_training = False
     # train = True
@@ -95,7 +110,13 @@ def Run_laplacian2D(pde):
             / file_name
         ).unlink(missing_ok=True)
 
-    tlayers = [40, 60, 60, 60, 40]
+    if size_param == "big":
+        tlayers = [40, 60, 60, 60, 40]
+    else:
+        if largenet and size_param == "medium":
+            tlayers = [120]*5
+        else:
+            tlayers = [80]*5
     network = pinn_x.MLP_x(pde=pde, layer_sizes=tlayers, activation_type="tanh")
     pinn = pinn_x.PINNx(network, pde)
     losses = pinn_losses.PinnLossesData()
@@ -118,7 +139,7 @@ def Run_laplacian2D(pde):
     if train:
         trainer.train(epochs=1000, n_collocation=8000, n_bc_collocation=0, n_data=0)
 
-    filename = current / "networks" / "test_fe3.png"
+    filename = current / "networks" / (namefe3+".png")
     trainer.plot(50000, random=True, filename=filename)
     
     return trainer, pinn

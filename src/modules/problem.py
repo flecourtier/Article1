@@ -138,3 +138,23 @@ class TestCase3:
         :return: Boundary condition evaluated at (x,y)
         """
         return 0.0
+    
+class TestCase3_small_param(TestCase3):
+    def __init__(self):
+        super().__init__()
+        self.parameter_domain = [
+                [0.45, 0.55],  # 0.4 < c1 < 0.6
+                [0.45, 0.55],  # 0.4 < c2 < 0.6
+                [0.4, 0.6],  # 0.1 < sigma < 0.8
+                [0.05, 0.2],  # 0.01 < eps < 1
+            ]
+        
+class TestCase3_medium_param(TestCase3):
+    def __init__(self):
+        super().__init__()
+        self.parameter_domain = [
+                [0.4, 0.6],  # 0.4 < c1 < 0.6
+                [0.4, 0.6],  # 0.4 < c2 < 0.6
+                [0.3, 0.6],  # 0.1 < sigma < 0.8
+                [0.04, 0.25],  # 0.01 < eps < 1
+            ]
