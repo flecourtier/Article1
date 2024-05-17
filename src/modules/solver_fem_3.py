@@ -184,3 +184,126 @@ class FEMSolver():
         
         return sol,C_tild,norme_L2
     
+    # def corr_mult(self, i, phi_tild, M=0.):
+    #     boundary = "on_boundary"
+
+    #     params = self.params[i]
+    #     f_expr = FExpr(params, degree=self.high_degree, domain=self.mesh, pb_considered=self.pb_considered)
+    #     u_ex = UexExpr(params, degree=self.high_degree, domain=self.mesh, pb_considered=self.pb_considered)
+    #     phi_tild_bar = phi_tild + M
+
+    #     g = Constant(1.0)
+    #     # g = Function(self.V)
+    #     # phi_tild_inter = interpolate(phi_tild, self.V)
+    #     # g.vector()[:] = (phi_tild_inter.vector()[:])        
+    #     bc = DirichletBC(self.V, g, boundary)
+
+    #     u = TrialFunction(self.V)
+    #     v = TestFunction(self.V)
+        
+    #     # Resolution of the variationnal problem
+    #     start = time.time()
+    #     a = inner(grad(phi_tild_bar * u), grad(phi_tild_bar * v)) * self.dx
+    #     l = f_expr * phi_tild_bar * v * self.dx
+
+    #     A = df.assemble(a)
+    #     L = df.assemble(l)
+    #     bc.apply(A, L)
+
+    #     end = time.time()
+
+    #     if print_time:
+    #         print("Time to assemble the matrix : ",end-start)
+    #     self.times_corr_add["assemble"] = end-start
+
+    #     C_tild = Function(self.V)
+
+    #     start = time.time()
+    #     solve(A,C_tild.vector(),L)
+    #     end = time.time()
+
+    #     if print_time:
+    #         print("Time to solve the system :",end-start)
+    #     self.times_corr_add["solve"] = end-start
+
+    #     sol = C_tild * phi_tild - M
+
+    #     uex_Vex = interpolate(u_ex,self.V_ex)
+        
+    #     C_Vex = interpolate(C_tild,self.V_ex)
+    #     sol_Vex = Function(self.V_ex)
+    #     sol_Vex.vector()[:] = (C_Vex.vector()[:])*phi_tild.vector()[:]
+    #     sol_Vex = sol_Vex - M
+        
+    #     norme_L2 = (assemble((((uex_Vex - sol_Vex)) ** 2) * self.dx) ** (0.5)) / (assemble((((uex_Vex)) ** 2) * self.dx) ** (0.5))
+        
+    #     return sol,C_tild,norme_L2
+    
+    def corr_mult(self, i, phi_tild, u_ref, M=0.0):
+        boundary = "on_boundary"
+        params = self.params[i]
+        
+        mat = AnisotropyExpr(params, degree=self.high_degree, domain=self.mesh, pb_considered=self.pb_considered) 
+        
+        f_expr = FExpr(params, degree=self.high_degree, domain=self.mesh, pb_considered=self.pb_considered)
+        
+        phi_tild_bar = Function(self.V_ex)
+        phi_tild_bar.vector()[:] = phi_tild.vector()[:] + M
+
+        g = Constant(1.0)    
+        bc = DirichletBC(self.V, g, boundary)
+
+        u = TrialFunction(self.V)
+        v = TestFunction(self.V)
+        
+        # Resolution of the variationnal problem
+        start = time.time()
+        a = inner(mat*grad(phi_tild_bar * u), grad(phi_tild_bar * v)) * self.dx
+        l = f_expr * phi_tild_bar * v * self.dx
+
+        A = df.assemble(a)
+        L = df.assemble(l)
+        bc.apply(A, L)
+
+        end = time.time()
+
+        if print_time:
+            print("Time to assemble the matrix : ",end-start)
+        self.times_corr_add["assemble"] = end-start
+
+        C_tild = Function(self.V)
+
+        start = time.time()
+        solve(A,C_tild.vector(),L)
+        end = time.time()
+
+        if print_time:
+            print("Time to solve the system :",end-start)
+        self.times_corr_add["solve"] = end-start
+
+        sol = C_tild * phi_tild_bar - M
+
+        uref_Vex = interpolate(u_ref,self.V_ex)
+        
+        C_Vex = interpolate(C_tild,self.V_ex)
+        sol_Vex = Function(self.V_ex)
+        sol_Vex.vector()[:] = (C_Vex.vector()[:])*phi_tild_bar.vector()[:]
+        sol_Vex = sol_Vex - M
+        
+        # import matplotlib.pyplot as plt
+        
+        # print("u_ref")
+        # plt.figure()
+        # c = plot(uref_Vex)
+        # plt.colorbar(c)
+        # plt.show()
+        
+        # print("u_ref")
+        # plt.figure()
+        # c = plot(sol_Vex)
+        # plt.colorbar(c)
+        # plt.show()
+        
+        norme_L2 = (assemble((((uref_Vex - sol_Vex)) ** 2) * self.dx) ** (0.5)) / (assemble((((uref_Vex)) ** 2) * self.dx) ** (0.5))
+        
+        return sol,C_tild,norme_L2
