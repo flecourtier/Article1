@@ -25,6 +25,10 @@ parameters["form_compiler"]["representation"] = "uflacs"
 
 current = Path(__file__).parent.parent#.parent.parent
 
+prm = parameters["krylov_solver"]
+prm["absolute_tolerance"] = 1e-13
+prm["relative_tolerance"] = 1e-13
+
 #######
 # FEM #
 #######
@@ -74,7 +78,7 @@ class FEMSolver():
 
         return mesh, V, dx
     
-    def fem(self, i):
+    def fem(self, i, iter_solver=False):
         boundary = "on_boundary"
         
         params = self.params[i]
@@ -97,6 +101,8 @@ class FEMSolver():
 
         A = df.assemble(a)
         L = df.assemble(l)
+        # print(A.size(0),A.size(1))
+        # print("nnz : ",A.nnz())
         bc.apply(A, L)
 
         end = time.time()
@@ -108,7 +114,11 @@ class FEMSolver():
         sol = Function(self.V)
 
         start = time.time()
-        solve(A,sol.vector(),L)
+        if not iter_solver:
+            solve(A,sol.vector(),L)
+        else:
+            # df.solve(a==l, sol, bcs=bc, solver_parameters={"linear_solver": "cg","preconditioner":"hypre_amg"})
+            solve(A,sol.vector(),L,"cg","hypre_amg")
         # solve(a==l, sol, bcs=bc)
         end = time.time()
 
