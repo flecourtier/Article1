@@ -122,7 +122,7 @@ def Run_laplacian2D(pde, bc_loss_bool=False, training = False, w_bc=0, w_res=1.0
 
     tlayers = [40, 60, 60, 60, 40]
     network = pinn_x.MultiScale_Fourier_x(
-        pde=pde, stds=[1.5, 10.0], nb_features=20, layer_sizes=tlayers
+        pde=pde, means=[0.0,0.0], stds=[1.5, 10.0], nb_features=20, layer_sizes=tlayers
     )
     pinn = pinn_x.PINNx(network, pde)
     losses = pinn_losses.PinnLossesData(
