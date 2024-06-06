@@ -150,19 +150,41 @@ class FEMSolver():
         v = TestFunction(self.V)
         
         # Resolution of the variationnal problem
-        start = time.time()
-        a = inner(grad(u), grad(v)) * self.dx
-        l = f_tild * v * self.dx
+        # start = time.time()
+        # a = inner(grad(u), grad(v)) * self.dx
+        # l = f_tild * v * self.dx
 
+        # A = df.assemble(a)
+        # L = df.assemble(l)
+        # bc.apply(A, L)
+
+        start = time.time()
+        
+        start_a = time.time()
+        a = inner(grad(u), grad(v)) * self.dx
         A = df.assemble(a)
+        end_a = time.time()
+        
+        start_b = time.time()
+        l = f_tild * v * self.dx
         L = df.assemble(l)
+        end_b = time.time()
+        
+        start_bc = time.time()        
         bc.apply(A, L)
+        end_bc = time.time()
 
         end = time.time()
 
         if print_time:
-            print("Time to assemble the matrix : ",end-start)
-        self.times_corr_add["assemble"] = end-start
+            print("Time to assemble the matrix A : ",end_a-start_a)
+            print("Time to assemble the vector b : ",end_b-start_b)
+            print("Time to impose Dirichlet BC : ",end_bc-start_bc)
+            print("Time to construct the sytem : ",end-start)
+        self.times_corr_add["system"] = end-start
+        self.times_corr_add["assemble_A"] = end_a-start_a
+        self.times_corr_add["assemble_b"] = end_b-start_b
+        self.times_corr_add["impose_BC"] = end_bc-start_bc
 
         C_tild = Function(self.V)
 
