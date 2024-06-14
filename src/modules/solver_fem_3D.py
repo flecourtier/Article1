@@ -55,13 +55,7 @@ class FEMSolver():
             box = np.array(self.pb_considered.geometry.box)
             start = time.time()
             mesh = BoxMesh(Point(box[0,0], box[1,0], box[2,0]), Point(box[0,1], box[1,1], box[2,1]), nb_vert - 1, nb_vert - 1, nb_vert - 1)
-            # mesh = RectangleMesh(Point(box[0,0], box[1,0]), Point(box[0,1], box[1,1]), nb_vert - 1, nb_vert - 1)
             end = time.time()
-            
-            # import matplotlib.pyplot as plt
-            # plt.figure()
-            # plot(mesh)
-            # plt.show()
 
             if print_time:
                 print("Time to generate mesh: ", end-start)
@@ -117,9 +111,7 @@ class FEMSolver():
         if not iter_solver:
             solve(A,sol.vector(),L)
         else:
-            # df.solve(a==l, sol, bcs=bc, solver_parameters={"linear_solver": "cg","preconditioner":"hypre_amg"})
             solve(A,sol.vector(),L,"cg","hypre_amg")
-        # solve(a==l, sol, bcs=bc)
         end = time.time()
 
         if print_time:
@@ -148,16 +140,7 @@ class FEMSolver():
 
         u = TrialFunction(self.V)
         v = TestFunction(self.V)
-        
-        # Resolution of the variationnal problem
-        # start = time.time()
-        # a = inner(grad(u), grad(v)) * self.dx
-        # l = f_tild * v * self.dx
-
-        # A = df.assemble(a)
-        # L = df.assemble(l)
-        # bc.apply(A, L)
-
+    
         start = time.time()
         
         start_a = time.time()
