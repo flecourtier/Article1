@@ -31,12 +31,12 @@ current = Path(__file__).parent.parent#.parent.parent
 #######
 
 class FEMSolver():
-    def __init__(self,nb_cell,params,problem,degree=1):
+    def __init__(self,nb_cell,params,problem,degree=1,high_degree=10):
         self.N = nb_cell
         self.params = params
         self.pb_considered = problem
         self.degree = degree
-        self.high_degree = 10 # to compute error
+        self.high_degree = high_degree # to compute error
         
         self.times_fem = {}
         self.times_corr_add = {}
