@@ -116,7 +116,7 @@ class FEMSolver():
 
         return sol,norme_L2
 
-    def corr_add(self, i, phi_tild):
+    def corr_add(self, i, phi_tild, nonexactBC=False):
         boundary = "on_boundary"
 
         params = self.params[i]
@@ -124,10 +124,13 @@ class FEMSolver():
         u_ex = UexExpr(params, degree=self.high_degree, domain=self.mesh, pb_considered=self.pb_considered)
         f_tild = f_expr + div(grad(phi_tild))
 
-        g = Constant(0.0)
-        # g = Function(self.V)
-        # phi_tild_inter = interpolate(phi_tild, self.V)
-        # g.vector()[:] = (phi_tild_inter.vector()[:])        
+        if not nonexactBC:
+            g = Constant(0.0)
+        else:
+            g = Function(self.V)
+            # phi_tild_inter = interpolate(phi_tild, self.V)
+            phi_tild_inter = project(phi_tild, self.V)
+            g.vector()[:] = -(phi_tild_inter.vector()[:])        
         bc = DirichletBC(self.V, g, boundary)
 
         u = TrialFunction(self.V)
