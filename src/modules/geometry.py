@@ -11,3 +11,14 @@ class Square1(Square):
 class UnitSquare(Square):
     def __init__(self):
         super().__init__(0.0, 1.0, 0.0, 1.0)
+    
+class Circle:
+    def __init__(self,a,b,r):
+        self.center = [a,b]
+        self.radius = r
+        self.box = None
+        
+class UnitCircle(Circle):
+    def __init__(self):
+        super().__init__(0.0, 0.0, 1.0)
+        self.box = [[-1,1],[-1,1]]

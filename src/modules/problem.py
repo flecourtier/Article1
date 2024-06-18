@@ -1,4 +1,4 @@
-from modules.geometry import Square1, UnitSquare
+from modules.geometry import Square1, UnitSquare, UnitCircle
 
 class TestCase1:
     def __init__(self):
@@ -158,3 +158,24 @@ class TestCase3_medium_param(TestCase3):
                 [0.3, 0.6],  # 0.1 < sigma < 0.8
                 [0.04, 0.25],  # 0.01 < eps < 1
             ]
+        
+        
+class TestCase4:
+    def __init__(self):
+        self.geometry = UnitCircle() 
+        self.nb_parameters = 1
+        self.parameter_domain = [[0.50000, 0.500001]]
+
+    def u_ex(self, pre, xy, mu):
+        pass
+
+    def f(self, pre, xy, mu):
+        return 1.0
+
+    # Dirichlet BC        
+    def g(self, pre, xy, mu):
+        return 0.0
+    
+    # Neumann BC
+    def h(self, pre, xy, mu):
+        return 0.0
