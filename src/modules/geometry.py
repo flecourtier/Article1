@@ -22,3 +22,12 @@ class UnitCircle(Circle):
     def __init__(self):
         super().__init__(0.0, 0.0, 1.0)
         self.box = [[-1,1],[-1,1]]
+        
+class Donut:
+    def __init__(self,a,b,bigr,smallr):
+        self.bigcircle = Circle(a,b,bigr)
+        self.hole = Circle(a,b,smallr)
+        
+class Donut1(Donut):
+    def __init__(self):
+        super().__init__(0.0, 0.0, 1.0, 0.5)

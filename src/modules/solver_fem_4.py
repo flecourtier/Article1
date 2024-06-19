@@ -61,6 +61,7 @@ class FEMSolver():
             
             start = time.time()
             domain = mshr.Circle(df.Point(center[0],center[1]), radius)
+            # domain.set_subdomain(1, mshr.Rectangle(df.Point(-1.0, 0.0), df.Point(1.0, 1.0)))
             end = time.time()
             
             mesh_macro = RectangleMesh(Point(box[0,0], box[1,0]), Point(box[0,1], box[1,1]), nb_vert, nb_vert)
@@ -100,7 +101,13 @@ class FEMSolver():
             g = Constant("0.0")
         
         def boundary_D(x,on_boundary):
-            return on_boundary and x[1]>DOLFIN_EPS #and x[0]**2+x[1]**2>1.0-DOLFIN_EPS
+            tol = 1e-6
+            if on_boundary and x[1]>=0.0:
+                if near(x[0],1.0,tol):
+                    print("oui : ",x)
+                if near(x[0],-1.0,tol):
+                    print("oui : ",x)
+            return on_boundary and x[1]>=0.0 #and x[0]**2+x[1]**2>1.0-DOLFIN_EPS
             
         bc = DirichletBC(self.V, g, boundary_D)
         
