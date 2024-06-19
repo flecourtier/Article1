@@ -7,7 +7,7 @@ print_time=False
 ###########
 
 from modules.fenics_expressions import *
-from modules.geometry import Circle
+from modules.geometry import Donut
 
 from dolfin import *
 import dolfin as df
@@ -53,15 +53,17 @@ class FEMSolver():
     def __create_FEM_domain(self):
         nb_vert = self.N+1
 
-        # check if pb_considered is instance of Square class
-        if isinstance(self.pb_considered.geometry, Circle):
-            center = self.pb_considered.geometry.center
-            radius = self.pb_considered.geometry.radius
+        # check if pb_considered is instance of Square class        
+        if isinstance(self.pb_considered.geometry, Donut):
+            bigcenter = self.pb_considered.geometry.bigcircle.center
+            bigradius = self.pb_considered.geometry.bigcircle.radius
+            smallcenter = self.pb_considered.geometry.hole.center
+            smallradius = self.pb_considered.geometry.hole.radius
             box = np.array(self.pb_considered.geometry.box)
             
             start = time.time()
-            bigcircle = mshr.Circle(df.Point(center[0],center[1]), radius)
-            hole = mshr.Circle(df.Point(center[0],center[1]), radius/2.0)
+            bigcircle = mshr.Circle(df.Point(bigcenter[0],bigcenter[1]), bigradius)
+            hole = mshr.Circle(df.Point(smallcenter[0],smallcenter[1]), smallradius)
             domain = bigcircle-hole
             # domain.set_subdomain(1, mshr.Rectangle(df.Point(-1.0, 0.0), df.Point(1.0, 1.0)))
             end = time.time()
