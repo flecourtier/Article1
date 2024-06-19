@@ -101,12 +101,6 @@ class FEMSolver():
             g = Constant("0.0")
         
         def boundary_D(x,on_boundary):
-            tol = 1e-6
-            if on_boundary and x[1]>=0.0:
-                if near(x[0],1.0,tol):
-                    print("oui : ",x)
-                if near(x[0],-1.0,tol):
-                    print("oui : ",x)
             return on_boundary and x[1]>=0.0 #and x[0]**2+x[1]**2>1.0-DOLFIN_EPS
             
         bc = DirichletBC(self.V, g, boundary_D)

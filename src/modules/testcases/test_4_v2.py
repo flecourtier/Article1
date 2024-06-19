@@ -175,4 +175,4 @@ def Run_laplacian2D(pde,training=False,plot_bc=False):
 
 if __name__ == "__main__":
     pde = Poisson_2D()
-    network, trainer = Run_laplacian2D(pde,training=True,plot_bc=True)
+    network, trainer = Run_laplacian2D(pde,training=False,plot_bc=True)
