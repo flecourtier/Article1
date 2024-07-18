@@ -1,3 +1,5 @@
+## SOLVEUR - Cas test 4 - V2+V3 - Donut
+
 # homogeneous = True
 cd = "homo"
 print_time=False
@@ -167,7 +169,7 @@ class FEMSolver():
 
         return sol,norme_L2
 
-    def corr_add(self, i, phi_tild, u_ref):
+    def corr_add(self, i, phi_tild, u_ref, nonexactBC=True):
         # nonexactBC=True
         params = self.params[i]
                 
@@ -175,11 +177,14 @@ class FEMSolver():
         
         f_tild = f_expr + div(grad(phi_tild))
         
-        g_tild = Function(self.V)
-        phi_tild_inter = project(phi_tild, self.V)
-        g_tild.vector()[:] = -(phi_tild_inter.vector()[:])        
-        
-        # g_tild = Constant("0.0")
+        if nonexactBC:
+            print("g=-u_theta")
+            g_tild = Function(self.V)
+            phi_tild_inter = project(phi_tild, self.V)
+            g_tild.vector()[:] = -(phi_tild_inter.vector()[:])   
+        else:
+            print("g=0")
+            g_tild = Constant("0.0")     
         
         n = FacetNormal(self.mesh)
         h_tild = -inner(grad(phi_tild),n)

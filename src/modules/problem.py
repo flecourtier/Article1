@@ -163,7 +163,7 @@ class TestCase3_medium_param(TestCase3):
 class TestCase4:
     def __init__(self,v=1):
         self.geometry = UnitCircle() 
-        if v==2:
+        if v>1:
             self.geometry = Donut1() 
         self.nb_parameters = 1
         self.parameter_domain = [[0.50000, 0.500001]]
