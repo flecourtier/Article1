@@ -165,14 +165,23 @@ class TestCase4:
         self.geometry = UnitCircle() 
         if v>1:
             self.geometry = Donut1() 
+        self.version = v 
         self.nb_parameters = 1
         self.parameter_domain = [[0.50000, 0.500001]]
 
     def u_ex(self, pre, xy, mu):
-        pass
+        if self.version == 5:
+            x,y = xy
+            return x**2 + y**2
+        else:
+            pass
 
     def f(self, pre, xy, mu):
-        return 1.0
+        if self.version == 5 or self.version == 6:
+            x,y = xy
+            return x**2 + y**2 - 4
+        else:
+            return 1.0
 
     # Dirichlet BC        
     def g(self, pre, xy, mu):
@@ -180,4 +189,17 @@ class TestCase4:
     
     # Neumann BC
     def h(self, pre, xy, mu):
+        assert self.version != 5 and self.version != 6
         return 0.0
+    
+    def h_int(self, pre, xy, mu):
+        assert self.version == 5 or self.version == 6
+        x,y = xy
+        # return -2.0*(x**2 + y**2)
+        return -0.5
+    
+    def h_ext(self, pre, xy, mu):
+        assert self.version == 5 or self.version == 6
+        x,y = xy
+        # return 2.0*(x**2 + y**2)
+        return 2.0
