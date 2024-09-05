@@ -15,7 +15,7 @@ import time
 from modules.geometry_3D import Cube
 from modules.problem_3D import TestCase1_3D
 
-current = Path(__file__).parent.parent.parent.parent
+current = Path(__file__).parent.parent.parent.parent.parent.parent
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 print(f"torch loaded; device is {device}")

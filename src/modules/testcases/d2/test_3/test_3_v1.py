@@ -23,7 +23,7 @@ PI = 3.14159265358979323846
 
 # test from 10.3390/en15186823
  
-current = Path(__file__).parent.parent.parent.parent
+current = Path(__file__).parent.parent.parent.parent.parent.parent
 
 
 class Poisson_2D(pdes.AbstractPDEx):

@@ -27,7 +27,7 @@ torch.set_default_device(device)
 
 PI = 3.14159265358979323846
 
-current = Path(__file__).parent.parent.parent.parent
+current = Path(__file__).parent.parent.parent.parent.parent.parent
 
 def create_fulldomain(geometry):
     bigcenter = geometry.bigcircle.center

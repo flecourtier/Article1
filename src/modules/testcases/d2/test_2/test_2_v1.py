@@ -13,7 +13,7 @@ from scimba.equations import domain, pdes
 from modules.geometry import Square
 from modules.problem import TestCase2
 
-current = Path(__file__).parent.parent.parent.parent
+current = Path(__file__).parent.parent.parent.parent.parent.parent
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 print(f"torch loaded; device is {device}")

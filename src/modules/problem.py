@@ -170,14 +170,21 @@ class TestCase4:
         self.parameter_domain = [[0.50000, 0.500001]]
 
     def u_ex(self, pre, xy, mu):
-        if self.version == 5:
+        if self.version == 4:
+            x,y = xy
+            return pre.sin(-1.0/4.0 * (x*x + y*y - 1.0))
+        elif self.version == 5:
             x,y = xy
             return x**2 + y**2
         else:
             pass
 
     def f(self, pre, xy, mu):
-        if self.version == 5 or self.version == 6:
+        if self.version == 4:
+            x,y = xy
+            
+            return -(x**2 + y**2) / 4.0 * pre.sin(-1.0/4.0 * (x*x + y*y - 1.0)) + pre.cos(-1.0/4.0 * (x*x + y*y - 1.0)) # NON
+        elif self.version == 5 or self.version == 6:
             x,y = xy
             return x**2 + y**2 - 4
         else:
@@ -185,7 +192,10 @@ class TestCase4:
 
     # Dirichlet BC        
     def g(self, pre, xy, mu):
-        return 0.0
+        if self.version == 4:
+            return self.u_ex(pre, xy, mu)
+        else:
+            return 0.0
     
     # Neumann BC
     def h(self, pre, xy, mu):

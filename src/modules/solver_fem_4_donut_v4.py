@@ -97,14 +97,16 @@ class FEMSolver():
 
         return mesh, V, dx
         
-    def fem(self, i, u_ref):
+    def fem(self, i):
         # boundary = "on_boundary"
         params = self.params[i]
         
-        f_expr = FExpr(params, degree=self.high_degree, domain=self.mesh, pb_considered=self.pb_considered)  
-
+        u_ex = UexExpr(params, degree=self.high_degree, domain=self.mesh, pb_considered=self.pb_considered)
+        # f_expr = FExpr(params, degree=self.high_degree, domain=self.mesh, pb_considered=self.pb_considered)  
+        f_expr = -div(grad(u_ex))
+        
         if cd=="homo":
-            g = Constant("0.0")
+            g = u_ex
             
         bc = DirichletBC(self.V, g, "on_boundary")
         
@@ -160,18 +162,19 @@ class FEMSolver():
             print("Time to solve the system :",end-start)
         self.times_fem["solve"] = end-start
 
-        uref_Vex = interpolate(u_ref,self.V_ex)
+        uref_Vex = interpolate(u_ex,self.V_ex)
         sol_Vex = interpolate(sol,self.V_ex)
         norme_L2 = (assemble((((uref_Vex - sol_Vex)) ** 2) * self.dx) ** (0.5)) / (assemble((((uref_Vex)) ** 2) * self.dx) ** (0.5))
 
         return sol,norme_L2
 
-    def corr_add(self, i, phi_tild, u_ref, nonexactBC=True):
+    def corr_add(self, i, phi_tild, nonexactBC=True):
         # nonexactBC=True
         params = self.params[i]
                 
-        f_expr = FExpr(params, degree=self.high_degree, domain=self.mesh, pb_considered=self.pb_considered)
-        
+        u_ex = UexExpr(params, degree=self.high_degree, domain=self.mesh, pb_considered=self.pb_considered)
+        # f_expr = FExpr(params, degree=self.high_degree, domain=self.mesh, pb_considered=self.pb_considered)
+        f_expr = -div(grad(u_ex))
         f_tild = f_expr + div(grad(phi_tild))
         
         if nonexactBC:
@@ -225,7 +228,7 @@ class FEMSolver():
 
         sol = C_tild + phi_tild
 
-        uref_Vex = interpolate(u_ref,self.V_ex)
+        uref_Vex = interpolate(u_ex,self.V_ex)
         
         C_Vex = interpolate(C_tild,self.V_ex)
         sol_Vex = Function(self.V_ex)

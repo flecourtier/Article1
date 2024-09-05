@@ -26,7 +26,7 @@ torch.set_default_device(device)
 
 PI = 3.14159265358979323846
 
-current = Path(__file__).parent.parent.parent.parent
+current = Path(__file__).parent.parent.parent.parent.parent.parent
 
 def create_fulldomain(geometry):
     bigcenter = geometry.bigcircle.center
@@ -130,7 +130,9 @@ class Poisson_2D(pdes.AbstractPDEx):
         bigradius = self.problem.geometry.bigcircle.radius
         bigphi = (x1 - bigcenter[0])**2 + (x2 - bigcenter[1])**2 - bigradius**2
         
-        return smallphi*bigphi*w
+        g = self.problem.g(torch, [x1, x2], mu)
+        
+        return smallphi*bigphi*w+g
 
     # def reference_solution(self, x, mu):
     #     x1, x2 = x.get_coordinates()
@@ -190,4 +192,4 @@ def Run_laplacian2D(pde,training=False,plot_bc=False):
 
 if __name__ == "__main__":
     pde = Poisson_2D()
-    network, trainer = Run_laplacian2D(pde,training=False,plot_bc=True)
+    network, trainer = Run_laplacian2D(pde,training=True,plot_bc=True)

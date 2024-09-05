@@ -1,5 +1,3 @@
-# meilleurs apprentissages des dérivées troisièmes
-
 from pathlib import Path
 
 import scimba.nets.training_tools as training_tools
@@ -15,7 +13,8 @@ from scimba.equations import domain, pdes
 from modules.geometry import Square
 from modules.problem import TestCase1
 
-current = Path(__file__).parent.parent.parent.parent
+current = Path(__file__).parent.parent.parent.parent.parent.parent
+print(current)
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 print(f"torch loaded; device is {device}")
@@ -80,8 +79,8 @@ def Run_laplacian2D(pde, bc_loss_bool=False, training = False, w_bc=0, w_res=1.0
     )
     sampler = sampling_pde.PdeXCartesianSampler(x_sampler, mu_sampler)
 
-    file_name = current / "networks" / "test_fe1_v2.pth"
-    # new_training = False
+    file_name = current / "networks" / "test_fe1.pth"
+    # new_training = True
     new_training = False
 
     if new_training:
@@ -91,7 +90,7 @@ def Run_laplacian2D(pde, bc_loss_bool=False, training = False, w_bc=0, w_res=1.0
             / file_name
         ).unlink(missing_ok=True)
 
-    tlayers = [40, 60, 80, 60, 40]
+    tlayers = [40, 60, 60, 60, 40]
     network = pinn_x.MLP_x(pde=pde, layer_sizes=tlayers, activation_type="sine")
     pinn = pinn_x.PINNx(network, pde)
     losses = pinn_losses.PinnLossesData(
@@ -119,7 +118,7 @@ def Run_laplacian2D(pde, bc_loss_bool=False, training = False, w_bc=0, w_res=1.0
                 epochs=12, n_collocation=5000, n_bc_collocation=2000, n_data=0
             )
 
-    filename = current / "networks" / "test_fe1_v2.png"
+    filename = current / "networks" / "test_fe1.png"
     trainer.plot(20000, random=True,reference_solution=True, filename=filename)
     # trainer.plot_derivative_mu(n_visu=20000)
     

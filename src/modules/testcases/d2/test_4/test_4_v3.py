@@ -1,5 +1,6 @@
-# Test Donut - Conditions Neumann partout (non paramétrique)
-# Conditions exactes sur les deux cercles (levelsel, pas de loss BC)
+# Test Donut - Conditions mixtes (non paramétrique)
+# Conditions non exact sur le bord Neumann (loss BC, pas de level)
+# Levelset sur le bord Dirichlet (trou)
 
 from pathlib import Path
 
@@ -26,7 +27,7 @@ torch.set_default_device(device)
 
 PI = 3.14159265358979323846
 
-current = Path(__file__).parent.parent.parent.parent
+current = Path(__file__).parent.parent.parent.parent.parent.parent
 
 def create_fulldomain(geometry):
     bigcenter = geometry.bigcircle.center
@@ -77,14 +78,14 @@ def create_fulldomain(geometry):
 
 class Poisson_2D(pdes.AbstractPDEx):
     def __init__(self):
-        self.problem = TestCase4(v=6)
+        self.problem = TestCase4(v=3)
         
         assert isinstance(self.problem.geometry, Donut)
         
         space_domain = create_fulldomain(self.problem.geometry)
         
         super().__init__(
-            nb_unknowns=2,
+            nb_unknowns=1,
             space_domain=space_domain,
             nb_parameters=self.problem.nb_parameters,
             parameter_domain=self.problem.parameter_domain,
@@ -97,84 +98,39 @@ class Poisson_2D(pdes.AbstractPDEx):
     def make_data(self, n_data):
         pass
 
-    def bc_residual(self, w, x, mu, **kwargs): 
-        pass       
-    
+    def bc_residual(self, w, x, mu, **kwargs):        
+        # u_top = self.get_variables(w, label=0)
+        # x1, x2 = x.get_coordinates(label=0)
+        # g = self.problem.g(torch, [x1,x2], mu)
+        
+        u_x_bottom = self.get_variables(w, "w_x", label=1)
+        u_y_bottom = self.get_variables(w, "w_y", label=1)
+        n_x, n_y = x.get_normals(label=1)
+        x1, x2 = x.get_coordinates(label=1)
+        h = self.problem.h(torch, [x1,x2], mu)
+        
+        return u_x_bottom * n_x + u_y_bottom * n_y - h
+
     def residual(self, w, x, mu, **kwargs):
         x1, x2 = x.get_coordinates()
-        print("w : ",w)
-        u = w["w"]
-        # u = self.get_variables(w, "w")
-        print(u.cpu().detach().numpy().shape)
-        u_xx = w["w_xx"]
-        # u_xx = self.get_variables(w, "w_xx")
-        print(u_xx.cpu().detach().numpy().shape)
-        u_yy = w["w_yy"]
-        # u_yy = self.get_variables(w, "w_yy")
-        print(u_yy.cpu().detach().numpy().shape)
+        u_xx = self.get_variables(w, "w_xx")
+        u_yy = self.get_variables(w, "w_yy")
         f = self.problem.f(torch, [x1, x2], mu)
-        print(f.cpu().detach().numpy().shape)
-        
-        return u_xx + u_yy - u + f
+        return u_xx + u_yy + f
     
-    def construct_phi(self, x1,x2):
-        # x1, x2 = x.get_coordinates()
-        
-        # compute phi
-        
-        smallcenter = self.problem.geometry.hole.center
-        smallradius = self.problem.geometry.hole.radius
-        smallphi = (x1 - smallcenter[0])**2 + (x2 - smallcenter[1])**2 - smallradius**2
-        
-        bigcenter = self.problem.geometry.bigcircle.center
-        bigradius = self.problem.geometry.bigcircle.radius
-        bigphi = (x1 - bigcenter[0])**2 + (x2 - bigcenter[1])**2 - bigradius**2
-        
-        phi = smallphi*bigphi
-        
-        return smallphi,bigphi,phi
-    
-    def post_processing(self, x, mu, w):   
-        x1 = x.x[:,0]
-        x2 = x.x[:,1]
-             
-        # compute levelsets
-        phi_I,phi_E,phi = self.construct_phi(x1,x2)
-        ones = torch.ones_like(x1)
-        gradphi = torch.autograd.grad(phi, x.x, ones, create_graph=True)[0]
-        
-        # get u1 and u2
-        
-        # u1,u2 = w[:,0][:,None],w[:,1][:,None]
-        u1 = w[:,0].reshape(-1,1)
-        u2 = w[:,1].reshape(-1,1)
-
-        ones = torch.ones_like(u1)
-        gradu1 = torch.autograd.grad(u1, x.x, ones, create_graph=True)[0] #, allow_unused=True)
-        
-        # print("gradphi :",gradphi)
-        # print("gradu1 :",gradu1)
-        
-        # get h
-        
-        h_I = self.problem.h_int(torch, [x1,x2], mu)
-        h_E = self.problem.h_ext(torch, [x1,x2], mu)
-        sumphi = phi_I**2+phi_E**2
-        h_glob = phi_I**2 / sumphi * h_E + phi_E**2 / sumphi * h_I
-        
-        # Produit élément par élément
-        element_wise_product = gradphi * gradu1
-
-        # Somme des produits le long de la dimension 1
-        dot_product = torch.sum(element_wise_product, dim=1)        
-        res = (u1[:,0] + phi*dot_product) - phi * h_glob + phi**2 * u2[:,0]
-        print("res : ",res[:,None].cpu().detach().numpy().shape)
-
-        return res
-
-    def reference_solution(self, x, mu):
+    def post_processing(self, x, mu, w):
         x1, x2 = x.get_coordinates()
-        return self.problem.u_ex(torch, [x1,x2], mu)
+        
+        center = self.problem.geometry.hole.center
+        radius = self.problem.geometry.hole.radius
+        
+        phi = (x1 - center[0])**2 + (x2 - center[1])**2 - radius**2
+        
+        return phi*w
+
+    # def reference_solution(self, x, mu):
+    #     x1, x2 = x.get_coordinates()
+    #     return 0.0 * x1
 
 def Run_laplacian2D(pde,training=False,plot_bc=False):
     x_sampler = sampling_pde.XSampler(pde=pde)
@@ -183,9 +139,9 @@ def Run_laplacian2D(pde,training=False,plot_bc=False):
     )
     sampler = sampling_pde.PdeXCartesianSampler(x_sampler, mu_sampler)
 
-    file_name = current / "networks" / "test_fe4_v6.pth"
-    # new_training = False
-    new_training = True
+    file_name = current / "networks" / "test_fe4_v3.pth"
+    new_training = False
+    # new_training = True
 
     if new_training:
         (
@@ -197,7 +153,7 @@ def Run_laplacian2D(pde,training=False,plot_bc=False):
     if plot_bc:
         x, mu = sampler.bc_sampling(1000)
         x1, x2 = x.get_coordinates(label=0)
-        plt.scatter(x1.cpu().detach().numpy(), x2.cpu().detach().numpy(), color="r", label="Neu")
+        plt.scatter(x1.cpu().detach().numpy(), x2.cpu().detach().numpy(), color="r", label="Dir")
         x1, x2 = x.get_coordinates(label=1)
         plt.scatter(x1.cpu().detach().numpy(), x2.cpu().detach().numpy(), color="b", label="Neu")
         plt.legend()
@@ -207,7 +163,7 @@ def Run_laplacian2D(pde,training=False,plot_bc=False):
     network = pinn_x.MLP_x(pde=pde, layer_sizes=tlayers, activation_type="tanh")
     pinn = pinn_x.PINNx(network, pde)
 
-    losses = pinn_losses.PinnLossesData(bc_loss_bool=False, w_res=1.0, w_bc=0.0)
+    losses = pinn_losses.PinnLossesData(bc_loss_bool=True, w_res=1.0, w_bc=30.0)
     optimizers = training_tools.OptimizerData(learning_rate=1.0e-2, decay=0.99)
 
     trainer = training_x.TrainerPINNSpace(
@@ -221,14 +177,13 @@ def Run_laplacian2D(pde,training=False,plot_bc=False):
     )
 
     if training:
-        trainer.train(epochs=1, n_collocation=8000, n_bc_collocation=8000)
-        # trainer.train(epochs=1, n_collocation=8000, n_bc_collocation=8000)
+        trainer.train(epochs=750, n_collocation=8000, n_bc_collocation=8000)
 
-    filename = current / "networks" / "test_fe4_v6.png"
-    trainer.plot(20000,filename=filename,reference_solution=True)
+    filename = current / "networks" / "test_fe4_v3.png"
+    trainer.plot(20000,filename=filename)
     
     return trainer,pinn
 
 if __name__ == "__main__":
     pde = Poisson_2D()
-    network, trainer = Run_laplacian2D(pde,training=True,plot_bc=False)
+    network, trainer = Run_laplacian2D(pde,training=False,plot_bc=True)
