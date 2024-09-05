@@ -182,7 +182,8 @@ class FEMSolver():
             phi_tild_inter = project(phi_tild, self.V)
             g_tild.vector()[:] = -(phi_tild_inter.vector()[:])   
         else:
-            g_tild = Constant("0.0")     
+            # g_tild = Constant("0.0")     
+            g_tild = u_ex-phi_tild
          
         # def boundary_D(x,on_boundary):
         #     return on_boundary and x[0]**2+x[1]**2<0.75**2 #and x[0]**2+x[1]**2>1.0-DOLFIN_EPS        
