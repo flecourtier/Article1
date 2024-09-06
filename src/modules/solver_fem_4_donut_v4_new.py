@@ -168,12 +168,12 @@ class FEMSolver():
 
         return sol,norme_L2
 
-    def corr_add(self, i, UthetaExpr, nonexactBC=True):
+    def corr_add(self, i, phi_tild, nonexactBC=True):
         # nonexactBC=True
         params = self.params[i]
                 
         u_ex = UexExpr(params, degree=self.high_degree, domain=self.mesh, pb_considered=self.pb_considered)
-        phi_tild = UthetaExpr(params, degree=self.high_degree, domain=self.mesh, pb_considered=self.pb_considered)
+        # phi_tild = UthetaExpr(params, degree=self.high_degree, domain=self.mesh, pb_considered=self.pb_considered)
         # f_expr = FExpr(params, degree=self.high_degree, domain=self.mesh, pb_considered=self.pb_considered)
         f_expr = -div(grad(u_ex))
         f_tild = f_expr + div(grad(phi_tild))
