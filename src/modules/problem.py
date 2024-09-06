@@ -176,23 +176,28 @@ class TestCase4:
         elif self.version == 5:
             x,y = xy
             return x**2 + y**2
+        elif self.version == 7:
+            x,y = xy
+            return 1.0/(2*pre.pi)*pre.exp(-1.0/2.0*(x**2+y**2))*pre.sin(-1.0/4.0 * (x*x + y*y - 1.0))
         else:
             pass
 
     def f(self, pre, xy, mu):
         if self.version == 4:
             x,y = xy
-            
-            return -(x**2 + y**2) / 4.0 * pre.sin(-1.0/4.0 * (x*x + y*y - 1.0)) + pre.cos(-1.0/4.0 * (x*x + y*y - 1.0)) # NON
+            return -(x**2 + y**2) / 4.0 * pre.sin(-1.0/4.0 * (x*x + y*y - 1.0)) + pre.cos(-1.0/4.0 * (x*x + y*y - 1.0))
         elif self.version == 5 or self.version == 6:
             x,y = xy
             return x**2 + y**2 - 4
+        elif self.version == 7:
+            x,y = xy
+            return -0.5*(0.25*x**2*pre.sin(0.25*(x**2 + y**2 - 1)) + x**2*pre.cos(0.25*(x**2 + y**2 - 1)) - (x**2 - 1)*pre.sin(0.25*(x**2 + y**2 - 1)) - 0.5*pre.cos(0.25*(x**2 + y**2 - 1)))*pre.exp(-0.5*x**2 - 0.5*y**2)/pre.pi - 0.5*(0.25*y**2*pre.sin(0.25*(x**2 + y**2 - 1)) + y**2*pre.cos(0.25*(x**2 + y**2 - 1)) - (y**2 - 1)*pre.sin(0.25*(x**2 + y**2 - 1)) - 0.5*pre.cos(0.25*(x**2 + y**2 - 1)))*pre.exp(-0.5*x**2 - 0.5*y**2)/pre.pi
         else:
             return 1.0
 
     # Dirichlet BC        
     def g(self, pre, xy, mu):
-        if self.version == 4:
+        if self.version == 4 or self.version == 7:
             return self.u_ex(pre, xy, mu)
         else:
             return 0.0
