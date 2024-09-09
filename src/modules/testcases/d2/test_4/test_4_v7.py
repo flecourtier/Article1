@@ -85,6 +85,9 @@ class Poisson_2D(pdes.AbstractPDEx):
         
         space_domain = create_fulldomain(self.problem.geometry)
         
+        print(self.problem.nb_parameters)
+        print(self.problem.parameter_domain)
+        
         super().__init__(
             nb_unknowns=1,
             space_domain=space_domain,
@@ -92,6 +95,7 @@ class Poisson_2D(pdes.AbstractPDEx):
             parameter_domain=self.problem.parameter_domain,
         )
 
+        print(self.problem.parameter_domain)
         self.first_derivative = True
         self.second_derivative = True
         self.compute_normals = True
@@ -116,13 +120,15 @@ class Poisson_2D(pdes.AbstractPDEx):
 
     def residual(self, w, x, mu, **kwargs):
         x1, x2 = x.get_coordinates()
+        mu1,mu2 = self.get_parameters(mu)
         u_xx = self.get_variables(w, "w_xx")
         u_yy = self.get_variables(w, "w_yy")
-        f = self.problem.f(torch, [x1, x2], mu)
+        f = self.problem.f(torch, [x1, x2], [mu1,mu2])
         return u_xx + u_yy + f
     
     def post_processing(self, x, mu, w):
         x1, x2 = x.get_coordinates()
+        mu1,mu2 = self.get_parameters(mu)
         
         smallcenter = self.problem.geometry.hole.center
         smallradius = self.problem.geometry.hole.radius
@@ -132,15 +138,17 @@ class Poisson_2D(pdes.AbstractPDEx):
         bigradius = self.problem.geometry.bigcircle.radius
         bigphi = (x1 - bigcenter[0])**2 + (x2 - bigcenter[1])**2 - bigradius**2
         
-        g = self.problem.g(torch, [x1, x2], mu)
+        g = self.problem.g(torch, [x1, x2], [mu1,mu2])
         
         return smallphi*bigphi*w+g
 
-    # def reference_solution(self, x, mu):
-    #     x1, x2 = x.get_coordinates()
-    #     return 0.0 * x1
+    def reference_solution(self, x, mu):
+        x1, x2 = x.get_coordinates()
+        mu1,mu2 = self.get_parameters(mu)
+        
+        return self.problem.u_ex(torch, [x1, x2], [mu1,mu2])
 
-def Run_laplacian2D(pde,training=False,plot_bc=False):
+def Run_laplacian2D(pde,new_training=False,plot_bc=False):
     x_sampler = sampling_pde.XSampler(pde=pde)
     mu_sampler = sampling_parameters.MuSampler(
         sampler=uniform_sampling.UniformSampling, model=pde
@@ -148,7 +156,6 @@ def Run_laplacian2D(pde,training=False,plot_bc=False):
     sampler = sampling_pde.PdeXCartesianSampler(x_sampler, mu_sampler)
 
     file_name = current / "networks" / "test_fe4_v7.pth"
-    new_training = False
     # new_training = True
 
     if new_training:
@@ -171,7 +178,7 @@ def Run_laplacian2D(pde,training=False,plot_bc=False):
     network = pinn_x.MLP_x(pde=pde, layer_sizes=tlayers, activation_type="tanh")
     pinn = pinn_x.PINNx(network, pde)
 
-    losses = pinn_losses.PinnLossesData(bc_loss_bool=False, w_res=1.0, w_bc=30.0)
+    losses = pinn_losses.PinnLossesData(bc_loss_bool=False, w_res=1.0, w_bc=0.0)
     optimizers = training_tools.OptimizerData(learning_rate=1.0e-2, decay=0.99)
 
     trainer = training_x.TrainerPINNSpace(
@@ -184,14 +191,14 @@ def Run_laplacian2D(pde,training=False,plot_bc=False):
         batch_size=8000,
     )
 
-    if training:
-        trainer.train(epochs=750, n_collocation=8000, n_bc_collocation=8000)
+    if new_training:
+        trainer.train(epochs=1000, n_collocation=8000, n_bc_collocation=8000)
 
     filename = current / "networks" / "test_fe4_v7.png"
-    trainer.plot(20000,filename=filename)
+    trainer.plot(20000,filename=filename,reference_solution=True)
     
     return trainer,pinn
 
 if __name__ == "__main__":
     pde = Poisson_2D()
-    network, trainer = Run_laplacian2D(pde,training=True,plot_bc=True)
+    network, trainer = Run_laplacian2D(pde,new_training=True,plot_bc=False)

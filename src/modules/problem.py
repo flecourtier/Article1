@@ -166,8 +166,12 @@ class TestCase4:
         if v>1:
             self.geometry = Donut1() 
         self.version = v 
-        self.nb_parameters = 1
-        self.parameter_domain = [[0.50000, 0.500001]]
+        if self.version ==7 :
+            self.nb_parameters = 2
+            self.parameter_domain = [[-0.5, 0.500001],[-0.50000, 0.500001]]
+        else:
+            self.nb_parameters = 1
+            self.parameter_domain = [[0.50000, 0.500001]]
 
     def u_ex(self, pre, xy, mu):
         if self.version == 4:
@@ -178,7 +182,9 @@ class TestCase4:
             return x**2 + y**2
         elif self.version == 7:
             x,y = xy
-            return 1.0/(2*pre.pi)*pre.exp(-1.0/2.0*(x**2+y**2))*pre.sin(-1.0/4.0 * (x*x + y*y - 1.0))
+            mu1,mu2 = mu
+            return 1.0/(2*pre.pi)*pre.exp(-1.0/2.0*((x-mu1)**2+(y-mu2)**2))*pre.sin(-1.0/4.0 * (x**2 + y**2 - 1.0))
+            # return 1.0/(2*pre.pi)*pre.exp(-1.0/2.0*(x**2+y**2))*pre.sin(-1.0/4.0 * (x*x + y*y - 1.0))
         else:
             pass
 
@@ -191,7 +197,9 @@ class TestCase4:
             return x**2 + y**2 - 4
         elif self.version == 7:
             x,y = xy
-            return -0.5*(0.25*x**2*pre.sin(0.25*(x**2 + y**2 - 1)) + x**2*pre.cos(0.25*(x**2 + y**2 - 1)) - (x**2 - 1)*pre.sin(0.25*(x**2 + y**2 - 1)) - 0.5*pre.cos(0.25*(x**2 + y**2 - 1)))*pre.exp(-0.5*x**2 - 0.5*y**2)/pre.pi - 0.5*(0.25*y**2*pre.sin(0.25*(x**2 + y**2 - 1)) + y**2*pre.cos(0.25*(x**2 + y**2 - 1)) - (y**2 - 1)*pre.sin(0.25*(x**2 + y**2 - 1)) - 0.5*pre.cos(0.25*(x**2 + y**2 - 1)))*pre.exp(-0.5*x**2 - 0.5*y**2)/pre.pi
+            mu1,mu2 = mu
+            return -0.5*(0.25*x**2*pre.sin(0.25*(x**2 + y**2 - 1)) - x*(mu1 - x)*pre.cos(0.25*(x**2 + y**2 - 1)) - ((mu1 - x)**2 - 1)*pre.sin(0.25*(x**2 + y**2 - 1)) - 0.5*pre.cos(0.25*(x**2 + y**2 - 1)))*pre.exp(-0.5*(-mu1 + x)**2 - 0.5*(-mu2 + y)**2)/pre.pi - 0.5*(0.25*y**2*pre.sin(0.25*(x**2 + y**2 - 1)) - y*(mu2 - y)*pre.cos(0.25*(x**2 + y**2 - 1)) - ((mu2 - y)**2 - 1)*pre.sin(0.25*(x**2 + y**2 - 1)) - 0.5*pre.cos(0.25*(x**2 + y**2 - 1)))*pre.exp(-0.5*(-mu1 + x)**2 - 0.5*(-mu2 + y)**2)/pre.pi
+            # return -0.5*(0.25*x**2*pre.sin(0.25*(x**2 + y**2 - 1)) + x**2*pre.cos(0.25*(x**2 + y**2 - 1)) - (x**2 - 1)*pre.sin(0.25*(x**2 + y**2 - 1)) - 0.5*pre.cos(0.25*(x**2 + y**2 - 1)))*pre.exp(-0.5*x**2 - 0.5*y**2)/pre.pi - 0.5*(0.25*y**2*pre.sin(0.25*(x**2 + y**2 - 1)) + y**2*pre.cos(0.25*(x**2 + y**2 - 1)) - (y**2 - 1)*pre.sin(0.25*(x**2 + y**2 - 1)) - 0.5*pre.cos(0.25*(x**2 + y**2 - 1)))*pre.exp(-0.5*x**2 - 0.5*y**2)/pre.pi
         else:
             return 1.0
 
