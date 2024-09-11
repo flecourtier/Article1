@@ -1,4 +1,5 @@
 from modules.geometry import Square1, UnitSquare, UnitCircle, Donut1
+from math import *
 
 class TestCase1:
     def __init__(self):
@@ -162,67 +163,45 @@ class TestCase3_medium_param(TestCase3):
         
 class TestCase4:
     def __init__(self,v=1):
-        self.geometry = UnitCircle() 
-        if v>1:
-            self.geometry = Donut1() 
+        self.geometry = Donut1() 
         self.version = v 
-        if self.version ==7 :
-            self.nb_parameters = 2
-            self.parameter_domain = [[-0.5, 0.500001],[-0.50000, 0.500001]]
-        else:
-            self.nb_parameters = 1
-            self.parameter_domain = [[0.50000, 0.500001]]
+        assert self.version == 1
+        self.nb_parameters = 2
+        self.parameter_domain = [[-0.5, 0.500001],[-0.50000, 0.500001]]
 
     def u_ex(self, pre, xy, mu):
-        if self.version == 4:
-            x,y = xy
-            return pre.sin(-1.0/4.0 * (x*x + y*y - 1.0))
-        elif self.version == 5:
-            x,y = xy
-            return x**2 + y**2
-        elif self.version == 7:
-            x,y = xy
-            mu1,mu2 = mu
-            return 1.0/(2*pre.pi)*pre.exp(-1.0/2.0*((x-mu1)**2+(y-mu2)**2))*pre.sin(-1.0/4.0 * (x**2 + y**2 - 1.0))
-            # return 1.0/(2*pre.pi)*pre.exp(-1.0/2.0*(x**2+y**2))*pre.sin(-1.0/4.0 * (x*x + y*y - 1.0))
-        else:
-            pass
+        x,y = xy
+        mu1,mu2 = mu
+        return 1.0/(2*pre.pi)*pre.exp(-1.0/2.0*((x-mu1)**2+(y-mu2)**2))*pre.sin(-1.0/4.0 * (x**2 + y**2 - 1.0))
 
     def f(self, pre, xy, mu):
-        if self.version == 4:
-            x,y = xy
-            return -(x**2 + y**2) / 4.0 * pre.sin(-1.0/4.0 * (x*x + y*y - 1.0)) + pre.cos(-1.0/4.0 * (x*x + y*y - 1.0))
-        elif self.version == 5 or self.version == 6:
-            x,y = xy
-            return x**2 + y**2 - 4
-        elif self.version == 7:
-            x,y = xy
-            mu1,mu2 = mu
-            return -0.5*(0.25*x**2*pre.sin(0.25*(x**2 + y**2 - 1)) - x*(mu1 - x)*pre.cos(0.25*(x**2 + y**2 - 1)) - ((mu1 - x)**2 - 1)*pre.sin(0.25*(x**2 + y**2 - 1)) - 0.5*pre.cos(0.25*(x**2 + y**2 - 1)))*pre.exp(-0.5*(-mu1 + x)**2 - 0.5*(-mu2 + y)**2)/pre.pi - 0.5*(0.25*y**2*pre.sin(0.25*(x**2 + y**2 - 1)) - y*(mu2 - y)*pre.cos(0.25*(x**2 + y**2 - 1)) - ((mu2 - y)**2 - 1)*pre.sin(0.25*(x**2 + y**2 - 1)) - 0.5*pre.cos(0.25*(x**2 + y**2 - 1)))*pre.exp(-0.5*(-mu1 + x)**2 - 0.5*(-mu2 + y)**2)/pre.pi
-            # return -0.5*(0.25*x**2*pre.sin(0.25*(x**2 + y**2 - 1)) + x**2*pre.cos(0.25*(x**2 + y**2 - 1)) - (x**2 - 1)*pre.sin(0.25*(x**2 + y**2 - 1)) - 0.5*pre.cos(0.25*(x**2 + y**2 - 1)))*pre.exp(-0.5*x**2 - 0.5*y**2)/pre.pi - 0.5*(0.25*y**2*pre.sin(0.25*(x**2 + y**2 - 1)) + y**2*pre.cos(0.25*(x**2 + y**2 - 1)) - (y**2 - 1)*pre.sin(0.25*(x**2 + y**2 - 1)) - 0.5*pre.cos(0.25*(x**2 + y**2 - 1)))*pre.exp(-0.5*x**2 - 0.5*y**2)/pre.pi
-        else:
-            return 1.0
+        x,y = xy
+        mu1,mu2 = mu
+        return -0.5*(0.25*x**2*pre.sin(0.25*(x**2 + y**2 - 1)) - x*(mu1 - x)*pre.cos(0.25*(x**2 + y**2 - 1)) - ((mu1 - x)**2 - 1)*pre.sin(0.25*(x**2 + y**2 - 1)) - 0.5*pre.cos(0.25*(x**2 + y**2 - 1)))*pre.exp(-0.5*(-mu1 + x)**2 - 0.5*(-mu2 + y)**2)/pre.pi - 0.5*(0.25*y**2*pre.sin(0.25*(x**2 + y**2 - 1)) - y*(mu2 - y)*pre.cos(0.25*(x**2 + y**2 - 1)) - ((mu2 - y)**2 - 1)*pre.sin(0.25*(x**2 + y**2 - 1)) - 0.5*pre.cos(0.25*(x**2 + y**2 - 1)))*pre.exp(-0.5*(-mu1 + x)**2 - 0.5*(-mu2 + y)**2)/pre.pi
 
     # Dirichlet BC        
     def g(self, pre, xy, mu):
-        if self.version == 4 or self.version == 7:
-            return self.u_ex(pre, xy, mu)
-        else:
-            return 0.0
-    
-    # Neumann BC
-    def h(self, pre, xy, mu):
-        assert self.version != 5 and self.version != 6
-        return 0.0
+        return self.u_ex(pre, xy, mu)      
+        
+
+class TestCase5:
+    def __init__(self,v=1):
+        self.geometry = Donut1() 
+        self.version = v 
+        assert self.version == 1
+        self.nb_parameters = 1
+        self.parameter_domain = [[0.50000, 0.500001]]
+
+    def u_ex(self, pre, xy, mu):
+        x,y = xy
+        return pre.sin(x**2 + y**2)
+
+    def f(self, pre, xy, mu):
+        x,y = xy
+        return (4*(x**2+y**2)+1)*pre.sin(x**2 + y**2)
     
     def h_int(self, pre, xy, mu):
-        assert self.version == 5 or self.version == 6
-        x,y = xy
-        # return -2.0*(x**2 + y**2)
-        return -0.5
+        return -cos(1.0/4.0)
     
     def h_ext(self, pre, xy, mu):
-        assert self.version == 5 or self.version == 6
-        x,y = xy
-        # return 2.0*(x**2 + y**2)
-        return 2.0
+        return 2.0*cos(1.0)        
