@@ -1,6 +1,6 @@
-# Test Donut - Conditions Mixtes présentés dans le papier
-# Conditions exactes
-# FONCTIONNE
+# Test Donut - Conditions Neumann partout (non paramétrique)
+# Conditions exactes sur les deux cercles (levelsel, pas de loss BC)
+# NE FONCTIONNE PAS
 
 from pathlib import Path
 
@@ -35,18 +35,13 @@ def create_fulldomain(geometry):
     smallcenter = geometry.hole.center
     smallradius = geometry.hole.radius
     
-    print("bigcenter : ",bigcenter)
-    print("bigradius : ",bigradius)
-    print("smallcenter : ",smallcenter)
-    print("smallradius : ",smallradius)
-    
     class BigDomain(domain.SignedDistance):
         def __init__(self):
             super().__init__(dim=2)
 
         def sdf(self, x):
             x1, x2 = x.get_coordinates()
-            return torch.sqrt((x1 - bigcenter[0]) ** 2 + (x2 - bigcenter[1]) ** 2) - bigradius
+            return (x1 - bigcenter[0]) ** 2 + (x2 - bigcenter[1]) ** 2 - bigradius**2
     
     class Hole(domain.SignedDistance):
         def __init__(self):
@@ -54,7 +49,7 @@ def create_fulldomain(geometry):
 
         def sdf(self, x):
             x1, x2 = x.get_coordinates()
-            return torch.sqrt((x1 - smallcenter[0]) ** 2 + (x2 - smallcenter[1]) ** 2) - smallradius
+            return (x1 - smallcenter[0]) ** 2 + (x2 - smallcenter[1]) ** 2 - smallradius**2
         
     sdf = BigDomain()
     sdf_hole = Hole()
@@ -68,13 +63,14 @@ def create_fulldomain(geometry):
 
 class Poisson_2D(pdes.AbstractPDEx):
     def __init__(self):
-        self.problem = TestCase5(v=1)        
+        self.problem = TestCase5(v=2)
+        
         assert isinstance(self.problem.geometry, Donut)
         
         space_domain,_,_ = create_fulldomain(self.problem.geometry)
         
         super().__init__(
-            nb_unknowns=1,
+            nb_unknowns=2,
             space_domain=space_domain,
             nb_parameters=self.problem.nb_parameters,
             parameter_domain=self.problem.parameter_domain,
@@ -92,41 +88,46 @@ class Poisson_2D(pdes.AbstractPDEx):
     
     def residual(self, w, x, mu, **kwargs):
         x1, x2 = x.get_coordinates()
-        u_xx = self.get_variables(w, "w_xx")
-        u_yy = self.get_variables(w, "w_yy")
+        u,_ = self.get_variables(w)
+        u_xx,_ = self.get_variables(w, "w_xx")
+        u_yy,_ = self.get_variables(w, "w_yy")
         f = self.problem.f(torch, [x1, x2], mu)
         
-        return u_xx + u_yy + f
+        return u_xx + u_yy - u + f
     
     def post_processing(self, x, mu, w):   
         x1,x2 = x.get_coordinates()
              
-        # compute levelset
-        phi_E = -self.space_domain.large_domain.sdf(x)
+        # compute levelsets
+        phi_E = self.space_domain.large_domain.sdf(x)
         phi_I = self.space_domain.list_holes[0].sdf(x)
-        phi = (phi_E * phi_I) / (phi_E + phi_I)
-        
-        # get BC condition
-        h = self.problem.h_int(torch, [x1,x2], mu)
-        g = self.problem.h_ext(torch, [x1,x2], mu)
-        
+        phi = phi_I * phi_E
         ones = torch.ones_like(x1)
-        gradphi_I = torch.autograd.grad(phi_I, x.x, ones, create_graph=True)[0]
-        gradw = torch.autograd.grad(w, x.x, ones, create_graph=True)[0] #, allow_unused=True)
+        gradphi = torch.autograd.grad(phi, x.x, ones, create_graph=True)[0]
         
-        w1 = phi_E / (phi_E + phi_I**2)
-        w2 = phi_I**2 / (phi_E + phi_I**2)
+        # get u1 and u2
+        u1 = w[:,0].reshape(-1,1)
+        u2 = w[:,1].reshape(-1,1)
         
-        u1 = g
-        element_wise_product = gradphi_I * gradw
-        dot_product = torch.sum(element_wise_product, dim=1)[:,None]
-        u2 = w + phi_I * (w - dot_product) - phi_I * h
+        ones = torch.ones_like(u1)
+        gradu1 = torch.autograd.grad(u1, x.x, ones, create_graph=True)[0] #, allow_unused=True)
         
+        # get h
+        h_I = self.problem.h_int(torch, [x1,x2], mu)
+        h_E = self.problem.h_ext(torch, [x1,x2], mu)
+        sumphi = phi_I**2+phi_E**2
+        h_glob = phi_I**2 / sumphi * h_E + phi_E**2 / sumphi * h_I
+        
+        # Produit élément par élément
+        element_wise_product = gradphi * gradu1
+
         # Somme des produits le long de la dimension 1
-        res = w1 * u2 + w2 * u1 + phi_E * phi_I**2 * w
+        dot_product = torch.sum(element_wise_product, dim=1)[:,None]     
+        res = (u1 + phi*dot_product) - phi * h_glob + phi**2 * u2
         res = res.reshape(-1,1)
 
-        return res
+        res2 = torch.cat([res,res],dim=1)
+        return res2
 
     def reference_solution(self, x, mu):
         x1, x2 = x.get_coordinates()
@@ -139,7 +140,7 @@ def Run_laplacian2D(pde,new_training=False,plot_bc=False):
     )
     sampler = sampling_pde.PdeXCartesianSampler(x_sampler, mu_sampler)
 
-    file_name = current / "networks" / "test_fe5.pth"
+    file_name = current / "networks" / "test_fe5_v2.pth"
 
     if new_training:
         (
@@ -178,7 +179,7 @@ def Run_laplacian2D(pde,new_training=False,plot_bc=False):
         trainer.train(epochs=1000, n_collocation=8000, n_bc_collocation=8000)
         # trainer.train(epochs=1, n_collocation=8000, n_bc_collocation=8000)
 
-    filename = current / "networks" / "test_fe5.png"
+    filename = current / "networks" / "test_fe5_v2.png"
     trainer.plot(20000,filename=filename,reference_solution=True)
     
     return trainer,pinn
@@ -195,8 +196,6 @@ if __name__ == "__main__":
     smallradius = geometry.hole.radius
     
     import numpy as np
-    from scimba.equations.domain import SpaceTensor
-    
     def big(t):
         return [bigcenter[0] + bigradius*np.cos(2.0 * PI * t), 
         bigcenter[0] + bigradius*np.sin(2.0 * PI * t)]
@@ -205,16 +204,13 @@ if __name__ == "__main__":
         return [smallcenter[0] + smallradius*np.cos(2.0 * PI * t), 
         smallcenter[0] + smallradius*np.sin(2.0 * PI * t)]
 
-    t = np.linspace(0,1,10)
+    t = np.linspace(0,1,100)
 
     XY_big = np.array(big(t)).T
-    XY_small = np.array(small(t)).T
     
+    from scimba.equations.domain import SpaceTensor
     X_test = torch.tensor(XY_big,requires_grad=True)
     X_test = SpaceTensor(X_test,torch.zeros_like(X_test,dtype=int))
-    
-    X_test_small = torch.tensor(XY_small,requires_grad=True)
-    X_test_small = SpaceTensor(X_test_small,torch.zeros_like(X_test_small,dtype=int))
 
     # get parameters
     nb_params = len(trainer.pde.parameter_domain)
@@ -223,29 +219,16 @@ if __name__ == "__main__":
     mu_test = (torch.Tensor([0.5]).to(device) * ones).to(device)
     
     u_theta = pinn.setup_w_dict(X_test, mu_test)["w"][:,0].reshape(-1,1)
-    print("Dir : ",u_theta.reshape(-1))
-    
-    u_theta = pinn.setup_w_dict(X_test_small, mu_test)["w"][:,0].reshape(-1,1)
-    
-    grad_u_theta = torch.autograd.grad(u_theta, X_test_small.x, ones, create_graph=True)[0]
-    phi_I = -pde.space_domain.list_holes[0].sdf(X_test_small)
-    gradphi_I = torch.autograd.grad(phi_I, X_test_small.x, ones, create_graph=True)[0]
-    
-    element_wise_product = gradphi_I * grad_u_theta
-    dot_product = torch.sum(element_wise_product, dim=1)[:,None]
-    bc_Robin = dot_product + u_theta
-    print("Robin : ",bc_Robin.reshape(-1))
-    from math import log
-    print("ex Robin : ",4.0/log(4.0) + 2.0)
-    # ones = torch.ones_like(u_theta)
-    # grad_u_theta = torch.autograd.grad(u_theta, X_test.x, ones, create_graph=True)[0].cpu()
+    print(u_theta.shape)
+    ones = torch.ones_like(u_theta)
+    grad_u_theta = torch.autograd.grad(u_theta, X_test.x, ones, create_graph=True)[0].cpu()
 
-    # # check BC Neumann
-    # normals = torch.Tensor(XY_big.copy())
-    # element_wise_product = grad_u_theta * normals
-    # dot_product = torch.sum(element_wise_product, dim=1)[:,None]
-    # print("<grad_u,n> :", dot_product)
-    # exact = 2*np.cos(1.0)*torch.ones_like(dot_product)
-    # diff = dot_product - exact
-    # print("diff.std() :",diff.std())
-    # print("diff.mean() :",diff.mean())
+    # check BC Neumann
+    normals = torch.Tensor(XY_big.copy())
+    element_wise_product = grad_u_theta * normals
+    dot_product = torch.sum(element_wise_product, dim=1)[:,None]
+    print("<grad_u,n> :", dot_product)
+    exact = 2*np.cos(1.0)*torch.ones_like(dot_product)
+    diff = dot_product - exact
+    print("diff.std() :",diff.std())
+    print("diff.mean() :",diff.mean())

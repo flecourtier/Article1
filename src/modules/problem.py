@@ -1,4 +1,4 @@
-from modules.geometry import Square1, UnitSquare, UnitCircle, Donut1
+from modules.geometry import Square1, UnitSquare, UnitCircle, Donut1, Donut2
 from math import *
 
 class TestCase1:
@@ -186,22 +186,41 @@ class TestCase4:
 
 class TestCase5:
     def __init__(self,v=1):
-        self.geometry = Donut1() 
         self.version = v 
-        assert self.version == 1
+        if self.version == 1:
+            self.geometry = Donut2()
+        if self.version == 2 or self.version == 3:
+            self.geometry = Donut1() 
+        elif self.version == 4 or self.version == 5:
+            self.geometry = UnitCircle()
+        else:
+            raise ValueError("Invalid version")
         self.nb_parameters = 1
         self.parameter_domain = [[0.50000, 0.500001]]
 
     def u_ex(self, pre, xy, mu):
         x,y = xy
-        return pre.sin(x**2 + y**2)
-
+        if self.version != 1:
+            return pre.sin(x**2 + y**2)
+        else:
+            return 1.0 - pre.log(pre.sqrt(x**2 + y**2))/log(4.0)
+        
     def f(self, pre, xy, mu):
         x,y = xy
-        return (4*(x**2+y**2)+1)*pre.sin(x**2 + y**2)
+        if self.version != 1:
+            return -2*(-2*x**2*pre.sin(x**2 + y**2) + pre.cos(x**2 + y**2)) - 2*(-2*y**2*pre.sin(x**2 + y**2) + pre.cos(x**2 + y**2)) + pre.sin(x**2 + y**2)
+        else:
+            return 0.0
     
     def h_int(self, pre, xy, mu):
-        return -cos(1.0/4.0)
+        assert self.version in [1,2,3]
+        if self.version == 1:
+            return 4.0/log(4.0) + 2.0
+        else:
+            return -cos(1.0/4.0)
     
     def h_ext(self, pre, xy, mu):
-        return 2.0*cos(1.0)        
+        if self.version != 1:
+            return 2.0*cos(1.0)        
+        else: # dirichlet
+            return 1.0

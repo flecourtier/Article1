@@ -1,7 +1,6 @@
-# Test Donut - Conditions dirichlet partout (non paramétrique)
-# Levelset
-
-# Pareil que V4 mais u_ex*gaussienne
+# Test Circle - Conditions Neumann partout (non paramétrique)
+# Conditions non exact sur les deux cercles (loss BC, pas de level)
+# FONCTIONNE
 
 from pathlib import Path
 
@@ -17,8 +16,8 @@ import scimba.sampling.uniform_sampling as uniform_sampling
 import torch
 from scimba.equations import pdes
 
-from modules.geometry import Donut
-from modules.problem import TestCase4
+from modules.geometry import Circle
+from modules.problem import TestCase5
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 print(f"torch loaded; device is {device}")
@@ -30,63 +29,35 @@ PI = 3.14159265358979323846
 
 current = Path(__file__).parent.parent.parent.parent.parent.parent
 
-def create_fulldomain(geometry):
-    bigcenter = geometry.bigcircle.center
-    bigradius = geometry.bigcircle.radius
-    smallcenter = geometry.hole.center
-    smallradius = geometry.hole.radius
-    # domain creation
-    xdomain = domain.DiskBasedDomain(2, bigcenter, bigradius)
-    # hole = domain.DiskBasedDomain(2, geometry.hole.center, geometry.hole.radius)
-    
-    class Hole(domain.SignedDistance):
-        def __init__(self):
-            super().__init__(dim=2)
 
-        def sdf(self, x):
-            x1, x2 = x.get_coordinates()
-            return (x1 - smallcenter[0]) ** 2 + (x2 - smallcenter[1]) ** 2 - smallradius**2
-        
-    sdf = Hole()
-    hole = domain.SignedDistanceBasedDomain(2, [[-1.0, 1.0], [-1.0, 1.0]], sdf)
+def create_fulldomain(geometry):
+    bigcenter = geometry.center
+    bigradius = geometry.radius
+    xdomain = domain.DiskBasedDomain(2, bigcenter, bigradius)
     
     fulldomain = domain.SpaceDomain(2, xdomain)
-    fulldomain.add_hole(hole)
     
     def big(t):
-        center = geometry.bigcircle.center
-        radius = geometry.bigcircle.radius
+        center = geometry.center
+        radius = geometry.radius
         return torch.cat([
             center[0] + radius*torch.cos(2.0 * PI * t), 
             center[0] + radius*torch.sin(2.0 * PI * t)], 
         axis=1)
 
-    def small(t):
-        center = geometry.hole.center
-        radius = geometry.hole.radius
-        return torch.cat([
-            center[0] + radius*torch.cos(2.0 * PI * t), 
-            center[0] + radius*torch.sin(2.0 * PI * t)], 
-        axis=1)
-
-    bc_Dir = domain.ParametricCurveBasedDomain(2, [[0.0, 1.0]], small)
     bc_Neu = domain.ParametricCurveBasedDomain(2, [[0.0, 1.0]], big)
 
-    fulldomain.add_bc_subdomain(bc_Dir)
     fulldomain.add_bc_subdomain(bc_Neu)
     
     return fulldomain
 
 class Poisson_2D(pdes.AbstractPDEx):
     def __init__(self):
-        self.problem = TestCase4(v=1)
+        self.problem = TestCase5(v=5)
         
-        assert isinstance(self.problem.geometry, Donut)
+        assert isinstance(self.problem.geometry, Circle)
         
         space_domain = create_fulldomain(self.problem.geometry)
-        
-        print(self.problem.nb_parameters)
-        print(self.problem.parameter_domain)
         
         super().__init__(
             nb_unknowns=1,
@@ -95,7 +66,6 @@ class Poisson_2D(pdes.AbstractPDEx):
             parameter_domain=self.problem.parameter_domain,
         )
 
-        print(self.problem.parameter_domain)
         self.first_derivative = True
         self.second_derivative = True
         self.compute_normals = True
@@ -104,49 +74,33 @@ class Poisson_2D(pdes.AbstractPDEx):
         pass
 
     def bc_residual(self, w, x, mu, **kwargs):        
-        # u_top = self.get_variables(w, label=0)
+        u_x_ext = self.get_variables(w, "w_x", label=0)
+        u_y_ext = self.get_variables(w, "w_y", label=0)
+        n_x_e, n_y_e = x.get_normals(label=0)
+        x1, x2 = x.get_coordinates(label=0)
+        h_ext = self.problem.h_ext(torch, [x1,x2], mu)
+        
+        # u_x_int = self.get_variables(w, "w_x", label=0)
+        # u_y_int = self.get_variables(w, "w_y", label=0)
+        # n_x_i, n_y_i = x.get_normals(label=0)
+        # n_x_i, n_y_i = -n_x_i,-n_y_i
         # x1, x2 = x.get_coordinates(label=0)
-        # g = self.problem.g(torch, [x1,x2], mu)
+        # h_int = self.problem.h_int(torch, [x1,x2], mu)
         
-        # u_x_bottom = self.get_variables(w, "w_x", label=1)
-        # u_y_bottom = self.get_variables(w, "w_y", label=1)
-        # n_x, n_y = x.get_normals(label=1)
-        # x1, x2 = x.get_coordinates(label=1)
-        # h = self.problem.h(torch, [x1,x2], mu)
-        
-        # return u_x_bottom * n_x + u_y_bottom * n_y - h
-        
-        pass
+        return u_x_ext * n_x_e + u_y_ext * n_y_e - h_ext #, u_x_int * n_x_i + u_y_int * n_y_i - h_int
 
     def residual(self, w, x, mu, **kwargs):
         x1, x2 = x.get_coordinates()
-        mu1,mu2 = self.get_parameters(mu)
+        u = self.get_variables(w, "w")
         u_xx = self.get_variables(w, "w_xx")
         u_yy = self.get_variables(w, "w_yy")
-        f = self.problem.f(torch, [x1, x2], [mu1,mu2])
-        return u_xx + u_yy + f
+        f = self.problem.f(torch, [x1, x2], mu)
+        
+        return u_xx + u_yy - u + f
     
-    def post_processing(self, x, mu, w):
-        x1, x2 = x.get_coordinates()
-        mu1,mu2 = self.get_parameters(mu)
-        
-        smallcenter = self.problem.geometry.hole.center
-        smallradius = self.problem.geometry.hole.radius
-        smallphi = (x1 - smallcenter[0])**2 + (x2 - smallcenter[1])**2 - smallradius**2
-        
-        bigcenter = self.problem.geometry.bigcircle.center
-        bigradius = self.problem.geometry.bigcircle.radius
-        bigphi = (x1 - bigcenter[0])**2 + (x2 - bigcenter[1])**2 - bigradius**2
-        
-        g = self.problem.g(torch, [x1, x2], [mu1,mu2])
-        
-        return smallphi*bigphi*w+g
-
     def reference_solution(self, x, mu):
         x1, x2 = x.get_coordinates()
-        mu1,mu2 = self.get_parameters(mu)
-        
-        return self.problem.u_ex(torch, [x1, x2], [mu1,mu2])
+        return self.problem.u_ex(torch, [x1,x2], mu)
 
 def Run_laplacian2D(pde,new_training=False,plot_bc=False):
     x_sampler = sampling_pde.XSampler(pde=pde)
@@ -155,8 +109,7 @@ def Run_laplacian2D(pde,new_training=False,plot_bc=False):
     )
     sampler = sampling_pde.PdeXCartesianSampler(x_sampler, mu_sampler)
 
-    file_name = current / "networks" / "test_fe4.pth"
-    # new_training = True
+    file_name = current / "networks" / "test_fe5_v5.pth"
 
     if new_training:
         (
@@ -168,9 +121,9 @@ def Run_laplacian2D(pde,new_training=False,plot_bc=False):
     if plot_bc:
         x, mu = sampler.bc_sampling(1000)
         x1, x2 = x.get_coordinates(label=0)
-        plt.scatter(x1.cpu().detach().numpy(), x2.cpu().detach().numpy(), color="r", label="Dir")
+        plt.scatter(x1.cpu().detach().numpy(), x2.cpu().detach().numpy(), color="r", label="Neu")
         x1, x2 = x.get_coordinates(label=1)
-        plt.scatter(x1.cpu().detach().numpy(), x2.cpu().detach().numpy(), color="b", label="Dir")
+        plt.scatter(x1.cpu().detach().numpy(), x2.cpu().detach().numpy(), color="b", label="Neu")
         plt.legend()
         plt.show()
 
@@ -178,7 +131,7 @@ def Run_laplacian2D(pde,new_training=False,plot_bc=False):
     network = pinn_x.MLP_x(pde=pde, layer_sizes=tlayers, activation_type="tanh")
     pinn = pinn_x.PINNx(network, pde)
 
-    losses = pinn_losses.PinnLossesData(bc_loss_bool=False, w_res=1.0, w_bc=0.0)
+    losses = pinn_losses.PinnLossesData(bc_loss_bool=True, w_res=1.0, w_bc=30.0)
     optimizers = training_tools.OptimizerData(learning_rate=1.0e-2, decay=0.99)
 
     trainer = training_x.TrainerPINNSpace(
@@ -193,12 +146,48 @@ def Run_laplacian2D(pde,new_training=False,plot_bc=False):
 
     if new_training:
         trainer.train(epochs=1000, n_collocation=8000, n_bc_collocation=8000)
+        # trainer.train(epochs=1, n_collocation=8000, n_bc_collocation=8000)
 
-    filename = current / "networks" / "test_fe4.png"
+    filename = current / "networks" / "test_fe5_v5.png"
     trainer.plot(20000,filename=filename,reference_solution=True)
     
     return trainer,pinn
 
 if __name__ == "__main__":
     pde = Poisson_2D()
-    network, trainer = Run_laplacian2D(pde,new_training=False,plot_bc=True)
+    trainer, pinn = Run_laplacian2D(pde,new_training=True,plot_bc=False)
+    
+    geometry = pde.problem.geometry
+
+    bigcenter = geometry.center
+    bigradius = geometry.radius
+    
+    import numpy as np
+    def big(t):
+        return [bigcenter[0] + bigradius*np.cos(2.0 * PI * t), 
+        bigcenter[0] + bigradius*np.sin(2.0 * PI * t)]
+
+    t = np.linspace(0,1,100)
+
+    XY_big = np.array(big(t)).T
+    
+    from scimba.equations.domain import SpaceTensor
+    X_test = torch.tensor(XY_big,requires_grad=True)
+    X_test = SpaceTensor(X_test,torch.zeros_like(X_test,dtype=int))
+
+    # get parameters
+    nb_params = len(trainer.pde.parameter_domain)
+    shape = (XY_big.shape[0],nb_params)
+    ones = torch.ones(shape)
+    mu_test = (torch.Tensor([0.5]).to(device) * ones).to(device)
+    
+    u_theta = pinn.setup_w_dict(X_test, mu_test)["w"]
+    ones = torch.ones_like(u_theta)
+    grad_u_theta = torch.autograd.grad(u_theta, X_test.x, ones, create_graph=True)[0].cpu()
+
+    normals = torch.Tensor(XY_big.copy())
+    element_wise_product = grad_u_theta * normals
+    dot_product = torch.sum(element_wise_product, dim=1)[:,None]
+    exact = 2*np.cos(1.0)*torch.ones_like(dot_product)
+    diff = dot_product - exact
+    print(diff.mean())

@@ -32,3 +32,8 @@ class Donut1(Donut):
     def __init__(self):
         super().__init__(0.0, 0.0, 1.0, 0.5)
         self.box = [[-1,1],[-1,1]]
+        
+class Donut2(Donut):
+    def __init__(self):
+        super().__init__(0.0, 0.0, 1.0, 0.25)
+        self.box = [[-1,1],[-1,1]]
