@@ -188,44 +188,26 @@ class TestCase4:
 class TestCase5:
     def __init__(self,v=1):
         self.version = v 
-        if self.version == 1:
-            self.geometry = Donut2()
-        elif self.version == 2 or self.version == 3:
-            self.geometry = Donut1() 
-        elif self.version == 4 or self.version == 5:
-            self.geometry = UnitCircle()
-        else:
-            raise ValueError("Invalid version")
+        assert self.version == 1:
+        self.geometry = Donut2()
         self.nb_parameters = 1
         self.parameter_domain = [[0.50000, 0.500001]]
 
     def u_ex(self, pre, xy, mu):
         x,y = xy
-        if self.version != 1:
-            return pre.sin(x**2 + y**2)
+        if pre is dolfin:
+            ln = pre.ln
         else:
-            if pre is dolfin:
-                ln = pre.ln
-            else:
-                ln = pre.log
-            return 1.0 - ln(pre.sqrt(x**2 + y**2))/log(4.0)
+            ln = pre.log
+        return 1.0 - ln(pre.sqrt(x**2 + y**2))/log(4.0)
         
     def f(self, pre, xy, mu):
         x,y = xy
-        if self.version != 1:
-            return -2*(-2*x**2*pre.sin(x**2 + y**2) + pre.cos(x**2 + y**2)) - 2*(-2*y**2*pre.sin(x**2 + y**2) + pre.cos(x**2 + y**2)) + pre.sin(x**2 + y**2)
-        else:
-            return 0.0
+        return 0.0
     
     def h_int(self, pre, xy, mu):
         assert self.version in [1,2,3]
-        if self.version == 1:
-            return 4.0/log(4.0) + 2.0
-        else:
-            return -cos(1.0/4.0)
+        return 4.0/log(4.0) + 2.0
     
-    def h_ext(self, pre, xy, mu):
-        if self.version != 1:
-            return 2.0*cos(1.0)        
-        else: # dirichlet
-            return 1.0
+    def h_ext(self, pre, xy, mu): # dirichlet
+        return 1.0
