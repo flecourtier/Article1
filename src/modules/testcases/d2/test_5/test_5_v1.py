@@ -148,14 +148,14 @@ def Run_laplacian2D(pde,new_training=False,plot_bc=False):
             / file_name
         ).unlink(missing_ok=True)
 
-    if plot_bc:
-        x, mu = sampler.bc_sampling(1000)
-        x1, x2 = x.get_coordinates(label=0)
-        plt.scatter(x1.cpu().detach().numpy(), x2.cpu().detach().numpy(), color="r", label="Neu")
-        x1, x2 = x.get_coordinates(label=1)
-        plt.scatter(x1.cpu().detach().numpy(), x2.cpu().detach().numpy(), color="b", label="Neu")
-        plt.legend()
-        plt.show()
+    # if plot_bc:
+    #     x, mu = sampler.bc_sampling(1000)
+    #     x1, x2 = x.get_coordinates(label=0)
+    #     plt.scatter(x1.cpu().detach().numpy(), x2.cpu().detach().numpy(), color="r", label="Dir")
+    #     x1, x2 = x.get_coordinates(label=1)
+    #     plt.scatter(x1.cpu().detach().numpy(), x2.cpu().detach().numpy(), color="b", label="Neu")
+    #     plt.legend()
+    #     plt.show()
 
     tlayers = [40, 40, 40, 40, 40]
     network = pinn_x.MLP_x(pde=pde, layer_sizes=tlayers, activation_type="tanh")
@@ -185,7 +185,7 @@ def Run_laplacian2D(pde,new_training=False,plot_bc=False):
 
 if __name__ == "__main__":
     pde = Poisson_2D()
-    trainer, pinn = Run_laplacian2D(pde,new_training=False,plot_bc=False)
+    trainer, pinn = Run_laplacian2D(pde,new_training=False,plot_bc=True)
 
     geometry = pde.problem.geometry
 

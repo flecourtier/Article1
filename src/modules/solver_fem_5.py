@@ -1,4 +1,4 @@
-## SOLVEUR - Cas test 4 - V2+V3 - Donut
+## SOLVEUR - Cas test 5 - Donut
 
 # homogeneous = True
 cd = "homo"
@@ -8,7 +8,7 @@ print_time=False
 # Imports #
 ###########
 
-from modules.fenics_expressions import *
+from modules.fenics_expressions_5 import *
 from modules.geometry import Donut
 
 from dolfin import *
@@ -97,54 +97,44 @@ class FEMSolver():
 
         return mesh, V, dx
         
-    def fem(self, i, u_ref):
+    def fem(self, i):
         # boundary = "on_boundary"
         params = self.params[i]
         
         f_expr = FExpr(params, degree=self.high_degree, domain=self.mesh, pb_considered=self.pb_considered)  
-
-        # if cd=="homo":
-        #     g = Constant("0.0")
+        u_ex = UexExpr(params, degree=self.high_degree, domain=self.mesh, pb_considered=self.pb_considered)
         
-        # def boundary_D(x,on_boundary):
-        #     return on_boundary and x[0]**2+x[1]**2<0.75**2 #and x[0]**2+x[1]**2>1.0-DOLFIN_EPS        
-            
-        # bc = DirichletBC(self.V, g, boundary_D)
+        # Impose Dirichlet boundary conditions
+        # g_E = GExpr(params, degree=self.high_degree, domain=self.mesh, pb_considered=self.pb_considered)
+        g_E = u_ex
+        R_mid = (self.pb_considered.geometry.bigcircle.radius+self.pb_considered.geometry.hole.radius)/2.0
+        def boundary_D(x,on_boundary):
+            return on_boundary and x[0]**2+x[1]**2>R_mid**2 
+        bc_ext = DirichletBC(self.V, g_E, boundary_D)       
         
-        # plot
-        # u = df.Function(self.V)
-        # u.vector()[:] = 0.0
-        # # u.set_all(0)
-        # u.vector()[0] = 1.0
-        
-        # for mycell in cells(self.mesh):
-        #     for myfacet in facets(mycell):
-        #         for v in vertices(myfacet):
-        #             x,y = v.point().x(),v.point().y()
-        #             if boundary([x,y]):
-        #                 print(x,y,":",x**2+y**2,v.index())
-        #                 u.vector()[v.index()] = 1.0
-                                            
-        # import matplotlib.pyplot as plt
-        # plt.figure()
-        # c = df.plot(u)
-        # plt.colorbar(c)
-        # plt.show()
-
-        u = TrialFunction(self.V)
-        v = TestFunction(self.V)
+        # Impose Neumann boundary conditions
+        # h_I = HExpr(params, degree=self.high_degree, domain=self.mesh, pb_considered=self.pb_considered)
+        h_I = df.inner(grad(u_ex),df.FacetNormal(self.mesh)) + u_ex
+        class BoundaryN(SubDomain):
+            def inside(self, x, on_boundary):
+                return on_boundary and x[0]**2+x[1]**2<R_mid**2
+        boundary_N = MeshFunction("size_t", self.mesh, self.mesh.topology().dim()-1)
+        bcN = BoundaryN()
+        bcN.mark(boundary_N, 0)
+        ds_int = Measure('ds', domain=self.mesh, subdomain_data=boundary_N)
         
         # Resolution of the variationnal problem
         
+        u = TrialFunction(self.V)
+        v = TestFunction(self.V)
+        
         start = time.time()
-
-        # a = - div(mat*grad(u)) * v * self.dx
-        a = inner(grad(u),grad(v)) * self.dx
-        l = f_expr * v * self.dx
-
+        a = df.inner(df.grad(u),df.grad(v)) * self.dx + u*v*ds_int
+        l = f_expr * v * self.dx + h_I * v * ds_int
+        
         A = df.assemble(a)
         L = df.assemble(l)
-        # bc.apply(A, L)
+        bc_ext.apply(A, L)
 
         end = time.time()
 
@@ -163,36 +153,54 @@ class FEMSolver():
             print("Time to solve the system :",end-start)
         self.times_fem["solve"] = end-start
 
-        uref_Vex = interpolate(u_ref,self.V_ex)
+        uref_Vex = interpolate(u_ex,self.V_ex)
         sol_Vex = interpolate(sol,self.V_ex)
         norme_L2 = (assemble((((uref_Vex - sol_Vex)) ** 2) * self.dx) ** (0.5)) / (assemble((((uref_Vex)) ** 2) * self.dx) ** (0.5))
 
         return sol,norme_L2
 
-    def corr_add(self, i, phi_tild, u_ref, nonexactBC):
+    def corr_add(self, i, phi_tild, phi_tild_inter):
         # nonexactBC=True
         params = self.params[i]
                 
         f_expr = FExpr(params, degree=self.high_degree, domain=self.mesh, pb_considered=self.pb_considered)
-        
+        u_ex = UexExpr(params, degree=self.high_degree, domain=self.mesh, pb_considered=self.pb_considered)
+
         f_tild = f_expr + div(grad(phi_tild))
         
-        assert nonexactBC == None 
+        # Impose Dirichlet boundary conditions (g_tild = 0 sur Gamma_D)
+        u_ex_inter = interpolate(u_ex, self.V) 
+        g_tild = u_ex_inter - phi_tild_inter
+        R_mid = (self.pb_considered.geometry.bigcircle.radius+self.pb_considered.geometry.hole.radius)/2.0
+        def boundary_D(x,on_boundary):
+            return on_boundary and x[0]**2+x[1]**2>R_mid**2 
+        bc_ext = DirichletBC(self.V, g_tild, boundary_D)
         
-        n = FacetNormal(self.mesh)
-        h_tild = -inner(grad(phi_tild),n)
-         
+        # Impose Neumann boundary conditions
+        h_I = df.inner(grad(u_ex),df.FacetNormal(self.mesh)) + u_ex
+        h_tild = h_I - (df.inner(grad(phi_tild),df.FacetNormal(self.mesh)) + phi_tild)
+        class BoundaryN(SubDomain):
+            def inside(self, x, on_boundary):
+                return on_boundary and x[0]**2+x[1]**2<R_mid**2
+        boundary_N = MeshFunction("size_t", self.mesh, self.mesh.topology().dim()-1)
+        bcN = BoundaryN()
+        bcN.mark(boundary_N, 0)
+        ds_int = Measure('ds', domain=self.mesh, subdomain_data=boundary_N)
+        
+        # Resolution of the variationnal problem
+        
         u = TrialFunction(self.V)
         v = TestFunction(self.V)
         
-        # Resolution of the variationnal problem
         start = time.time()
-        a = inner(grad(u), grad(v)) * self.dx
-        l = f_tild * v * self.dx + h_tild * v * self.ds
+
+        a = df.inner(df.grad(u),df.grad(v)) * self.dx + u*v*ds_int
+        l = f_tild * v * self.dx + h_tild * v * ds_int
 
         A = df.assemble(a)
         L = df.assemble(l)
-
+        bc_ext.apply(A, L)
+        
         end = time.time()
 
         if print_time:
@@ -211,7 +219,7 @@ class FEMSolver():
 
         sol = C_tild + phi_tild
 
-        uref_Vex = interpolate(u_ref,self.V_ex)
+        uref_Vex = interpolate(u_ex,self.V_ex)
         
         C_Vex = interpolate(C_tild,self.V_ex)
         sol_Vex = Function(self.V_ex)

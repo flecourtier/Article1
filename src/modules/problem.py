@@ -1,5 +1,6 @@
 from modules.geometry import Square1, UnitSquare, UnitCircle, Donut1, Donut2
 from math import *
+import dolfin
 
 class TestCase1:
     def __init__(self):
@@ -189,7 +190,7 @@ class TestCase5:
         self.version = v 
         if self.version == 1:
             self.geometry = Donut2()
-        if self.version == 2 or self.version == 3:
+        elif self.version == 2 or self.version == 3:
             self.geometry = Donut1() 
         elif self.version == 4 or self.version == 5:
             self.geometry = UnitCircle()
@@ -203,7 +204,11 @@ class TestCase5:
         if self.version != 1:
             return pre.sin(x**2 + y**2)
         else:
-            return 1.0 - pre.log(pre.sqrt(x**2 + y**2))/log(4.0)
+            if pre is dolfin:
+                ln = pre.ln
+            else:
+                ln = pre.log
+            return 1.0 - ln(pre.sqrt(x**2 + y**2))/log(4.0)
         
     def f(self, pre, xy, mu):
         x,y = xy
