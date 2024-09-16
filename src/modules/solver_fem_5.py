@@ -177,8 +177,9 @@ class FEMSolver():
         bc_ext = DirichletBC(self.V, g_tild, boundary_D)
         
         # Impose Neumann boundary conditions
-        h_I = df.inner(grad(u_ex),df.FacetNormal(self.mesh)) + u_ex
-        h_tild = h_I - (df.inner(grad(phi_tild),df.FacetNormal(self.mesh)) + phi_tild)
+        normals = df.FacetNormal(self.mesh)
+        h_I = df.inner(grad(u_ex),normals) + u_ex
+        h_tild = h_I - (df.inner(grad(phi_tild),normals) + phi_tild)
         class BoundaryN(SubDomain):
             def inside(self, x, on_boundary):
                 return on_boundary and x[0]**2+x[1]**2<R_mid**2
@@ -217,7 +218,7 @@ class FEMSolver():
             print("Time to solve the system :",end-start)
         self.times_corr_add["solve"] = end-start
 
-        sol = C_tild + phi_tild
+        sol = C_tild + phi_tild_inter
 
         uref_Vex = interpolate(u_ex,self.V_ex)
         
