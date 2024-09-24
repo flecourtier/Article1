@@ -170,7 +170,8 @@ class FEMSolver():
         
         # Impose Dirichlet boundary conditions (g_tild = 0 sur Gamma_D)
         u_ex_inter = interpolate(u_ex, self.V) 
-        g_tild = u_ex_inter - phi_tild_inter
+        g_E = u_ex_inter
+        g_tild = g_E - phi_tild_inter
         R_mid = (self.pb_considered.geometry.bigcircle.radius+self.pb_considered.geometry.hole.radius)/2.0
         def boundary_D(x,on_boundary):
             return on_boundary and x[0]**2+x[1]**2>R_mid**2 
@@ -185,7 +186,7 @@ class FEMSolver():
                 return on_boundary and x[0]**2+x[1]**2<R_mid**2
         boundary_N = MeshFunction("size_t", self.mesh, self.mesh.topology().dim()-1)
         bcN = BoundaryN()
-        bcN.mark(boundary_N, 0)
+        bcN.mark(boundary_N, 1)
         ds_int = Measure('ds', domain=self.mesh, subdomain_data=boundary_N)
         
         # Resolution of the variationnal problem
@@ -195,8 +196,8 @@ class FEMSolver():
         
         start = time.time()
 
-        a = df.inner(df.grad(u),df.grad(v)) * self.dx + u*v*ds_int
-        l = f_tild * v * self.dx + h_tild * v * ds_int
+        a = df.inner(df.grad(u),df.grad(v)) * self.dx + u*v*ds_int(1)
+        l = f_tild * v * self.dx + h_tild * v * ds_int(1)
 
         A = df.assemble(a)
         L = df.assemble(l)
