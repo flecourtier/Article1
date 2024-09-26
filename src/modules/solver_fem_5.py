@@ -177,7 +177,7 @@ class FEMSolver():
             return on_boundary and x[0]**2+x[1]**2>R_mid**2 
         bc_ext = DirichletBC(self.V, g_tild, boundary_D)
         
-        # Impose Neumann boundary conditions
+        # Impose Robin boundary conditions
         normals = df.FacetNormal(self.mesh)
         h_I = df.inner(grad(u_ex),normals) + u_ex
         h_tild = h_I - (df.inner(grad(phi_tild),normals) + phi_tild)

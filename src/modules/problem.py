@@ -200,7 +200,25 @@ class TestCase5:
         else:
             ln = pre.log
         return 1.0 - ln(pre.sqrt(x**2 + y**2))/log(4.0)
-        
+    
+    def grad_uex(self, pre, xy, mu):
+        x,y = xy
+        coeff = -1.0/log(4.0)
+        s = x**2 + y**2
+        return coeff*x/s, coeff*y/s
+    
+    def grad2_uex(self, pre, xy, mu):
+        x,y = xy
+        coeff = -1.0/log(4.0)
+        s = x**2 + y**2
+        return coeff * (s - 2*x**2)/s**2, coeff * (s - 2*y**2)/s**2
+    
+    def grad3_uex(self, pre, xy, mu):
+        x,y = xy
+        coeff = -1.0/log(4.0)
+        s = x**2 + y**2
+        return coeff * 2 * x * (x**2 - 3 * y **2)/s**3, coeff * 2 * y * (y**2 - 3 * x **2)/s**3
+    
     def f(self, pre, xy, mu):
         x,y = xy
         return 0.0

@@ -154,6 +154,19 @@ class Poisson_2D(pdes.AbstractPDEx):
     def reference_solution(self, x, mu):
         x1, x2 = x.get_coordinates()
         return self.problem.u_ex(torch, [x1,x2], mu)
+    
+    def reference_gradient(self, x, mu):
+        x1, x2 = x.get_coordinates()
+        return self.problem.grad_uex(torch, [x1,x2], mu)
+    
+    def reference_gradient2(self, x, mu):
+        x1, x2 = x.get_coordinates()
+        return self.problem.grad2_uex(torch, [x1,x2], mu)
+    
+    def reference_gradient3(self, x, mu):
+        x1, x2 = x.get_coordinates()
+        return self.problem.grad3_uex(torch, [x1,x2], mu)
+        
 
 def Run_laplacian2D(pde,new_training=False,plot_bc=False):
     x_sampler = sampling_pde.XSampler(pde=pde)
