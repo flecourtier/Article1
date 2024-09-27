@@ -1,0 +1,14 @@
+{
+    "name": "Firedrake Container",
+    "dockerComposeFile": ["docker-compose.yml"],
+    "service": "myfiredrake",
+    "settings": {
+      "python.pythonPath": "/home/firedrake/firedrake/bin/python"
+    },
+    "workspaceFolder": "/usr/src/app",
+    "extensions": [
+      "ms-python.python",
+      "ms-toolsai.jupyter"
+    ]
+}
+
