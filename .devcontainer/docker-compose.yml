@@ -1,0 +1,20 @@
+services:
+  myfiredrake:
+    user: "1001:1001"
+    container_name: contfiredrake
+    working_dir: /usr/src/app
+    build:
+      dockerfile: Dockerfile.python
+    volumes:
+      - code_directory:/usr/src/app:rw
+      - ~/.vscode-server:/root/.vscode-server
+    command: /bin/bash
+    tty: true
+
+volumes:
+  code_directory:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: /home/flecourtier/Bureau

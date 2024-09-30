@@ -1,0 +1,30 @@
+FROM firedrakeproject/firedrake:2024-09
+
+USER root
+
+ARG UID=1001
+ARG GID=1001
+
+ARG MYUSER=flecourtier
+
+# RUN sudo usermod -u ${UID} ${MYUSER}
+# RUN sudo groupmod -g ${GID} ${MYUSER}
+
+RUN chmod 777 /home/firedrake
+RUN chmod 777 -R /home/firedrake/firedrake/.cache
+
+RUN /home/firedrake/firedrake/bin/python3 -m pip install siphash24
+
+# Installer python3-venv pour créer des environnements virtuels
+RUN sudo apt-get update && sudo apt-get install -y python3-venv
+
+RUN groupadd -g "${GID}" ${MYUSER} \
+  && useradd --create-home --no-log-init -u "${UID}" -g "${GID}" ${MYUSER}
+
+# RUN usermod -aG 1000 ${MYUSER}
+
+WORKDIR /usr/src/app
+
+USER $MYUSER
+
+RUN ["/bin/bash"]
