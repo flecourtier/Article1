@@ -188,7 +188,7 @@ class TestCase4:
 class TestCase5:
     def __init__(self,v=1):
         self.version = v 
-        assert self.version in [1,2]
+        assert self.version in [1,2,3]
         self.geometry = Donut2()
         self.nb_parameters = 1
         self.parameter_domain = [[0.50000, 0.500001]]
