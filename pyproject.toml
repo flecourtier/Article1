@@ -1,0 +1,14 @@
+[build-system]
+requires = ["setuptools>=42", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "modules"
+version = "1.0.0"
+description = "A project containing both modfenics and testcases modules."
+authors = [{name = "Frédérique", email = "frederique.lecourtier@gmail.com"}]
+
+# Spécifiez les deux packages sous le même toit
+[tool.setuptools]
+packages = ["modfenics", "testcases"]
+package-dir = {"" = "src"}

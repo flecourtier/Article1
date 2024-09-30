@@ -1,6 +1,2 @@
 .ipynb_checkpoints/
 __pycache__/
-
-docs/antora/cache
-docs/antora/public
-docs/antora/node_modules
