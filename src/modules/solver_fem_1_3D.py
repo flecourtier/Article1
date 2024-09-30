@@ -54,9 +54,14 @@ class FEMSolver():
         if isinstance(self.pb_considered.geometry, Cube):
             box = np.array(self.pb_considered.geometry.box)
             start = time.time()
+            # maillage régulier
             mesh = BoxMesh(Point(box[0,0], box[1,0], box[2,0]), Point(box[0,1], box[1,1], box[2,1]), nb_vert - 1, nb_vert - 1, nb_vert - 1)
             end = time.time()
 
+            # ne fonctionne pas avec jupyter
+            # from vedo.dolfin import plot as vplot
+            # vplot(mesh, interactive=1).show()
+            
             if print_time:
                 print("Time to generate mesh: ", end-start)
             self.times_fem["mesh"] = end-start
