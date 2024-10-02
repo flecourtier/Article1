@@ -97,7 +97,7 @@ def Run_laplacian2D(pde, size_param="big", new_training = False, largenet=False)
     if largenet and size_param == "medium":
         namefe3 += "_largenet"
         
-    file_name = current / "networks" / (namefe3+".pth")
+    file_name = current / "networks" / "test_2D" / (namefe3+".pth")
 
     if new_training:
         (

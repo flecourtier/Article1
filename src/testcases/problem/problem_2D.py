@@ -141,6 +141,47 @@ class TestCase3:
         """
         return 0.0
     
+class TestCase3_new:
+    def __init__(self):
+        self.geometry = UnitSquare() 
+        self.nb_parameters = 4
+        self.parameter_domain = [
+                [0.4, 0.6],  # 0.4 < c1 < 0.6
+                [0.4, 0.6],  # 0.4 < c2 < 0.6
+                [0.4, 0.8],  # 0.1 < sigma < 0.8
+                [0.5, 1.0],  # 0.5 < eps < 1
+            ]
+
+    def u_ex(self, pre, xy, mu):
+        pass
+    
+    def anisotropy_matrix(self, pre, xy, mu):
+        x,y = xy
+        c1, c2, sigma, eps = mu
+
+        a11 = eps * x**2 + y**2
+        a12 = (eps - 1) * x * y
+        a21 = (eps - 1) * x * y
+        a22 = x**2 + eps * y**2
+
+        return a11, a12, a21, a22
+
+    def f(self, pre, xy, mu):
+        x,y=xy
+        c1,c2,sigma,eps = mu
+    
+        return 10 * pre.exp(-((x - c1) ** 2 + (y - c2) ** 2) / (0.025 * sigma**2))
+        
+    def g(self, pre, xy, mu):
+        """Boundary condition for the Circle domain
+
+        :param pre: Preconditioner
+        :param xy: (x,y) coordinates
+        :param mu: (S) parameter
+        :return: Boundary condition evaluated at (x,y)
+        """
+        return 0.0
+    
 class TestCase3_small_param(TestCase3):
     def __init__(self):
         super().__init__()
