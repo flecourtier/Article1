@@ -42,11 +42,11 @@ ENV MYUSER=${MYUSER}
 
 # Définir le script comme point d'entrée (executé pendant le up)
 # ENTRYPOINT ["/home/flecourtier/install.sh"]
-ENTRYPOINT ["/bin/bash", "-c", "/home/${MYUSER}/install.sh"]
+ENTRYPOINT ["/bin/bash", "-c", "/home/${MYUSER}/install.sh && exec /bin/bash"]
 
 USER $MYUSER
 
-RUN ["/bin/bash"]
+# RUN ["/bin/bash"]
 
 # Non utilisé : Clonage du dépôt GitLab privé ScimBa
   
