@@ -1,7 +1,7 @@
 services:
-  myfiredrake:
+  myfdtorch:
     user: "1001:1001"
-    container_name: contfiredrake
+    container_name: contfdtorch
     working_dir: /usr/src/app
     build:
       dockerfile: Dockerfile.python
@@ -9,8 +9,15 @@ services:
       - code_directory:/usr/src/app:rw
       - ~/.vscode-server:/root/.vscode-server
     command: /bin/bash
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
     tty: true
-
+    
 volumes:
   code_directory:
     driver: local

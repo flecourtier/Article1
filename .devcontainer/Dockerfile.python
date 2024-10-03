@@ -7,24 +7,57 @@ ARG GID=1001
 
 ARG MYUSER=flecourtier
 
-# RUN sudo usermod -u ${UID} ${MYUSER}
-# RUN sudo groupmod -g ${GID} ${MYUSER}
-
+## Mettre à jour les droits d'accès + Installer les dépendances de Firedrake
 RUN chmod 777 /home/firedrake
 RUN chmod 777 -R /home/firedrake/firedrake/.cache
 
 RUN /home/firedrake/firedrake/bin/python3 -m pip install siphash24
 
-# Installer python3-venv pour créer des environnements virtuels
+# Installer python3-venv pour créer des environnements virtuels (?)
 RUN sudo apt-get update && sudo apt-get install -y python3-venv
 
+## Création de l'utilisateur $MYUSER
 RUN groupadd -g "${GID}" ${MYUSER} \
   && useradd --create-home --no-log-init -u "${UID}" -g "${GID}" ${MYUSER}
 
-# RUN usermod -aG 1000 ${MYUSER}
+# Installation de PyTorch
+WORKDIR /home/${MYUSER}
 
-WORKDIR /usr/src/app
+COPY ./requirements.txt ./
+RUN /home/firedrake/firedrake/bin/python3 -m pip install -r requirements.txt  \
+-f https://download.pytorch.org/whl/cu121/torch_stable.html
+
+# Ajouter l'utilisateur $MYUSER au groupe sudo et lui permettre d'utiliser sudo sans mot de passe
+RUN usermod -aG sudo ${MYUSER} \
+  && echo "${MYUSER} ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers
+
+# Copier le script d'installation
+COPY ./install.sh ./
+RUN chmod +x install.sh
+
+RUN echo "Le contenu du répertoire  /home/${MYUSER} est : " && ls /home/${MYUSER}
+
+# Définir MYUSER comme une variable d'environnement pour que sa valeur soit disponible à l'exécution
+ENV MYUSER=${MYUSER}
+
+# Définir le script comme point d'entrée (executé pendant le up)
+# ENTRYPOINT ["/home/flecourtier/install.sh"]
+ENTRYPOINT ["/bin/bash", "-c", "/home/${MYUSER}/install.sh"]
 
 USER $MYUSER
 
 RUN ["/bin/bash"]
+
+# Non utilisé : Clonage du dépôt GitLab privé ScimBa
+  
+# WORKDIR /home/${MYUSER}
+
+# # Installer Git pour cloner le dépôt GitLab privé
+# RUN apt-get update && apt-get install -y git
+
+# # Ajouter l'hôte GitLab aux hôtes connus avant le clonage
+# RUN --mount=type=ssh mkdir -p /root/.ssh && \
+#     ssh-keyscan gitlab.inria.fr >> /root/.ssh/known_hosts
+
+# # Cloner le dépôt GitLab privé ScimBa dans le répertoire /home/${MYUSER}/ScimBa
+# RUN --mount=type=ssh git clone git@gitlab.inria.fr:sciml/scimba.git ScimBa
