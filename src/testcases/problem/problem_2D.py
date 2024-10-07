@@ -270,3 +270,34 @@ class TestCase5:
     
     def h_ext(self, pre, xy, mu): # dirichlet
         return 1.0
+    
+class TestCase6:
+    def __init__(self,v=1):
+        self.version = v 
+        assert self.version == 1
+        self.geometry = Donut1()
+        self.nb_parameters = 1
+        self.parameter_domain = [[0.50000, 0.500001]]
+
+    def u_ex(self, pre, xy, mu):
+        x,y = xy
+        return pre.sin(x**2 + y**2)
+    
+    def grad_uex(self, pre, xy, mu):
+        pass
+    
+    def grad2_uex(self, pre, xy, mu):
+        pass
+    
+    def grad3_uex(self, pre, xy, mu):
+        pass
+    
+    def f(self, pre, xy, mu):
+        x,y = xy
+        return (4.0 * (x**2 + y**2) + 1) * pre.sin(x**2 + y**2) - 4.0 * pre.cos(x**2 + y**2)
+    
+    def h_int(self, pre, xy, mu):
+        return -cos(1.0/4.0)
+    
+    def h_ext(self, pre, xy, mu): # dirichlet
+        return 2 * cos(1.0)
