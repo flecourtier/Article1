@@ -23,6 +23,11 @@ parameters["allow_extrapolation"] = True
 parameters["form_compiler"]["representation"] = "uflacs"
 # parameters["form_compiler"]["quadrature_degree"] = 10
 
+# prm = parameters["krylov_solver"]
+# prm["absolute_tolerance"] = 1e-13
+# prm["relative_tolerance"] = 1e-13
+
+
 current = Path(__file__).parent.parent#.parent.parent
 
 #######
@@ -103,6 +108,8 @@ class FEMSolver():
 
         start = time.time()
         solve(A,sol.vector(),L)
+        # print("use of hypre_amg")
+        # df.solve(a==l, sol, bcs=bc, solver_parameters={"linear_solver": "cg","preconditioner":"hypre_amg"})
         # solve(a==l, sol, bcs=bc)
         end = time.time()
 
