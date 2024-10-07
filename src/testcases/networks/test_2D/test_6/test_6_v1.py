@@ -59,6 +59,24 @@ def create_fulldomain(geometry):
     fulldomain = domain.SpaceDomain(2, xdomain)
     fulldomain.add_hole(hole)
     
+    # to plot bc
+    def big(t):
+        return torch.cat([
+            bigcenter[0] + bigradius*torch.cos(2.0 * PI * t), 
+            bigcenter[0] + bigradius*torch.sin(2.0 * PI * t)], 
+        axis=1)
+
+    def small(t):
+        return torch.cat([
+            smallcenter[0] + smallradius*torch.cos(2.0 * PI * t), 
+            smallcenter[0] + smallradius*torch.sin(2.0 * PI * t)], 
+        axis=1)
+    
+    bc_big = domain.ParametricCurveBasedDomain(2, [[0.0, 1.0]], big)
+    fulldomain.add_bc_subdomain(bc_big)
+    bc_hole = domain.ParametricCurveBasedDomain(2, [[0.0, 1.0]], small)
+    hole.add_bc_subdomain(bc_hole)
+    
     return fulldomain,xdomain,hole
 
 class Poisson_2D(pdes.AbstractPDEx):
@@ -150,6 +168,15 @@ def Run_laplacian2D(pde,new_training=False,plot_bc=False):
             / file_name
         ).unlink(missing_ok=True)
 
+    if plot_bc:
+        x, mu = sampler.bc_sampling(1000)
+        x1, x2 = x.get_coordinates(label=0)
+        plt.scatter(x1.cpu().detach().numpy(), x2.cpu().detach().numpy(), color="b", label="Neu")
+        x1, x2 = x.get_coordinates(label=1)
+        plt.scatter(x1.cpu().detach().numpy(), x2.cpu().detach().numpy(), color="r", label="Neu")
+        plt.legend()
+        plt.show()
+
     tlayers = [40, 40, 40, 40, 40]
     network = pinn_x.MLP_x(pde=pde, layer_sizes=tlayers, activation_type="tanh")
     pinn = pinn_x.PINNx(network, pde)
@@ -176,10 +203,7 @@ def Run_laplacian2D(pde,new_training=False,plot_bc=False):
     
     return trainer,pinn
 
-if __name__ == "__main__":
-    pde = Poisson_2D()
-    trainer, pinn = Run_laplacian2D(pde,new_training=False,plot_bc=True)
-
+def check_BC():
     geometry = pde.problem.geometry
 
     bigcenter = geometry.bigcircle.center
@@ -249,3 +273,10 @@ if __name__ == "__main__":
     check("big")
     print("## Values for Neumann condition on small circle")
     check("small")
+
+if __name__ == "__main__":
+    pde = Poisson_2D()
+    trainer, pinn = Run_laplacian2D(pde,new_training=False,plot_bc=False)
+
+    check_BC()
+    
