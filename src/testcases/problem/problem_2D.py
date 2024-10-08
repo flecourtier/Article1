@@ -307,3 +307,43 @@ class TestCase6:
     
     def h_ext(self, pre, xy, mu):
         return 2 * cos(1.0)
+    
+class TestCase7:
+    def __init__(self,v=1):
+        self.version = v 
+        assert self.version == 1
+        self.geometry = SquareDonut1()
+        self.nb_parameters = 1
+        self.parameter_domain = [[0.50000, 0.500001]]
+
+    def u_ex(self, pre, xy, mu):
+        x,y = xy
+        PI = pre.pi
+        return pre.sin(2*PI*x)*pre.sin(2*PI*y)
+    
+    def grad_uex(self, pre, xy, mu):
+        pass
+    
+    def grad2_uex(self, pre, xy, mu):
+        pass
+    
+    def grad3_uex(self, pre, xy, mu):
+        pass
+    
+    def f(self, pre, xy, mu):
+        x,y = xy
+        PI = pre.pi
+        return (1.0 + 8.0*PI**2)*pre.sin(2*PI*x)*pre.sin(2*PI*y)
+    
+    def grad_f(self, pre, xy, mu):
+        pass
+        
+    def h_int(self, pre, xy, mu):
+        x,y = xy
+        PI = pre.pi
+        return 2*( y*2*PI*pre.sin(2*PI*x) + x*2*PI*pre.sin(2*PI*y) )
+    
+    def h_ext(self, pre, xy, mu):
+        x,y = xy
+        PI = pre.pi
+        return y*2*PI*pre.sin(2*PI*x) + x*2*PI*pre.sin(2*PI*y)
