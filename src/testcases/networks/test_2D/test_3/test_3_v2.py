@@ -121,13 +121,16 @@ def Run_laplacian2D(pde,new_training = False):
         trainer.train(epochs=5_000, n_collocation=15_000, n_bc_collocation=0, n_data=0)
         print("training time:", time.perf_counter() - start)
         
+    filename = current / "networks" / "test_2D" / "test_fe3_new.png"
+    trainer.plot(50000, random=True, filename=filename)
+        
     return trainer, pinn
 
 if __name__ == "__main__":
     # Laplacien strong Bc on Square with nn
     pde = Poisson_2D()
-    trainer, network = Run_laplacian2D(pde)
-    trainer.plot(n_visu=20000)
+    trainer, network = Run_laplacian2D(pde,new_training=False)
+    # trainer.plot(n_visu=20000)
     # plot for 3 random sets of parameters
     for _ in range(3):
         trainer.plot_2d_contourf(draw_contours=True, random=True)

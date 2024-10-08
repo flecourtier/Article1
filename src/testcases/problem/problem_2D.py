@@ -274,7 +274,7 @@ class TestCase5:
 class TestCase6:
     def __init__(self,v=1):
         self.version = v 
-        assert self.version == 1
+        assert self.version in [1,2]
         self.geometry = Donut1()
         self.nb_parameters = 1
         self.parameter_domain = [[0.50000, 0.500001]]
@@ -296,8 +296,14 @@ class TestCase6:
         x,y = xy
         return (4.0 * (x**2 + y**2) + 1) * pre.sin(x**2 + y**2) - 4.0 * pre.cos(x**2 + y**2)
     
+    def grad_f(self, pre, xy, mu):
+        x,y = xy
+        df_dx =  x*((8.0*x**2 + 8.0*y**2 + 2)*pre.cos(x**2 + y**2) + 16.0*pre.sin(x**2 + y**2))
+        df_dy =  y*((8.0*x**2 + 8.0*y**2 + 2)*pre.cos(x**2 + y**2) + 16.0*pre.sin(x**2 + y**2))
+        return df_dx, df_dy  
+    
     def h_int(self, pre, xy, mu):
         return -cos(1.0/4.0)
     
-    def h_ext(self, pre, xy, mu): # dirichlet
+    def h_ext(self, pre, xy, mu):
         return 2 * cos(1.0)

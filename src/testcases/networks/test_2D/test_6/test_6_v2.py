@@ -64,7 +64,7 @@ def create_fulldomain(geometry):
 
 class Poisson_2D(pdes.AbstractPDEx):
     def __init__(self):
-        self.problem = TestCase6(v=1)        
+        self.problem = TestCase6(v=2)        
         assert isinstance(self.problem.geometry, Donut)
         
         space_domain,_,_ = create_fulldomain(self.problem.geometry)
@@ -99,25 +99,28 @@ class Poisson_2D(pdes.AbstractPDEx):
         x1, x2 = x.get_coordinates()
         
         # compute residual
-        u_xx = self.get_variables(w, "w_xx")
-        u_yy = self.get_variables(w, "w_yy")
+        u,_ = self.get_variables(w, "w")
+        u_xx,_ = self.get_variables(w, "w_xx")
+        u_yy,_ = self.get_variables(w, "w_yy")
         f = self.problem.f(torch, [x1, x2], mu)
         
-        res = u_xx + u_yy + f
+        res = u_xx + u_yy - u + f
+        
+        df_dx,df_dy = self.problem.grad_f(torch, [x1, x2], mu)
         
         # compute d/dx residual
-        u_xxx = self.get_variables(w, "w_xxx")
-        u_xyy = self.get_variables(w, "w_xyy")
-        df_dx = 0.0 # car f=0
+        u_x,_ = self.get_variables(w, "w_x")
+        u_xxx,_ = self.get_variables(w, "w_xxx")
+        u_xyy,_ = self.get_variables(w, "w_xyy")
 
-        dres_dx = u_xxx + u_xyy + df_dx
+        dres_dx = u_xxx + u_xyy - u_x + df_dx
         
         # compute d/dy residual
-        u_xxy = self.get_variables(w, "w_xxy")
-        u_yyy = self.get_variables(w, "w_yyy")
-        df_dy = 0.0
+        u_y,_ = self.get_variables(w, "w_y")
+        u_xxy,_ = self.get_variables(w, "w_xxy")
+        u_yyy,_ = self.get_variables(w, "w_yyy")
 
-        dres_dy = u_xxy + u_yyy + df_dy
+        dres_dy = u_xxy + u_yyy -u_y + df_dy
         
         return torch.sqrt(
             res**2 + self.coeff_third_derivative**2 * (dres_dx**2 + dres_dy**2)
@@ -170,7 +173,7 @@ def Run_laplacian2D(pde,new_training=False,plot_bc=False):
     )
     sampler = sampling_pde.PdeXCartesianSampler(x_sampler, mu_sampler)
 
-    file_name = current / "networks" / "test_2D" / "test_fe6.pth"
+    file_name = current / "networks" / "test_2D" / "test_fe6_v2.pth"
 
     if new_training:
         (
@@ -197,18 +200,15 @@ def Run_laplacian2D(pde,new_training=False,plot_bc=False):
     )
 
     if new_training:
-        trainer.train(epochs=1000, n_collocation=8000, n_bc_collocation=8000)
+        trainer.train(epochs=2000, n_collocation=8000, n_bc_collocation=8000)
         # trainer.train(epochs=1, n_collocation=8000, n_bc_collocation=8000)
 
-    filename = current / "networks" / "test_2D" / "test_fe6.png"
+    filename = current / "networks" / "test_2D" / "test_fe6_v2.png"
     trainer.plot(20000,filename=filename,reference_solution=True)
     
     return trainer,pinn
 
-if __name__ == "__main__":
-    pde = Poisson_2D()
-    trainer, pinn = Run_laplacian2D(pde,new_training=False,plot_bc=True)
-
+def check_BC():
     geometry = pde.problem.geometry
 
     bigcenter = geometry.bigcircle.center
@@ -278,3 +278,9 @@ if __name__ == "__main__":
     check("big")
     print("## Values for Neumann condition on small circle")
     check("small")
+
+if __name__ == "__main__":
+    pde = Poisson_2D()
+    trainer, pinn = Run_laplacian2D(pde,new_training=False,plot_bc=False)
+
+    check_BC()

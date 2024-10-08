@@ -135,7 +135,7 @@ def Run_laplacian2D(pde, size_param="big", new_training = False, largenet=False)
     if new_training:
         trainer.train(epochs=1000, n_collocation=8000, n_bc_collocation=0, n_data=0)
 
-    filename = current / "networks" / (namefe3+".png")
+    filename = current / "networks" / "test_2D" / (namefe3+".png")
     trainer.plot(50000, random=True, filename=filename)
     
     return trainer, pinn
