@@ -1,6 +1,6 @@
 # Test Donut - Conditions Mixtes présentés dans le papier
 # Conditions exactes
-# On améliore le réseau avec les dérivées troisièmes
+# On améliore le réseau avec les dérivées troisièmes + fct activateion = sine
 # FONCTIONNE
 
 from pathlib import Path

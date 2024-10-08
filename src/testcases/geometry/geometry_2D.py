@@ -3,6 +3,8 @@ PI = 3.14159265358979323846
 class Square:
     def __init__(self,a,b,a2,b2):
         self.box = [[a,b],[a2,b2]]
+        self.center = [(a+b)/2,(a2+b2)/2]
+        self.radius = (b-a)/2
         
 class Square1(Square):
     def __init__(self):
@@ -37,3 +39,13 @@ class Donut2(Donut):
     def __init__(self):
         super().__init__(0.0, 0.0, 1.0, 0.25)
         self.box = [[-1,1],[-1,1]]
+        
+class SquareDonut:
+    def __init__(self,x0,y0,bigr,smallr):
+        self.bigsquare = Square(x0-bigr,x0+bigr,y0-bigr,y0+bigr)
+        self.hole = Square(x0-smallr,x0+smallr,y0-smallr,y0+smallr)
+        
+class SquareDonut1(SquareDonut):
+    def __init__(self):
+        super().__init__(0.0, 0.0, 1.0, 0.5)
+        self.box = [[-1.2,1.2],[-1.2,1.2]]

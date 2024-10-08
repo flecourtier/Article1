@@ -1,4 +1,4 @@
-from testcases.geometry.geometry_2D import Square1, UnitSquare, UnitCircle, Donut1, Donut2
+from testcases.geometry.geometry_2D import Square1, UnitSquare, UnitCircle, Donut1, Donut2, SquareDonut1
 from math import *
 import dolfin
 
@@ -300,8 +300,8 @@ class TestCase6:
         x,y = xy
         df_dx =  x*((8.0*x**2 + 8.0*y**2 + 2)*pre.cos(x**2 + y**2) + 16.0*pre.sin(x**2 + y**2))
         df_dy =  y*((8.0*x**2 + 8.0*y**2 + 2)*pre.cos(x**2 + y**2) + 16.0*pre.sin(x**2 + y**2))
-        return df_dx, df_dy  
-    
+        return df_dx, df_dy 
+        
     def h_int(self, pre, xy, mu):
         return -cos(1.0/4.0)
     

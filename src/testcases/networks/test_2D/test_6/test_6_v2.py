@@ -102,8 +102,14 @@ class Poisson_2D(pdes.AbstractPDEx):
         u,_ = self.get_variables(w, "w")
         u_xx,_ = self.get_variables(w, "w_xx")
         u_yy,_ = self.get_variables(w, "w_yy")
+        u,_ = self.get_variables(w, "w")
+        u_xx,_ = self.get_variables(w, "w_xx")
+        u_yy,_ = self.get_variables(w, "w_yy")
         f = self.problem.f(torch, [x1, x2], mu)
         
+        res = u_xx + u_yy - u + f
+        
+        df_dx,df_dy = self.problem.grad_f(torch, [x1, x2], mu)
         res = u_xx + u_yy - u + f
         
         df_dx,df_dy = self.problem.grad_f(torch, [x1, x2], mu)
@@ -112,14 +118,22 @@ class Poisson_2D(pdes.AbstractPDEx):
         u_x,_ = self.get_variables(w, "w_x")
         u_xxx,_ = self.get_variables(w, "w_xxx")
         u_xyy,_ = self.get_variables(w, "w_xyy")
+        u_x,_ = self.get_variables(w, "w_x")
+        u_xxx,_ = self.get_variables(w, "w_xxx")
+        u_xyy,_ = self.get_variables(w, "w_xyy")
 
+        dres_dx = u_xxx + u_xyy - u_x + df_dx
         dres_dx = u_xxx + u_xyy - u_x + df_dx
         
         # compute d/dy residual
         u_y,_ = self.get_variables(w, "w_y")
         u_xxy,_ = self.get_variables(w, "w_xxy")
         u_yyy,_ = self.get_variables(w, "w_yyy")
+        u_y,_ = self.get_variables(w, "w_y")
+        u_xxy,_ = self.get_variables(w, "w_xxy")
+        u_yyy,_ = self.get_variables(w, "w_yyy")
 
+        dres_dy = u_xxy + u_yyy -u_y + df_dy
         dres_dy = u_xxy + u_yyy -u_y + df_dy
         
         return torch.sqrt(
@@ -201,13 +215,16 @@ def Run_laplacian2D(pde,new_training=False,plot_bc=False):
 
     if new_training:
         trainer.train(epochs=2000, n_collocation=8000, n_bc_collocation=8000)
+        trainer.train(epochs=2000, n_collocation=8000, n_bc_collocation=8000)
         # trainer.train(epochs=1, n_collocation=8000, n_bc_collocation=8000)
 
+    filename = current / "networks" / "test_2D" / "test_fe6_v2.png"
     filename = current / "networks" / "test_2D" / "test_fe6_v2.png"
     trainer.plot(20000,filename=filename,reference_solution=True)
     
     return trainer,pinn
 
+def check_BC():
 def check_BC():
     geometry = pde.problem.geometry
 
@@ -282,5 +299,11 @@ def check_BC():
 if __name__ == "__main__":
     pde = Poisson_2D()
     trainer, pinn = Run_laplacian2D(pde,new_training=False,plot_bc=False)
+
+    check_BC()
+
+if __name__ == "__main__":
+    pde = Poisson_2D()
+    trainer, pinn = Run_laplacian2D(pde,new_training=True,plot_bc=False)
 
     check_BC()

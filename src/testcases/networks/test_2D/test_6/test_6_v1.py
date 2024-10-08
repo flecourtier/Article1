@@ -1,4 +1,4 @@
-# Test Donut - Conditions Mixtes présentés dans le papier
+# Test Donut - Conditions Full Neumann
 # Conditions exactes
 # FONCTIONNE
 
