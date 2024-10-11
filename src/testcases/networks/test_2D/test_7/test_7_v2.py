@@ -142,8 +142,8 @@ class Poisson_2D(pdes.AbstractPDEx):
         # compute levelset
         phi_E = -self.space_domain.large_domain.sdf(x)
         phi_I = self.space_domain.list_holes[0].sdf(x)
-        # phi = (phi_E * phi_I) / (phi_E + phi_I)
-        phi = torch.min(phi_E,phi_I)
+        phi = (phi_E * phi_I) / (phi_E + phi_I)
+        # phi = torch.min(phi_E,phi_I)
         
         # compute gradient of phi
         ones = torch.ones_like(x1)
@@ -184,7 +184,7 @@ def Run_laplacian2D(pde,new_training=False,plot_bc=False):
     )
     sampler = sampling_pde.PdeXCartesianSampler(x_sampler, mu_sampler)
 
-    file_name = current / "networks" / "test_2D" / "test_fe7.pth"
+    file_name = current / "networks" / "test_2D" / "test_fe7_v2.pth"
 
     if new_training:
         (
@@ -223,7 +223,7 @@ def Run_laplacian2D(pde,new_training=False,plot_bc=False):
         trainer.train(epochs=2000, n_collocation=8000, n_bc_collocation=8000)
         # trainer.train(epochs=1, n_collocation=8000, n_bc_collocation=8000)
 
-    filename = current / "networks" / "test_2D" / "test_fe7.png"
+    filename = current / "networks" / "test_2D" / "test_fe7_v2.png"
     trainer.plot(20000,filename=filename,reference_solution=True)
     
     return trainer,pinn
@@ -367,7 +367,7 @@ def check_BC():
 
 if __name__ == "__main__":
     pde = Poisson_2D()
-    trainer, pinn = Run_laplacian2D(pde,new_training=False,plot_bc=False)
+    trainer, pinn = Run_laplacian2D(pde,new_training=True,plot_bc=False)
 
     check_BC()
     
