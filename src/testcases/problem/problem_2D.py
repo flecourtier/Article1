@@ -1,6 +1,7 @@
 from testcases.geometry.geometry_2D import Square1, UnitSquare, UnitCircle, Donut1, Donut2, SquareDonut1
 from math import *
-import dolfin
+# import dolfin
+import torch
 
 class TestCase1:
     def __init__(self):
@@ -236,10 +237,14 @@ class TestCase5:
 
     def u_ex(self, pre, xy, mu):
         x,y = xy
-        if pre is dolfin:
-            ln = pre.ln
-        else:
+        if pre is torch:
             ln = pre.log
+        else:
+            ln = pre.ln
+        # if pre is dolfin:
+        #     ln = pre.ln
+        # else:
+        #     ln = pre.log
         return 1.0 - ln(pre.sqrt(x**2 + y**2))/log(4.0)
     
     def grad_uex(self, pre, xy, mu):
