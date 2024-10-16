@@ -1,5 +1,6 @@
 README.md
 pyproject.toml
+src/modfenics/utils.py
 src/modules.egg-info/PKG-INFO
 src/modules.egg-info/SOURCES.txt
 src/modules.egg-info/dependency_links.txt

@@ -1,3 +1,4 @@
 modfenics
+modfenicsx
 modfiredrake
 testcases

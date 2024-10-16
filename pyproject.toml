@@ -10,5 +10,5 @@ authors = [{name = "Frédérique", email = "frederique.lecourtier@gmail.com"}]
 
 # Spécifiez les deux packages sous le même toit
 [tool.setuptools]
-packages = ["modfenics", "modfiredrake", "testcases"]
+packages = ["modfenics", "modfenicsx", "modfiredrake", "testcases"]
 package-dir = {"" = "src"}
