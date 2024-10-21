@@ -8,7 +8,7 @@ print_time=False
 # Imports #
 ###########
 
-from modfenics.fenics_expressions.fenics_expressions_5 import *
+from modfenics.fenics_expressions.fenics_expressions_2D import *
 from testcases.geometry.geometry_2D import Donut
 
 from dolfin import *
@@ -112,8 +112,8 @@ class FEMSolver():
             return on_boundary and x[0]**2+x[1]**2>R_mid**2 
         bc_ext = DirichletBC(self.V, g_E, boundary_D)       
         
-        # Impose Neumann boundary conditions
-        # h_I = HExpr(params, degree=self.high_degree, domain=self.mesh, pb_considered=self.pb_considered)
+        # Impose Robin boundary conditions
+        # h_I = GRExpr(params, degree=self.high_degree, domain=self.mesh, pb_considered=self.pb_considered)
         h_I = df.inner(grad(u_ex),df.FacetNormal(self.mesh)) + u_ex
         class BoundaryN(SubDomain):
             def inside(self, x, on_boundary):

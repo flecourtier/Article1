@@ -4,7 +4,7 @@ print_time=False
 # Imports #
 ###########
 
-from modfenics.fenics_expressions.fenics_expressions import *
+from modfenics.fenics_expressions.fenics_expressions_2D import *
 from testcases.geometry.geometry_2D import Square
 
 from dolfin import *

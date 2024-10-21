@@ -10,9 +10,9 @@ from dolfin.function.expression import (
     _InterfaceExpression,
 )
 
-######################
-# FENICS Expressions #
-######################
+####################
+# MyUserExpression #
+####################
 
 class MyUserExpression(BaseExpression):
     """JIT Expressions"""
@@ -34,6 +34,7 @@ class MyUserExpression(BaseExpression):
             label=None,
         )
         
+# MyUserExpression for 2x2 matrices
 class MyUserExpression22(BaseExpression):
     """JIT Expressions"""
 
@@ -54,21 +55,9 @@ class MyUserExpression22(BaseExpression):
             label=None,
         )
 
-# class PhiConstructExpr(MyUserExpression):
-#     def __init__(self, degree, domain, sdf_considered):
-#         super().__init__(degree, domain)
-#         self.sdf_considered = sdf_considered
-
-#     def eval(self, value, x):
-#         value[0] = self.sdf_considered.phi(dol, x)
-
-# class PhiExpr(MyUserExpression):
-#     def __init__(self, degree, domain, sdf_considered):
-#         super().__init__(degree, domain)
-#         self.sdf_considered = sdf_considered
-
-#     def eval(self, value, x):
-#         value[0] = self.sdf_considered.phi(dol, x)
+######################
+# FENICS Expressions #
+######################
 
 class UexExpr(MyUserExpression):
     def __init__(self, params, degree, domain, pb_considered):
@@ -78,7 +67,7 @@ class UexExpr(MyUserExpression):
     
     def eval(self, value, x):
         value[0] = self.pb_considered.u_ex(dol, x, self.mu)
-                               
+
 class FExpr(MyUserExpression):
     def __init__(self, params, degree, domain, pb_considered):
         super().__init__(degree, domain)
@@ -88,6 +77,54 @@ class FExpr(MyUserExpression):
     def eval(self, value, x):
         value[0] = self.pb_considered.f(dol, x, self.mu)
         
+class GExpr(MyUserExpression): # dirichlet
+    def __init__(self, params, degree, domain, pb_considered):
+        super().__init__(degree, domain)
+        self.mu = params
+        self.pb_considered = pb_considered
+    
+    def eval(self, value, x):
+        value[0] = self.pb_considered.g(dol, x, self.mu)
+        
+class GNExpr(MyUserExpression): # neumann
+    def __init__(self, params, degree, domain, pb_considered):
+        super().__init__(degree, domain)
+        self.mu = params
+        self.pb_considered = pb_considered
+    
+    def eval(self, value, x):
+        value[0] = self.pb_considered.gn(dol, x, self.mu)
+        
+class GRExpr(MyUserExpression): # robin
+    def __init__(self, params, degree, domain, pb_considered):
+        super().__init__(degree, domain)
+        self.mu = params
+        self.pb_considered = pb_considered
+    
+    def eval(self, value, x):
+        value[0] = self.pb_considered.gr(dol, x, self.mu)
+
+# Temporary (TestCase 6 + 7)
+class HExtExpr(MyUserExpression):
+    def __init__(self, params, degree, domain, pb_considered):
+        super().__init__(degree, domain)
+        self.mu = params
+        self.pb_considered = pb_considered
+    
+    def eval(self, value, x):
+        value[0] = self.pb_considered.h_ext(dol, x, self.mu)
+
+# Temporary (TestCase 6 + 7)   
+class HIntExpr(MyUserExpression):
+    def __init__(self, params, degree, domain, pb_considered):
+        super().__init__(degree, domain)
+        self.mu = params
+        self.pb_considered = pb_considered
+    
+    def eval(self, value, x):
+        value[0] = self.pb_considered.h_int(dol, x, self.mu)
+        
+# Use only in the 3rd TestCase
 class AnisotropyExpr(MyUserExpression22):
     def __init__(self, params, degree, domain, pb_considered):
         super().__init__(degree, domain)
