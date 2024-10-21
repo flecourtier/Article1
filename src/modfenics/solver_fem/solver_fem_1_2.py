@@ -112,14 +112,15 @@ class FEMSolver():
 
         return sol,norme_L2
 
-    def corr_add(self, i, phi_tild):
+    def corr_add(self, i, phi_tild, lap_phi_tild):
         # phi_tild defined on V_ex, error compute on V_ex
         boundary = "on_boundary"
 
         params = self.params[i]
         f_expr = FExpr(params, degree=self.high_degree, domain=self.mesh, pb_considered=self.pb_considered)
         u_ex = UexExpr(params, degree=self.high_degree, domain=self.mesh, pb_considered=self.pb_considered)
-        f_tild = f_expr + div(grad(phi_tild))
+        fexpr_inter = df.interpolate(f_expr,self.V_ex)
+        f_tild = fexpr_inter + lap_phi_tild #div(grad(phi_tild))
 
         g = Constant(0.0)
         bc = DirichletBC(self.V, g, boundary)

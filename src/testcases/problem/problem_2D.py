@@ -41,8 +41,9 @@ class TestCase1:
         if self.version != 4:
             return -pre.exp(-((x - mu1)**2 + (y - mu2)**2)/2) * (((x**2 - 2*mu1*x + mu1**2 - 5)*pre.sin(2*x) + (4*mu1 - 4*x)*pre.cos(2*x)) * pre.sin(2*y) + pre.sin(2*x) * ((y**2 - 2*mu2*y + mu2**2 - 5)*pre.sin(2*y) + (4*mu2 - 4*y)*pre.cos(2*y)))
         else:
-            return pre.exp(-((x - mu1)**2 + (y - mu2)**2)/2) * (((1.0 - 1.0*(x - mu1)**2.0)*pre.sin(4*x) + 8.0*(x - mu1)*pre.cos(4*x) + 16*pre.sin(4*x))*pre.sin(4*y) + ((1.0 - 1.0*(y - mu2)**2.0)*pre.sin(4*y) + 8.0*(y - mu2)*pre.cos(4*y) + 16*pre.sin(4*y))*pre.sin(4*x))*pre.exp(-((x - mu1)**2 + (y - mu2)**2)/2)
-
+            # return pre.exp(-((x - mu1)**2 + (y - mu2)**2)/2) * (((1.0 - 1.0*(x - mu1)**2.0)*pre.sin(4*x) + 8.0*(x - mu1)*pre.cos(4*x) + 16*pre.sin(4*x))*pre.sin(4*y) + ((1.0 - 1.0*(y - mu2)**2.0)*pre.sin(4*y) + 8.0*(y - mu2)*pre.cos(4*y) + 16*pre.sin(4*y))*pre.sin(4*x))*pre.exp(-((x - mu1)**2 + (y - mu2)**2)/2)
+            return (((1.0 - 1.0*(-mu1 + x)**2.0)*sin(4*x) + 8.0*(-mu1 + x)**1.0*cos(4*x) + 16*sin(4*x))*sin(4*y) + ((1.0 - 1.0*(-mu2 + y)**2.0)*sin(4*y) + 8.0*(-mu2 + y)**1.0*cos(4*y) + 16*sin(4*y))*sin(4*x))*exp(-(-mu1 + x)**2.0/2 - (-mu2 + y)**2.0/2)
+        
     def g(self, pre, xy, mu):
         """Boundary condition for the Circle domain
 
