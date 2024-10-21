@@ -1,19 +1,27 @@
-from testcases.geometry.geometry_2D import Square1, UnitSquare, UnitCircle, Donut1, Donut2, SquareDonut1
+from testcases.geometry.geometry_2D import Square1, Square2, UnitSquare, UnitCircle, Donut1, Donut2, SquareDonut1
 from math import *
 # import dolfin
 import torch
 
 class TestCase1:
-    def __init__(self):
-        self.geometry = Square1() 
+    def __init__(self,v=1):
         self.nb_parameters = 2
         self.parameter_domain = [[-0.5, 0.500001],[-0.50000, 0.500001]]
-
+        self.version = v
+        assert self.version in [1,2,3,4]
+        if self.version!=4:
+            self.geometry = Square1() 
+        else:
+            self.geometry = Square2()
+            
     def u_ex(self, pre, xy, mu):
         x,y=xy
         mu1,mu2 = mu
         ex = pre.exp(-((x-mu1)**2.0 +(y-mu2)**2.0)/2)
-        return ex * pre.sin(2*x) * pre.sin(2 *y)
+        if self.version != 4:
+            return ex * pre.sin(2*x) * pre.sin(2*y)
+        else:
+            return ex * pre.sin(4*x) * pre.sin(4*y)
 
     # def u_ex_prime(self, pre, xy, mu):
     #     x,y=xy
@@ -30,7 +38,10 @@ class TestCase1:
     def f(self, pre, xy, mu):
         x,y=xy
         mu1,mu2 = mu
-        return -pre.exp(-((x - mu1)**2 + (y - mu2)**2)/2) * (((x**2 - 2*mu1*x + mu1**2 - 5)*pre.sin(2*x) + (4*mu1 - 4*x)*pre.cos(2*x)) * pre.sin(2*y) + pre.sin(2*x) * ((y**2 - 2*mu2*y + mu2**2 - 5)*pre.sin(2*y) + (4*mu2 - 4*y)*pre.cos(2*y)))
+        if self.version != 4:
+            return -pre.exp(-((x - mu1)**2 + (y - mu2)**2)/2) * (((x**2 - 2*mu1*x + mu1**2 - 5)*pre.sin(2*x) + (4*mu1 - 4*x)*pre.cos(2*x)) * pre.sin(2*y) + pre.sin(2*x) * ((y**2 - 2*mu2*y + mu2**2 - 5)*pre.sin(2*y) + (4*mu2 - 4*y)*pre.cos(2*y)))
+        else:
+            return pre.exp(-((x - mu1)**2 + (y - mu2)**2)/2) * (((1.0 - 1.0*(x - mu1)**2.0)*pre.sin(4*x) + 8.0*(x - mu1)*pre.cos(4*x) + 16*pre.sin(4*x))*pre.sin(4*y) + ((1.0 - 1.0*(y - mu2)**2.0)*pre.sin(4*y) + 8.0*(y - mu2)*pre.cos(4*y) + 16*pre.sin(4*y))*pre.sin(4*x))*pre.exp(-((x - mu1)**2 + (y - mu2)**2)/2)
 
     def g(self, pre, xy, mu):
         """Boundary condition for the Circle domain

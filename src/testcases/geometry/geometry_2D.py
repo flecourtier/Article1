@@ -10,6 +10,10 @@ class Square1(Square):
     def __init__(self):
         super().__init__(-0.5*PI, 0.5*PI, -0.5*PI, 0.5*PI)
         
+class Square2(Square):
+    def __init__(self):
+        super().__init__(-0.25*PI, 0.25*PI, -0.25*PI, 0.25*PI)
+        
 class UnitSquare(Square):
     def __init__(self):
         super().__init__(0.0, 1.0, 0.0, 1.0)
