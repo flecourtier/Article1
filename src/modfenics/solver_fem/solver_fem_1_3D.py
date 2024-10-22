@@ -6,7 +6,7 @@ print_time=True
 # Imports #
 ###########
 
-from modfenics.fenics_expressions.fenics_expressions_2D import *
+from modfenics.fenics_expressions.fenics_expressions import *
 from testcases.geometry.geometry_3D import Cube
 
 from dolfin import *

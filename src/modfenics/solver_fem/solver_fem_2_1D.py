@@ -2,7 +2,7 @@
 # Imports #
 ###########
 
-from modfenics.fenics_expressions.fenics_expressions_1D import *
+from modfenics.fenics_expressions.fenics_expressions import *
 from testcases.geometry.geometry_1D import Line
 
 from dolfin import *

@@ -8,7 +8,7 @@ print_time=False
 # Imports #
 ###########
 
-from modfenics.fenics_expressions.fenics_expressions_2D import *
+from modfenics.fenics_expressions.fenics_expressions import *
 from testcases.geometry.geometry_2D import Donut
 
 from dolfin import *
