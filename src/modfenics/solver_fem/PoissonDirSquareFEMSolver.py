@@ -69,6 +69,8 @@ class PoissonDirFEMSolver(FEMSolver):
         A = df.assemble(a)
         L = df.assemble(l)
         bc.apply(A, L)
+        
+        return A,L
     
 class PoissonDirSquareFEMSolver(PoissonDirFEMSolver,SquareFEMSolver):
     pass

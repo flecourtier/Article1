@@ -133,17 +133,10 @@ class FEMSolver(abc.ABC):
         
         from time import sleep
         
-        u_theta_V = get_utheta_fenics_onV(self.V,self.params[i],u_PINNs)
-        
-        sleep(5)        
-        
-        u_theta_Vex = get_utheta_fenics_onV(self.V_ex,self.params[i],u_PINNs)
-        
-        sleep(5)
+        u_theta_V = get_utheta_fenics_onV(self.V,self.params[i],u_PINNs)      
         
         u = df.TrialFunction(self.V)
         v = df.TestFunction(self.V)
-        sleep(5)
         
         
         # Declaration of the variationnal problem
@@ -169,6 +162,7 @@ class FEMSolver(abc.ABC):
         self.times_corr_add[self.N]["solve"] = end-start
 
         # Compute the error
+        u_theta_Vex = get_utheta_fenics_onV(self.V_ex,self.params[i],u_PINNs)
         u_ex = UexExpr(params, degree=self.high_degree, domain=self.mesh, pb_considered=self.pb_considered)
         uex_Vex = df.interpolate(u_ex,self.V_ex) 
         C_Vex = df.interpolate(C_tild,self.V_ex)
