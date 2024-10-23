@@ -39,7 +39,6 @@ def compute_error_estimations_Corr_deg(param_num,problem,degree,high_degree,u_th
         tab_h_Corr = []
         tab_err_Corr = []
 
-        print(params)
         solver = solver_type(params=params, problem=problem, degree=degree, error_degree=error_degree, high_degree=high_degree, save_uref=save_uref)
         for nb_vert in tab_nb_vert_Corr:
             solver.set_meshsize(nb_cell=nb_vert-1)

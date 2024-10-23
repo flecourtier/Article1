@@ -47,22 +47,54 @@ def get_laputheta_fenics_fromV(V_test,params,u_PINNs):
     
     return lapu_theta
 
-def get_divmatgradutheta_fenics_fromV(V_test,params,u_PINNs,mat_inter):
+def get_gradutheta_fenics_fromV(V_test,params,u_PINNs):
     X_test,mu_test = get_test_sample_fromV(V_test,params)
     
     pred = u_PINNs.setup_w_dict(X_test, mu_test)
     u_PINNs.get_first_derivatives(pred, X_test)
-    u_PINNs.get_second_derivatives(pred, X_test)
     
-    phi_tild_xx = pred["w_xx"][:,0].cpu().detach().numpy()
-    phi_tild_yy = pred["w_yy"][:,0].cpu().detach().numpy()
+    phi_tild_x = pred["w_x"][:,0].cpu().detach().numpy()
+    phi_tild_y = pred["w_y"][:,0].cpu().detach().numpy()
     
-    lap_phi_tild = phi_tild_xx + phi_tild_yy
+    # u_theta_x = df.Function(V_test)
+    # u_theta_x.vector()[:] = phi_tild_x.copy()
     
-    lapu_theta = df.Function(V_test)
-    lapu_theta.vector()[:] = lap_phi_tild.copy()
+    # u_theta_y = df.Function(V_test)
+    # u_theta_y.vector()[:] = phi_tild_y.copy()
     
-    return lapu_theta
+    V_test_2D = df.VectorFunctionSpace(V_test.mesh(),V_test.ufl_element().family(),V_test.ufl_element().degree(),dim=2)
+    grad_utheta = df.Function(V_test_2D)
+    grad_utheta.sub(0).vector()[:] = phi_tild_x.copy()
+    grad_utheta.sub(1).vector()[:] = phi_tild_y.copy()
+    
+    return grad_utheta
+
+def get_divmatgradutheta_fenics_fromV(V_test,params,u_PINNs,anisotropy_matrix):
+    X_test,mu_test = get_test_sample_fromV(V_test,params)
+    
+    pred = u_PINNs.setup_w_dict(X_test, mu_test)
+    u_PINNs.get_first_derivatives(pred, X_test)
+    
+    phi_tild_x = pred["w_x"][:,0]
+    phi_tild_y = pred["w_y"][:,0]
+    
+    m00,m01,m10,m11 = anisotropy_matrix(torch,X_test.x.T,params)
+    
+    matgrad_x = m00 * phi_tild_x + m01 * phi_tild_y
+    matgrad_y = m10 * phi_tild_x + m11 * phi_tild_y
+    
+    ones = torch.ones_like(matgrad_x)
+    mat_grad_xx,_ = torch.autograd.grad(matgrad_x, X_test.x, ones, create_graph=True)[0].T
+    
+    ones = torch.ones_like(matgrad_y)
+    _,mat_grad_yy = torch.autograd.grad(matgrad_y, X_test.x, ones, create_graph=True)[0].T
+    
+    divmatgradphitild = (mat_grad_xx + mat_grad_yy).cpu().detach().numpy()
+    
+    divmatgradutheta = df.Function(V_test)
+    divmatgradutheta.vector()[:] = divmatgradphitild.copy()
+    
+    return divmatgradutheta
 
 def get_param(i,parameter_domain):
     # pick 1 random parameter

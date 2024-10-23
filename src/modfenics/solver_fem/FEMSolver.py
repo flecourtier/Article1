@@ -45,6 +45,7 @@ class FEMSolver(abc.ABC):
         # To evaluate computational time
         self.times_fem = {}
         self.times_corr_add = {}
+        self.times_corr_mult = {}
         
         # To compute error (overrefined mesh)
         self.N_ex = 500 #5*self.N
@@ -74,11 +75,16 @@ class FEMSolver(abc.ABC):
     def _define_corr_add_system(self,params,u,v,u_PINNs,V_solve):
         pass
     
+    @abc.abstractmethod
+    def _define_corr_mult_system(self,params,u,v,u_PINNs,V_solve,M):
+        pass
+    
     def set_meshsize(self,nb_cell):
         self.N = nb_cell # number of cells
         
         self.times_fem[self.N] = {}
         self.times_corr_add[self.N] = {}
+        self.times_corr_mult[self.N] = {}
         
         # To compute the solution with FEM (standard/correction)
         self.mesh,self.V,self.dx = self._create_FEM_domain(self.N+1,self.degree,save_times=True)
@@ -98,6 +104,7 @@ class FEMSolver(abc.ABC):
                 print("Time to generate mesh: ", end-start)
             self.times_fem[self.N]["mesh"] = end-start
             self.times_corr_add[self.N]["mesh"] = end-start
+            self.times_corr_mult[self.N]["mesh"] = end-start
         
         V = df.FunctionSpace(mesh, "CG", degree)
         dx = df.Measure("dx", domain=mesh)
@@ -186,8 +193,6 @@ class FEMSolver(abc.ABC):
         assert self.N is not None
         params = self.params[i]
         
-        u_theta_V = get_utheta_fenics_onV(self.V,self.params[i],u_PINNs)      
-        
         u = df.TrialFunction(self.V)
         v = df.TestFunction(self.V)
         
@@ -206,6 +211,7 @@ class FEMSolver(abc.ABC):
         df.solve(A,C_tild.vector(),L)
         
         sol = df.Function(self.V)
+        u_theta_V = get_utheta_fenics_onV(self.V,self.params[i],u_PINNs)      
         sol.vector()[:] = C_tild.vector()[:] + u_theta_V.vector()[:]
         end = time.time()
 
@@ -214,6 +220,7 @@ class FEMSolver(abc.ABC):
         self.times_corr_add[self.N]["solve"] = end-start
 
         # Compute the error
+        start = time.time()
         u_theta_Vex = get_utheta_fenics_onV(self.V_ex,self.params[i],u_PINNs)
         if self.pb_considered.ana_sol:
             u_ex = UexExpr(params, degree=self.high_degree, domain=self.mesh, pb_considered=self.pb_considered)
@@ -225,5 +232,64 @@ class FEMSolver(abc.ABC):
         sol_Vex.vector()[:] = (C_Vex.vector()[:])+u_theta_Vex.vector()[:]
         
         norme_L2 = (df.assemble((((uex_Vex - sol_Vex)) ** 2) * self.dx) ** (0.5)) / (df.assemble((((uex_Vex)) ** 2) * self.dx) ** (0.5))
+        end = time.time()
+        
+        if print_time:
+            print("Time to compute the error :",end-start)
+        self.times_corr_add[self.N]["error"] = end-start
+        
+        return sol,C_tild,norme_L2
+
+    def corr_mult(self, i, u_PINNs, M=0.0): #phi_tild, lap_phi_tild):
+        assert self.N is not None
+        params = self.params[i]
+        self.times_corr_mult[self.N][str(M)] = {}
+        
+        u = df.TrialFunction(self.V)
+        v = df.TestFunction(self.V)
+        
+        # Declaration of the variationnal problem
+        start = time.time()
+        A,L = self._define_corr_mult_system(params,u,v,u_PINNs,self.V,M)
+        end = time.time()
+
+        if print_time:
+            print("Time to assemble the matrix : ",end-start)
+        self.times_corr_mult[self.N][str(M)]["assemble"] = end-start
+
+        # Resolution of the linear system
+        start = time.time()
+        C_tild = df.Function(self.V)
+        df.solve(A,C_tild.vector(),L)
+        
+        sol = df.Function(self.V)
+        u_theta_V = get_utheta_fenics_onV(self.V,self.params[i],u_PINNs)      
+        # u_theta_M_V = df.Function(self.V)
+        # u_theta_M_V.vector()[:] = u_theta_V.vector()[:] + M
+        sol.vector()[:] = C_tild.vector()[:] * (u_theta_V.vector()[:] + M) - M
+        end = time.time()
+
+        if print_time:
+            print("Time to solve the system :",end-start)
+        self.times_corr_mult[self.N][str(M)]["solve"] = end-start
+
+        # Compute the error
+        start = time.time()
+        u_theta_Vex = get_utheta_fenics_onV(self.V_ex,self.params[i],u_PINNs)
+        if self.pb_considered.ana_sol:
+            u_ex = UexExpr(params, degree=self.high_degree, domain=self.mesh, pb_considered=self.pb_considered)
+            uex_Vex = df.interpolate(u_ex,self.V_ex) 
+        else:
+            uex_Vex = self.tab_uref[i]
+        C_Vex = df.interpolate(C_tild,self.V_ex)
+        sol_Vex = df.Function(self.V_ex)
+        sol_Vex.vector()[:] = C_Vex.vector()[:] * (u_theta_Vex.vector()[:] + M) - M
+        
+        norme_L2 = (df.assemble((((uex_Vex - sol_Vex)) ** 2) * self.dx) ** (0.5)) / (df.assemble((((uex_Vex)) ** 2) * self.dx) ** (0.5))
+        end = time.time()
+        
+        if print_time:
+            print("Time to compute the error :",end-start)
+        self.times_corr_mult[self.N][str(M)]["error"] = end-start
         
         return sol,C_tild,norme_L2

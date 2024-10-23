@@ -76,5 +76,8 @@ class PoissonDirFEMSolver(FEMSolver):
         
         return A,L
     
+    def _define_corr_mult_system(self,params,u,v,u_PINNs,V_solve,M):
+        pass
+    
 class PoissonDirSquareFEMSolver(PoissonDirFEMSolver,SquareFEMSolver):
     pass

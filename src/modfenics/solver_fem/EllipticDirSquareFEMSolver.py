@@ -6,7 +6,7 @@ print_time = True
 
 from modfenics.fenics_expressions.fenics_expressions import FExpr,AnisotropyExpr
 from modfenics.solver_fem.FEMSolver import FEMSolver
-from modfenics.utils import get_divmatgradutheta_fenics_fromV
+from modfenics.utils import get_divmatgradutheta_fenics_fromV, get_utheta_fenics_onV, get_gradutheta_fenics_fromV
 from testcases.geometry.geometry_2D import Square
 import dolfin as df
 
@@ -48,10 +48,7 @@ class EllipticDirFEMSolver(FEMSolver):
         return A,L
     
     def _define_corr_add_system(self,params,u,v,u_PINNs,V_solve):
-        mat = AnisotropyExpr(params, degree=self.high_degree, domain=V_solve.mesh(), pb_considered=self.pb_considered)
-        mat_inter = df.interpolate(mat,self.V_theta)
-        print(mat_inter.vector()[:].shape)
-        divmatgradutheta = get_divmatgradutheta_fenics_fromV(self.V_theta,params,u_PINNs,mat_inter)
+        divmatgradutheta = get_divmatgradutheta_fenics_fromV(self.V_theta,params,u_PINNs,self.pb_considered.anisotropy_matrix)
         
         boundary = "on_boundary"
         f_expr = FExpr(params, degree=self.high_degree, domain=V_solve.mesh(), pb_considered=self.pb_considered)
@@ -72,6 +69,52 @@ class EllipticDirFEMSolver(FEMSolver):
         bc.apply(A, L)
         
         return A,L
+    
+    def _define_corr_mult_system(self,params,u,v,u_PINNs,V_solve,M):
+        u_theta_V = get_utheta_fenics_onV(V_solve,params,u_PINNs) 
+        u_theta_M_V = df.Function(V_solve)
+        u_theta_M_V.vector()[:] = u_theta_V.vector()[:] + M
+        
+        boundary = "on_boundary"
+        f_expr = FExpr(params, degree=self.high_degree, domain=V_solve.mesh(), pb_considered=self.pb_considered)
+        dx = df.Measure("dx", domain=V_solve.mesh())
+
+        g = df.Constant(1.0)
+        bc = df.DirichletBC(V_solve, g, boundary)
+        
+        mat = AnisotropyExpr(params, degree=self.high_degree, domain=V_solve.mesh(), pb_considered=self.pb_considered) 
+        a = df.inner(mat*df.grad(u_theta_M_V * u), df.grad(u_theta_M_V * v)) * dx
+        l = f_expr * u_theta_M_V * v * dx
+
+        A = df.assemble(a)
+        L = df.assemble(l)
+        bc.apply(A, L)
+        
+        return A,L
+    
+    # def _define_corr_mult_system(self,params,u,v,u_PINNs,V_solve,M):
+    #     u_theta_V = get_utheta_fenics_onV(V_solve,params,u_PINNs) 
+    #     u_theta_M_V = df.Function(V_solve)
+    #     u_theta_M_V.vector()[:] = u_theta_V.vector()[:] + M
+        
+    #     grad_u_theta_V = get_gradutheta_fenics_fromV(V_solve,params,u_PINNs) # same as grad_u_theta_M_V
+        
+    #     boundary = "on_boundary"
+    #     f_expr = FExpr(params, degree=self.high_degree, domain=V_solve.mesh(), pb_considered=self.pb_considered)
+    #     dx = df.Measure("dx", domain=V_solve.mesh())
+
+    #     g = df.Constant(1.0)
+    #     bc = df.DirichletBC(V_solve, g, boundary)
+        
+    #     mat = AnisotropyExpr(params, degree=self.high_degree, domain=V_solve.mesh(), pb_considered=self.pb_considered) 
+    #     a = df.inner(mat * (grad_u_theta_V * u + u_theta_M_V * df.grad(u)), df.grad(grad_u_theta_V * v + u_theta_M_V * df.grad(v))) * dx
+    #     l = f_expr * u_theta_M_V * v * dx
+
+    #     A = df.assemble(a)
+    #     L = df.assemble(l)
+    #     bc.apply(A, L)
+        
+    #     return A,L
     
 class EllipticDirSquareFEMSolver(EllipticDirFEMSolver,SquareFEMSolver):
     pass
