@@ -1,13 +1,31 @@
 from testcases.geometry.geometry_2D import Square1, UnitSquare, UnitCircle, Donut1, Donut2, SquareDonut1
 from math import *
-# import dolfin
 import torch
-
-class TestCase1:
-    def __init__(self):
+import abc
+class TestCase2D(abc.ABC):
+    def __init__(self,testcase,version):
+        self.testcase = testcase
+        self.version = version
+        
+        @property
+        @abc.abstractmethod
+        def geometry(self):
+            pass
+        @property
+        @abc.abstractmethod
+        def nb_parameters(self):
+            pass
+        @property
+        @abc.abstractmethod
+        def parameter_domain(self):
+            pass
+        
+class TestCase1(TestCase2D):
+    def __init__(self,version=1):
+        super().__init__(1,version)
+        self.geometry = Square1() 
         self.nb_parameters = 2
         self.parameter_domain = [[-0.5, 0.500001],[-0.50000, 0.500001]]
-        self.geometry = Square1() 
             
     def u_ex(self, pre, xy, mu):
         x,y=xy
@@ -23,8 +41,9 @@ class TestCase1:
     def g(self, pre, xy, mu):
         return 0.0
     
-class TestCase2:
-    def __init__(self):
+class TestCase2(TestCase2D):
+    def __init__(self,version=1):
+        super().__init__(2,version)
         self.geometry = Square1() 
         self.nb_parameters = 2
         self.parameter_domain = [[-0.5, 0.500001],[-0.50000, 0.500001]]
@@ -44,250 +63,250 @@ class TestCase2:
     def g(self, pre, xy, mu):
         return 0.0
     
-class TestCase3:
-    def __init__(self):
-        self.geometry = UnitSquare() 
-        self.nb_parameters = 4
-        self.parameter_domain = [
-                [0.4, 0.6],  # 0.4 < c1 < 0.6
-                [0.4, 0.6],  # 0.4 < c2 < 0.6
-                [0.1, 0.8],  # 0.1 < sigma < 0.8
-                [0.01, 1.0],  # 0.01 < eps < 1
-            ]
+# class TestCase3:
+#     def __init__(self):
+#         self.geometry = UnitSquare() 
+#         self.nb_parameters = 4
+#         self.parameter_domain = [
+#                 [0.4, 0.6],  # 0.4 < c1 < 0.6
+#                 [0.4, 0.6],  # 0.4 < c2 < 0.6
+#                 [0.1, 0.8],  # 0.1 < sigma < 0.8
+#                 [0.01, 1.0],  # 0.01 < eps < 1
+#             ]
 
-    def u_ex(self, pre, xy, mu):
-        pass
+#     def u_ex(self, pre, xy, mu):
+#         pass
     
-    def anisotropy_matrix(self, pre, xy, mu):
-        x,y = xy
-        c1, c2, sigma, eps = mu
+#     def anisotropy_matrix(self, pre, xy, mu):
+#         x,y = xy
+#         c1, c2, sigma, eps = mu
 
-        a11 = eps * x**2 + y**2
-        a12 = (eps - 1) * x * y
-        a21 = (eps - 1) * x * y
-        a22 = x**2 + eps * y**2
+#         a11 = eps * x**2 + y**2
+#         a12 = (eps - 1) * x * y
+#         a21 = (eps - 1) * x * y
+#         a22 = x**2 + eps * y**2
 
-        return a11, a12, a21, a22
+#         return a11, a12, a21, a22
 
-    def f(self, pre, xy, mu):
-        x,y=xy
-        c1,c2,sigma,eps = mu
+#     def f(self, pre, xy, mu):
+#         x,y=xy
+#         c1,c2,sigma,eps = mu
     
-        return pre.exp(-((x - c1) ** 2 + (y - c2) ** 2) / (0.025 * sigma**2))
+#         return pre.exp(-((x - c1) ** 2 + (y - c2) ** 2) / (0.025 * sigma**2))
         
-    def g(self, pre, xy, mu):
-        return 0.0
+#     def g(self, pre, xy, mu):
+#         return 0.0
     
     
-class TestCase3_small_param(TestCase3):
-    def __init__(self):
-        super().__init__()
-        self.parameter_domain = [
-                [0.45, 0.55],  # 0.4 < c1 < 0.6
-                [0.45, 0.55],  # 0.4 < c2 < 0.6
-                [0.4, 0.6],  # 0.1 < sigma < 0.8
-                [0.05, 0.2],  # 0.01 < eps < 1
-            ]
+# class TestCase3_small_param(TestCase3):
+#     def __init__(self):
+#         super().__init__()
+#         self.parameter_domain = [
+#                 [0.45, 0.55],  # 0.4 < c1 < 0.6
+#                 [0.45, 0.55],  # 0.4 < c2 < 0.6
+#                 [0.4, 0.6],  # 0.1 < sigma < 0.8
+#                 [0.05, 0.2],  # 0.01 < eps < 1
+#             ]
         
-class TestCase3_medium_param(TestCase3):
-    def __init__(self):
-        super().__init__()
-        self.parameter_domain = [
-                [0.4, 0.6],  # 0.4 < c1 < 0.6
-                [0.4, 0.6],  # 0.4 < c2 < 0.6
-                [0.3, 0.6],  # 0.1 < sigma < 0.8
-                [0.04, 0.25],  # 0.01 < eps < 1
-            ]
-class TestCase3_new:
-    def __init__(self):
-        self.geometry = UnitSquare() 
-        self.nb_parameters = 4
-        self.parameter_domain = [
-                [0.4, 0.6],  # 0.4 < c1 < 0.6
-                [0.4, 0.6],  # 0.4 < c2 < 0.6
-                [0.4, 0.8],  # 0.1 < sigma < 0.8
-                [0.5, 1.0],  # 0.5 < eps < 1
-            ]
+# class TestCase3_medium_param(TestCase3):
+#     def __init__(self):
+#         super().__init__()
+#         self.parameter_domain = [
+#                 [0.4, 0.6],  # 0.4 < c1 < 0.6
+#                 [0.4, 0.6],  # 0.4 < c2 < 0.6
+#                 [0.3, 0.6],  # 0.1 < sigma < 0.8
+#                 [0.04, 0.25],  # 0.01 < eps < 1
+#             ]
+# class TestCase3_new:
+#     def __init__(self):
+#         self.geometry = UnitSquare() 
+#         self.nb_parameters = 4
+#         self.parameter_domain = [
+#                 [0.4, 0.6],  # 0.4 < c1 < 0.6
+#                 [0.4, 0.6],  # 0.4 < c2 < 0.6
+#                 [0.4, 0.8],  # 0.1 < sigma < 0.8
+#                 [0.5, 1.0],  # 0.5 < eps < 1
+#             ]
 
-    def u_ex(self, pre, xy, mu):
-        pass
+#     def u_ex(self, pre, xy, mu):
+#         pass
     
-    def anisotropy_matrix(self, pre, xy, mu):
-        x,y = xy
-        c1, c2, sigma, eps = mu
+#     def anisotropy_matrix(self, pre, xy, mu):
+#         x,y = xy
+#         c1, c2, sigma, eps = mu
 
-        a11 = eps * x**2 + y**2
-        a12 = (eps - 1) * x * y
-        a21 = (eps - 1) * x * y
-        a22 = x**2 + eps * y**2
+#         a11 = eps * x**2 + y**2
+#         a12 = (eps - 1) * x * y
+#         a21 = (eps - 1) * x * y
+#         a22 = x**2 + eps * y**2
 
-        return a11, a12, a21, a22
+#         return a11, a12, a21, a22
 
-    def f(self, pre, xy, mu):
-        x,y=xy
-        c1,c2,sigma,eps = mu
+#     def f(self, pre, xy, mu):
+#         x,y=xy
+#         c1,c2,sigma,eps = mu
     
-        return 10 * pre.exp(-((x - c1) ** 2 + (y - c2) ** 2) / (0.025 * sigma**2))
+#         return 10 * pre.exp(-((x - c1) ** 2 + (y - c2) ** 2) / (0.025 * sigma**2))
         
-    def g(self, pre, xy, mu):
-        """Boundary condition for the Circle domain
+#     def g(self, pre, xy, mu):
+#         """Boundary condition for the Circle domain
 
-        :param pre: Preconditioner
-        :param xy: (x,y) coordinates
-        :param mu: (S) parameter
-        :return: Boundary condition evaluated at (x,y)
-        """
-        return 0.0
+#         :param pre: Preconditioner
+#         :param xy: (x,y) coordinates
+#         :param mu: (S) parameter
+#         :return: Boundary condition evaluated at (x,y)
+#         """
+#         return 0.0
         
         
-class TestCase4:
-    def __init__(self,v=1):
-        self.geometry = Donut1() 
-        self.version = v 
-        assert self.version == 1
-        self.nb_parameters = 2
-        self.parameter_domain = [[-0.5, 0.500001],[-0.50000, 0.500001]]
+# class TestCase4:
+#     def __init__(self,v=1):
+#         self.geometry = Donut1() 
+#         self.version = v 
+#         assert self.version == 1
+#         self.nb_parameters = 2
+#         self.parameter_domain = [[-0.5, 0.500001],[-0.50000, 0.500001]]
 
-    def u_ex(self, pre, xy, mu):
-        x,y = xy
-        mu1,mu2 = mu
-        return 1.0/(2*pre.pi)*pre.exp(-1.0/2.0*((x-mu1)**2+(y-mu2)**2))*pre.sin(-1.0/4.0 * (x**2 + y**2 - 1.0))
+#     def u_ex(self, pre, xy, mu):
+#         x,y = xy
+#         mu1,mu2 = mu
+#         return 1.0/(2*pre.pi)*pre.exp(-1.0/2.0*((x-mu1)**2+(y-mu2)**2))*pre.sin(-1.0/4.0 * (x**2 + y**2 - 1.0))
 
-    def f(self, pre, xy, mu):
-        x,y = xy
-        mu1,mu2 = mu
-        return -0.5*(0.25*x**2*pre.sin(0.25*(x**2 + y**2 - 1)) - x*(mu1 - x)*pre.cos(0.25*(x**2 + y**2 - 1)) - ((mu1 - x)**2 - 1)*pre.sin(0.25*(x**2 + y**2 - 1)) - 0.5*pre.cos(0.25*(x**2 + y**2 - 1)))*pre.exp(-0.5*(-mu1 + x)**2 - 0.5*(-mu2 + y)**2)/pre.pi - 0.5*(0.25*y**2*pre.sin(0.25*(x**2 + y**2 - 1)) - y*(mu2 - y)*pre.cos(0.25*(x**2 + y**2 - 1)) - ((mu2 - y)**2 - 1)*pre.sin(0.25*(x**2 + y**2 - 1)) - 0.5*pre.cos(0.25*(x**2 + y**2 - 1)))*pre.exp(-0.5*(-mu1 + x)**2 - 0.5*(-mu2 + y)**2)/pre.pi
+#     def f(self, pre, xy, mu):
+#         x,y = xy
+#         mu1,mu2 = mu
+#         return -0.5*(0.25*x**2*pre.sin(0.25*(x**2 + y**2 - 1)) - x*(mu1 - x)*pre.cos(0.25*(x**2 + y**2 - 1)) - ((mu1 - x)**2 - 1)*pre.sin(0.25*(x**2 + y**2 - 1)) - 0.5*pre.cos(0.25*(x**2 + y**2 - 1)))*pre.exp(-0.5*(-mu1 + x)**2 - 0.5*(-mu2 + y)**2)/pre.pi - 0.5*(0.25*y**2*pre.sin(0.25*(x**2 + y**2 - 1)) - y*(mu2 - y)*pre.cos(0.25*(x**2 + y**2 - 1)) - ((mu2 - y)**2 - 1)*pre.sin(0.25*(x**2 + y**2 - 1)) - 0.5*pre.cos(0.25*(x**2 + y**2 - 1)))*pre.exp(-0.5*(-mu1 + x)**2 - 0.5*(-mu2 + y)**2)/pre.pi
     
-    def g(self, pre, xy, mu):
-        return self.u_ex(pre, xy, mu)      
+#     def g(self, pre, xy, mu):
+#         return self.u_ex(pre, xy, mu)      
         
 
-class TestCase5:
-    def __init__(self,v=1):
-        self.version = v 
-        assert self.version in [1,2,3]
-        self.geometry = Donut2()
-        self.nb_parameters = 1
-        self.parameter_domain = [[0.50000, 0.500001]]
+# class TestCase5:
+#     def __init__(self,v=1):
+#         self.version = v 
+#         assert self.version in [1,2,3]
+#         self.geometry = Donut2()
+#         self.nb_parameters = 1
+#         self.parameter_domain = [[0.50000, 0.500001]]
 
-    def u_ex(self, pre, xy, mu):
-        x,y = xy
-        if pre is torch:
-            ln = pre.log
-        else:
-            ln = pre.ln
-        return 1.0 - ln(pre.sqrt(x**2 + y**2))/log(4.0)
+#     def u_ex(self, pre, xy, mu):
+#         x,y = xy
+#         if pre is torch:
+#             ln = pre.log
+#         else:
+#             ln = pre.ln
+#         return 1.0 - ln(pre.sqrt(x**2 + y**2))/log(4.0)
     
-    def grad_uex(self, pre, xy, mu):
-        x,y = xy
-        coeff = -1.0/log(4.0)
-        s = x**2 + y**2
-        return coeff*x/s, coeff*y/s
+#     def grad_uex(self, pre, xy, mu):
+#         x,y = xy
+#         coeff = -1.0/log(4.0)
+#         s = x**2 + y**2
+#         return coeff*x/s, coeff*y/s
     
-    def grad2_uex(self, pre, xy, mu):
-        x,y = xy
-        coeff = -1.0/log(4.0)
-        s = x**2 + y**2
-        return coeff * (s - 2*x**2)/s**2, coeff * (s - 2*y**2)/s**2
+#     def grad2_uex(self, pre, xy, mu):
+#         x,y = xy
+#         coeff = -1.0/log(4.0)
+#         s = x**2 + y**2
+#         return coeff * (s - 2*x**2)/s**2, coeff * (s - 2*y**2)/s**2
     
-    def grad3_uex(self, pre, xy, mu):
-        x,y = xy
-        coeff = -1.0/log(4.0)
-        s = x**2 + y**2
-        return coeff * 2 * x * (x**2 - 3 * y **2)/s**3, coeff * 2 * y * (y**2 - 3 * x **2)/s**3
+#     def grad3_uex(self, pre, xy, mu):
+#         x,y = xy
+#         coeff = -1.0/log(4.0)
+#         s = x**2 + y**2
+#         return coeff * 2 * x * (x**2 - 3 * y **2)/s**3, coeff * 2 * y * (y**2 - 3 * x **2)/s**3
     
-    def f(self, pre, xy, mu):
-        x,y = xy
-        return 0.0
+#     def f(self, pre, xy, mu):
+#         x,y = xy
+#         return 0.0
     
-    def h_int(self, pre, xy, mu): # robin
-        assert self.version in [1,2,3]
-        return 4.0/log(4.0) + 2.0
+#     def h_int(self, pre, xy, mu): # robin
+#         assert self.version in [1,2,3]
+#         return 4.0/log(4.0) + 2.0
     
-    def h_ext(self, pre, xy, mu): # dirichlet
-        return 1.0
+#     def h_ext(self, pre, xy, mu): # dirichlet
+#         return 1.0
     
-    def gr(self, pre, xy, mu): # robin
-        return self.h_int(pre, xy, mu)
+#     def gr(self, pre, xy, mu): # robin
+#         return self.h_int(pre, xy, mu)
     
-    def g(self, pre, xy, mu): # dirichlet
-        return self.h_ext(pre, xy, mu)  
+#     def g(self, pre, xy, mu): # dirichlet
+#         return self.h_ext(pre, xy, mu)  
     
     
     
-class TestCase6:
-    def __init__(self,v=1):
-        self.version = v 
-        assert self.version in [1,2]
-        self.geometry = Donut1()
-        self.nb_parameters = 1
-        self.parameter_domain = [[0.50000, 0.500001]]
+# class TestCase6:
+#     def __init__(self,v=1):
+#         self.version = v 
+#         assert self.version in [1,2]
+#         self.geometry = Donut1()
+#         self.nb_parameters = 1
+#         self.parameter_domain = [[0.50000, 0.500001]]
 
-    def u_ex(self, pre, xy, mu):
-        x,y = xy
-        return pre.sin(x**2 + y**2)
+#     def u_ex(self, pre, xy, mu):
+#         x,y = xy
+#         return pre.sin(x**2 + y**2)
     
-    def grad_uex(self, pre, xy, mu):
-        pass
+#     def grad_uex(self, pre, xy, mu):
+#         pass
     
-    def grad2_uex(self, pre, xy, mu):
-        pass
+#     def grad2_uex(self, pre, xy, mu):
+#         pass
     
-    def grad3_uex(self, pre, xy, mu):
-        pass
+#     def grad3_uex(self, pre, xy, mu):
+#         pass
     
-    def f(self, pre, xy, mu):
-        x,y = xy
-        return (4.0 * (x**2 + y**2) + 1) * pre.sin(x**2 + y**2) - 4.0 * pre.cos(x**2 + y**2)
+#     def f(self, pre, xy, mu):
+#         x,y = xy
+#         return (4.0 * (x**2 + y**2) + 1) * pre.sin(x**2 + y**2) - 4.0 * pre.cos(x**2 + y**2)
     
-    def grad_f(self, pre, xy, mu):
-        x,y = xy
-        df_dx =  x*((8.0*x**2 + 8.0*y**2 + 2)*pre.cos(x**2 + y**2) + 16.0*pre.sin(x**2 + y**2))
-        df_dy =  y*((8.0*x**2 + 8.0*y**2 + 2)*pre.cos(x**2 + y**2) + 16.0*pre.sin(x**2 + y**2))
-        return df_dx, df_dy 
+#     def grad_f(self, pre, xy, mu):
+#         x,y = xy
+#         df_dx =  x*((8.0*x**2 + 8.0*y**2 + 2)*pre.cos(x**2 + y**2) + 16.0*pre.sin(x**2 + y**2))
+#         df_dy =  y*((8.0*x**2 + 8.0*y**2 + 2)*pre.cos(x**2 + y**2) + 16.0*pre.sin(x**2 + y**2))
+#         return df_dx, df_dy 
         
-    def h_int(self, pre, xy, mu):
-        return -cos(1.0/4.0)
+#     def h_int(self, pre, xy, mu):
+#         return -cos(1.0/4.0)
     
-    def h_ext(self, pre, xy, mu):
-        return 2 * cos(1.0)
+#     def h_ext(self, pre, xy, mu):
+#         return 2 * cos(1.0)
     
-class TestCase7:
-    def __init__(self,v=1):
-        self.version = v 
-        assert self.version == 1
-        self.geometry = SquareDonut1()
-        self.nb_parameters = 1
-        self.parameter_domain = [[0.50000, 0.500001]]
+# class TestCase7:
+#     def __init__(self,v=1):
+#         self.version = v 
+#         assert self.version == 1
+#         self.geometry = SquareDonut1()
+#         self.nb_parameters = 1
+#         self.parameter_domain = [[0.50000, 0.500001]]
 
-    def u_ex(self, pre, xy, mu):
-        x,y = xy
-        PI = pre.pi
-        return pre.sin(2*PI*x)*pre.sin(2*PI*y)
+#     def u_ex(self, pre, xy, mu):
+#         x,y = xy
+#         PI = pre.pi
+#         return pre.sin(2*PI*x)*pre.sin(2*PI*y)
     
-    def grad_uex(self, pre, xy, mu):
-        pass
+#     def grad_uex(self, pre, xy, mu):
+#         pass
     
-    def grad2_uex(self, pre, xy, mu):
-        pass
+#     def grad2_uex(self, pre, xy, mu):
+#         pass
     
-    def grad3_uex(self, pre, xy, mu):
-        pass
+#     def grad3_uex(self, pre, xy, mu):
+#         pass
     
-    def f(self, pre, xy, mu):
-        x,y = xy
-        PI = pre.pi
-        return (1.0 + 8.0*PI**2)*pre.sin(2*PI*x)*pre.sin(2*PI*y)
+#     def f(self, pre, xy, mu):
+#         x,y = xy
+#         PI = pre.pi
+#         return (1.0 + 8.0*PI**2)*pre.sin(2*PI*x)*pre.sin(2*PI*y)
     
-    def grad_f(self, pre, xy, mu):
-        pass
+#     def grad_f(self, pre, xy, mu):
+#         pass
         
-    def h_int(self, pre, xy, mu):
-        x,y = xy
-        PI = pre.pi
-        return 2*( y*2*PI*pre.sin(2*PI*x) + x*2*PI*pre.sin(2*PI*y) )
+#     def h_int(self, pre, xy, mu):
+#         x,y = xy
+#         PI = pre.pi
+#         return 2*( y*2*PI*pre.sin(2*PI*x) + x*2*PI*pre.sin(2*PI*y) )
     
-    def h_ext(self, pre, xy, mu):
-        x,y = xy
-        PI = pre.pi
-        return y*2*PI*pre.sin(2*PI*x) + x*2*PI*pre.sin(2*PI*y)
+#     def h_ext(self, pre, xy, mu):
+#         x,y = xy
+#         PI = pre.pi
+#         return y*2*PI*pre.sin(2*PI*x) + x*2*PI*pre.sin(2*PI*y)

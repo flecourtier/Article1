@@ -23,7 +23,7 @@ torch.set_default_device(device)
 
 class Poisson_2D(pdes.AbstractPDEx):
     def __init__(self):
-        self.problem = TestCase2()
+        self.problem = TestCase2(version=1)
         
         assert isinstance(self.problem.geometry, Square)
         
