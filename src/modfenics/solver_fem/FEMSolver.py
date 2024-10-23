@@ -1,4 +1,4 @@
-print_time = True
+print_time = False
 
 ###########
 # Imports #
@@ -9,7 +9,9 @@ from modfenics.utils import get_utheta_fenics_onV
 import dolfin as df
 
 import abc
+import os
 import time
+import numpy as np
 from pathlib import Path
 
 df.parameters["ghost_mode"] = "shared_facet"
@@ -19,6 +21,10 @@ df.parameters["allow_extrapolation"] = True
 df.parameters["form_compiler"]["representation"] = "uflacs"
 # parameters["form_compiler"]["quadrature_degree"] = 10
 
+prm = df.parameters["krylov_solver"]
+prm["absolute_tolerance"] = 1e-13
+prm["relative_tolerance"] = 1e-13
+
 current = Path(__file__).parent.parent
 
 #######
@@ -26,13 +32,15 @@ current = Path(__file__).parent.parent
 #######
 
 class FEMSolver(abc.ABC):
-    def __init__(self,params,problem,degree=1,error_degree=4,high_degree=9):
+    def __init__(self,params,problem,degree=1,error_degree=4,high_degree=9,save_uref=None):
         self.N = None # number of cells
         self.params = params # list of parameters
         self.pb_considered = problem # problem considered
         self.degree = degree # degree of the finite element space
         self.error_degree = error_degree # degree of the error space
         self.high_degree = high_degree # degree of the expression space for f
+        self.save_uref = save_uref # directory to save results
+        self.tab_uref = None
         
         # To evaluate computational time
         self.times_fem = {}
@@ -44,17 +52,26 @@ class FEMSolver(abc.ABC):
         self.h_ex = self.mesh_ex.hmax()
         print("V_ex created with ",self.N_ex+1," vertices and degree ",self.error_degree," : h_ex =",self.h_ex)
         # self.V_ex = FunctionSpace(self.mesh, "CG", self.high_degree)
+        
+        # To create reference solution
+        if not self.pb_considered.ana_sol:
+            assert self.save_uref is not None and len(save_uref)==len(params)
+            self.N_ref = 999
+            self.error_ref = 3
+            self.mesh_ref,self.V_ref,_ = self._create_FEM_domain(self.N_ref+1,self.error_ref) 
+            print("V_ref created with ",self.N_ref+1," vertices and degree ",self.error_ref)
+            self.tab_uref = [self.get_uref(i) for i in range(len(self.params))]
             
     @abc.abstractmethod
     def _create_mesh(self,nb_vert):
         pass    
 
     @abc.abstractmethod
-    def _define_fem_system(self,params,u,v):
+    def _define_fem_system(self,params,u,v,V_solve):
         pass
     
     @abc.abstractmethod
-    def _define_corr_add_system(self):
+    def _define_corr_add_system(self,params,u,v,u_PINNs,V_solve):
         pass
     
     def set_meshsize(self,nb_cell):
@@ -87,6 +104,41 @@ class FEMSolver(abc.ABC):
 
         return mesh, V, dx
     
+    def run_uref(self,i):
+        assert not self.pb_considered.ana_sol
+        params = self.params[i]
+        
+        u = df.TrialFunction(self.V_ex)
+        v = df.TestFunction(self.V_ex)
+        
+        # Declaration of the variationnal problem
+        A,L = self._define_fem_system(params,u,v,self.V_ex)
+
+        # Resolution of the linear system
+        sol = df.Function(self.V_ex)
+        df.solve(A,sol.vector(),L, solver_parameters={"linear_solver": "cg","preconditioner":"hypre_amg"})
+
+        return sol
+    
+    def get_uref(self,i):       
+        filename = self.save_uref[i]
+
+        load_ref = True
+        if not load_ref or not os.path.exists(filename):
+            print("Computing reference solution")
+            u_ref = self.run_uref(i)
+            vct_u_ref = u_ref.vector().get_local()
+            np.save(filename, vct_u_ref)  
+        else:
+            print("Load reference solution")
+            vct_u_ref = np.load(filename)
+            u_ref = df.Function(self.V_ref)
+            u_ref.vector()[:] = vct_u_ref
+            
+        u_ref_Vex = df.interpolate(u_ref,self.V_ex)
+        
+        return u_ref_Vex
+
     def fem(self, i):
         assert self.N is not None
         params = self.params[i]
@@ -96,7 +148,7 @@ class FEMSolver(abc.ABC):
         
         # Declaration of the variationnal problem
         start = time.time()        
-        A,L = self._define_fem_system(params,u,v)
+        A,L = self._define_fem_system(params,u,v,self.V)
         end = time.time()
 
         if print_time:
@@ -115,8 +167,11 @@ class FEMSolver(abc.ABC):
 
         # Compute the error
         start = time.time()
-        u_ex = UexExpr(params, degree=self.high_degree, domain=self.mesh, pb_considered=self.pb_considered)
-        uex_Vex = df.interpolate(u_ex,self.V_ex)
+        if self.pb_considered.ana_sol:
+            u_ex = UexExpr(params, degree=self.high_degree, domain=self.mesh, pb_considered=self.pb_considered)
+            uex_Vex = df.interpolate(u_ex,self.V_ex)
+        else:
+            uex_Vex = self.tab_uref[i]
         sol_Vex = df.interpolate(sol,self.V_ex)
         norme_L2 = (df.assemble((((uex_Vex - sol_Vex)) ** 2) * self.dx) ** (0.5)) / (df.assemble((((uex_Vex)) ** 2) * self.dx) ** (0.5))
         end = time.time()
@@ -131,17 +186,14 @@ class FEMSolver(abc.ABC):
         assert self.N is not None
         params = self.params[i]
         
-        from time import sleep
-        
         u_theta_V = get_utheta_fenics_onV(self.V,self.params[i],u_PINNs)      
         
         u = df.TrialFunction(self.V)
         v = df.TestFunction(self.V)
         
-        
         # Declaration of the variationnal problem
         start = time.time()
-        A,L = self._define_corr_add_system(params,u,v,u_PINNs)
+        A,L = self._define_corr_add_system(params,u,v,u_PINNs,self.V)
         end = time.time()
 
         if print_time:
@@ -163,8 +215,11 @@ class FEMSolver(abc.ABC):
 
         # Compute the error
         u_theta_Vex = get_utheta_fenics_onV(self.V_ex,self.params[i],u_PINNs)
-        u_ex = UexExpr(params, degree=self.high_degree, domain=self.mesh, pb_considered=self.pb_considered)
-        uex_Vex = df.interpolate(u_ex,self.V_ex) 
+        if self.pb_considered.ana_sol:
+            u_ex = UexExpr(params, degree=self.high_degree, domain=self.mesh, pb_considered=self.pb_considered)
+            uex_Vex = df.interpolate(u_ex,self.V_ex) 
+        else:
+            uex_Vex = self.tab_uref[i]
         C_Vex = df.interpolate(C_tild,self.V_ex)
         sol_Vex = df.Function(self.V_ex)
         sol_Vex.vector()[:] = (C_Vex.vector()[:])+u_theta_Vex.vector()[:]

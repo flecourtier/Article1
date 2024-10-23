@@ -11,7 +11,7 @@ import torch
 from scimba.equations import domain, pdes
 
 from testcases.geometry.geometry_2D import Square
-from testcases.problem.problem_2D import TestCase3, TestCase3_small_param, TestCase3_medium_param
+from testcases.problem.problem_2D import TestCase3
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 print(f"torch loaded; device is {device}")
@@ -29,13 +29,7 @@ current = Path(__file__).parent.parent.parent.parent.parent.parent
 class Poisson_2D(pdes.AbstractPDEx):
     def __init__(self,size_param="big"):
         assert size_param in ["small", "medium", "big"]
-        
-        if size_param == "big":
-            self.problem = TestCase3()
-        elif size_param == "medium":
-            self.problem = TestCase3_medium_param()
-        else:
-            self.problem = TestCase3_small_param()
+        self.problem = TestCase3(version=size_param)
         
         assert isinstance(self.problem.geometry, Square)
         

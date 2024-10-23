@@ -47,11 +47,30 @@ def get_laputheta_fenics_fromV(V_test,params,u_PINNs):
     
     return lapu_theta
 
+def get_divmatgradutheta_fenics_fromV(V_test,params,u_PINNs,mat_inter):
+    X_test,mu_test = get_test_sample_fromV(V_test,params)
+    
+    pred = u_PINNs.setup_w_dict(X_test, mu_test)
+    u_PINNs.get_first_derivatives(pred, X_test)
+    u_PINNs.get_second_derivatives(pred, X_test)
+    
+    phi_tild_xx = pred["w_xx"][:,0].cpu().detach().numpy()
+    phi_tild_yy = pred["w_yy"][:,0].cpu().detach().numpy()
+    
+    lap_phi_tild = phi_tild_xx + phi_tild_yy
+    
+    lapu_theta = df.Function(V_test)
+    lapu_theta.vector()[:] = lap_phi_tild.copy()
+    
+    return lapu_theta
+
 def get_param(i,parameter_domain):
     # pick 1 random parameter
     np.random.seed(0)
     for j in range(i):
-        param = [np.random.uniform(parameter_domain[0][0], parameter_domain[0][1]), np.random.uniform(parameter_domain[1][0], parameter_domain[1][1])]
+        param = []
+        for k in range(len(parameter_domain)):
+            param.append(np.random.uniform(parameter_domain[k][0], parameter_domain[k][1]))
     param = np.round(param, 2)
     return param
 

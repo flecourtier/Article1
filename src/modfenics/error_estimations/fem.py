@@ -1,6 +1,7 @@
 import pandas as pd
 import os
 from modfenics.utils import get_param,compute_slope
+from testcases.utils import create_tree
 from modfenics.error_estimations.utils import get_solver_type
 import matplotlib.pyplot as plt
 
@@ -19,6 +20,14 @@ def compute_error_estimations_fem_deg(param_num,problem,degree,high_degree,error
     params = [get_param(param_num,parameter_domain)]
     solver_type = get_solver_type(testcase,version)
     
+    save_uref = None
+    if not problem.ana_sol:
+        savedir = result_dir + "u_ref/"
+        create_tree(savedir)
+        filename = savedir + f"u_ref_{param_num}.npy"
+        save_uref = [filename]
+        print(filename)
+    
     csv_file = result_dir+f'FEM_case{testcase}_v{version}_param{param_num}_degree{degree}.csv' 
     if not new_run and os.path.exists(csv_file):
         print(f"## Read csv file {csv_file}")
@@ -29,7 +38,7 @@ def compute_error_estimations_fem_deg(param_num,problem,degree,high_degree,error
         tab_h_FEM = []
         tab_err_FEM = []
 
-        solver = solver_type(params=params, problem=problem, degree=degree, error_degree=error_degree, high_degree=high_degree)
+        solver = solver_type(params=params, problem=problem, degree=degree, error_degree=error_degree, high_degree=high_degree, save_uref=save_uref)
         for nb_vert in tab_nb_vert_FEM:
             solver.set_meshsize(nb_cell=nb_vert-1)
             tab_h_FEM.append(solver.h)

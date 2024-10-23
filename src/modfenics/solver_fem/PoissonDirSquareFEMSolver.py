@@ -37,14 +37,16 @@ class SquareFEMSolver(FEMSolver):
         return mesh
 
 class PoissonDirFEMSolver(FEMSolver):    
-    def _define_fem_system(self,params,u,v):
+    def _define_fem_system(self,params,u,v,V_solve):
         boundary = "on_boundary"
         g = df.Constant("0.0")
-        bc = df.DirichletBC(self.V, g, boundary)
+        bc = df.DirichletBC(V_solve, g, boundary)
         
-        f_expr = FExpr(params, degree=self.high_degree, domain=self.mesh, pb_considered=self.pb_considered)
-        a = df.inner(df.grad(u), df.grad(v)) * self.dx
-        l = f_expr * v * self.dx
+        dx = df.Measure("dx", domain=V_solve.mesh())
+        
+        f_expr = FExpr(params, degree=self.high_degree, domain=V_solve.mesh(), pb_considered=self.pb_considered)
+        a = df.inner(df.grad(u), df.grad(v)) * dx
+        l = f_expr * v * dx
 
         A = df.assemble(a)
         L = df.assemble(l)
@@ -52,19 +54,21 @@ class PoissonDirFEMSolver(FEMSolver):
         
         return A,L
     
-    def _define_corr_add_system(self,params,u,v,u_PINNs):
+    def _define_corr_add_system(self,params,u,v,u_PINNs,V_solve):
         lap_utheta = get_laputheta_fenics_fromV(self.V_theta,params,u_PINNs)
         
         boundary = "on_boundary"
-        f_expr = FExpr(params, degree=self.high_degree, domain=self.mesh, pb_considered=self.pb_considered)
+        f_expr = FExpr(params, degree=self.high_degree, domain=V_solve.mesh(), pb_considered=self.pb_considered)
         fexpr_inter = df.interpolate(f_expr,self.V_theta)
         f_tild = df.Function(self.V_theta)
         f_tild.vector()[:] = fexpr_inter.vector()[:] + lap_utheta.vector()[:] # div(grad(phi_tild))
 
+        dx = df.Measure("dx", domain=V_solve.mesh())
+
         g = df.Constant(0.0)
-        bc = df.DirichletBC(self.V, g, boundary)
-        a = df.inner(df.grad(u), df.grad(v)) * self.dx
-        l = f_tild * v * self.dx
+        bc = df.DirichletBC(V_solve, g, boundary)
+        a = df.inner(df.grad(u), df.grad(v)) * dx
+        l = f_tild * v * dx
 
         A = df.assemble(a)
         L = df.assemble(l)

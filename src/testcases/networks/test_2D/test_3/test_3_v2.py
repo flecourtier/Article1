@@ -20,11 +20,11 @@ current = Path(__file__).parent.parent.parent.parent.parent.parent
 PI = 3.14159265358979323846
 # test from 10.3390/en15186823
 
-from testcases.problem.problem_2D import TestCase3_new
+from testcases.problem.problem_2D import TestCase3
 
 class Poisson_2D(pdes.AbstractPDEx):
     def __init__(self):
-        self.problem = TestCase3_new()
+        self.problem = TestCase3(version="new")
         space_domain = domain.SpaceDomain(2, domain.SquareDomain(2, self.problem.geometry.box))
         
         super().__init__(
