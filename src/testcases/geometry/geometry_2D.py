@@ -29,6 +29,7 @@ class Donut:
     def __init__(self,a,b,bigr,smallr):
         self.bigcircle = Circle(a,b,bigr)
         self.hole = Circle(a,b,smallr)
+        self.H_start = 350 # To construct more quickly mesh_ex (with FEniCS)
         
 class Donut1(Donut):
     def __init__(self):

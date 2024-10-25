@@ -1,4 +1,4 @@
-print_time = False
+print_time = True
 
 ###########
 # Imports #
@@ -49,9 +49,13 @@ class FEMSolver(abc.ABC):
         
         # To compute error (overrefined mesh)
         self.N_ex = 500 #5*self.N
+        start = time.time()
         self.mesh_ex,self.V_ex,self.dx_ex = self._create_FEM_domain(self.N_ex+1,self.error_degree) 
         self.h_ex = self.mesh_ex.hmax()
+        end = time.time()
         print("V_ex created with ",self.N_ex+1," vertices and degree ",self.error_degree," : h_ex =",self.h_ex)
+        if print_time:
+            print("Time to generate V_ex: ", end-start)
         # self.V_ex = FunctionSpace(self.mesh, "CG", self.high_degree)
         
         # To create reference solution
@@ -96,16 +100,14 @@ class FEMSolver(abc.ABC):
         
     def _create_FEM_domain(self,nb_vert,degree,save_times=False):        
         # Construct a cartesian mesh with nb_vert-1 cells in each direction
-        start = time.time()
-        mesh = self._create_mesh(nb_vert)
-        end = time.time()
+        mesh,tps = self._create_mesh(nb_vert)
 
         if save_times:
             if print_time:
-                print("Time to generate mesh: ", end-start)
-            self.times_fem[self.N]["mesh"] = end-start
-            self.times_corr_add[self.N]["mesh"] = end-start
-            self.times_corr_mult[self.N]["mesh"] = end-start
+                print("Time to generate mesh: ", tps)
+            self.times_fem[self.N]["mesh"] = tps
+            self.times_corr_add[self.N]["mesh"] = tps
+            self.times_corr_mult[self.N]["mesh"] = tps
         
         V = df.FunctionSpace(mesh, "CG", degree)
         dx = df.Measure("dx", domain=mesh)
@@ -147,6 +149,7 @@ class FEMSolver(abc.ABC):
         return u_ref_Vex
 
     def fem(self, i):
+        print("feeeeeeeeeemmmm")
         assert self.N is not None
         params = self.params[i]
         

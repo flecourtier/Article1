@@ -2,6 +2,7 @@ from testcases.geometry.geometry_2D import Square1, UnitSquare, UnitCircle, Donu
 from math import *
 import torch
 import abc
+
 class TestCase2D(abc.ABC):
     def __init__(self,testcase,version):
         self.testcase = testcase
@@ -110,8 +111,9 @@ class TestCase3(TestCase2D):
     def g(self, pre, xy, mu):
         return 0.0
         
-class TestCase4:
+class TestCase4(TestCase2D):
     def __init__(self,v=1):
+        super().__init__(4,v)
         self.geometry = Donut1() 
         self.version = v 
         assert self.version == 1

@@ -4,10 +4,10 @@ print_time = True
 # Imports #
 ###########
 
-from modfenics.fenics_expressions.fenics_expressions import FExpr
+from modfenics.fenics_expressions.fenics_expressions import FExpr,UexExpr
 from modfenics.solver_fem.FEMSolver import FEMSolver
-from modfenics.utils import get_laputheta_fenics_fromV
-from testcases.geometry.geometry_2D import Square
+from modfenics.utils import get_laputheta_fenics_fromV,get_utheta_fenics_onV
+from testcases.geometry.geometry_2D import Square,Donut
 import dolfin as df
 
 import numpy as np
@@ -26,20 +26,19 @@ current = Path(__file__).parent.parent
 # FEM #
 #######
 
-class SquareFEMSolver(FEMSolver):    
-    def _create_mesh(self,nb_vert):
-        # check if pb_considered is instance of Square class
-        assert isinstance(self.pb_considered.geometry, Square)
-        
-        box = np.array(self.pb_considered.geometry.box)
-        mesh = df.RectangleMesh(df.Point(box[0,0], box[1,0]), df.Point(box[0,1], box[1,1]), nb_vert - 1, nb_vert - 1)
-        
-        return mesh
+from modfenics.solver_fem.GeometryFEMSolver import SquareFEMSolver,DonutFEMSolver
 
 class PoissonDirFEMSolver(FEMSolver):    
     def _define_fem_system(self,params,u,v,V_solve):
         boundary = "on_boundary"
-        g = df.Constant("0.0")
+        print(self.pb_considered.geometry)
+        if isinstance(self.pb_considered.geometry, Square):
+            g = df.Constant("0.0")
+        elif isinstance(self.pb_considered.geometry, Donut):
+            u_ex = UexExpr(params, degree=self.high_degree, domain=V_solve.mesh(), pb_considered=self.pb_considered)
+            g = df.interpolate(u_ex,V_solve)
+        else:
+            raise ValueError("Geometry not recognized")
         bc = df.DirichletBC(V_solve, g, boundary)
         
         dx = df.Measure("dx", domain=V_solve.mesh())
@@ -65,7 +64,15 @@ class PoissonDirFEMSolver(FEMSolver):
 
         dx = df.Measure("dx", domain=V_solve.mesh())
 
-        g = df.Constant(0.0)
+        if isinstance(self.pb_considered.geometry, Square):
+            g = df.Constant("0.0")
+        elif isinstance(self.pb_considered.geometry, Donut):
+            u_ex = UexExpr(params, degree=self.high_degree, domain=V_solve.mesh(), pb_considered=self.pb_considered)
+            u_ex_V = df.interpolate(u_ex,V_solve)
+            u_theta_V = get_utheta_fenics_onV(V_solve,params,u_PINNs)
+            g = u_ex_V - u_theta_V
+        else:
+            raise ValueError("Geometry not recognized")
         bc = df.DirichletBC(V_solve, g, boundary)
         a = df.inner(df.grad(u), df.grad(v)) * dx
         l = f_tild * v * dx
@@ -80,4 +87,7 @@ class PoissonDirFEMSolver(FEMSolver):
         pass
     
 class PoissonDirSquareFEMSolver(PoissonDirFEMSolver,SquareFEMSolver):
+    pass
+
+class PoissonDirDonutFEMSolver(PoissonDirFEMSolver,DonutFEMSolver):
     pass

@@ -37,7 +37,6 @@ def compute_error_estimations_fem_deg(param_num,problem,degree,high_degree,error
         tab_nb_vert_FEM = [2**i for i in range(4,9)]
         tab_h_FEM = []
         tab_err_FEM = []
-
         solver = solver_type(params=params, problem=problem, degree=degree, error_degree=error_degree, high_degree=high_degree, save_uref=save_uref)
         for nb_vert in tab_nb_vert_FEM:
             solver.set_meshsize(nb_cell=nb_vert-1)
