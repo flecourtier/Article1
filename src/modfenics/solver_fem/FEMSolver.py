@@ -32,7 +32,7 @@ current = Path(__file__).parent.parent
 #######
 
 class FEMSolver(abc.ABC):
-    def __init__(self,params,problem,degree=1,error_degree=4,high_degree=9,save_uref=None):
+    def __init__(self,params,problem,degree=1,error_degree=4,high_degree=9,save_uref=None,load_uref=False):
         self.N = None # number of cells
         self.params = params # list of parameters
         self.pb_considered = problem # problem considered
@@ -62,6 +62,7 @@ class FEMSolver(abc.ABC):
             self.mesh_ref,self.V_ref,_ = self._create_FEM_domain(self.N_ref+1,self.error_ref) 
             print("V_ref created with ",self.N_ref+1," vertices and degree ",self.error_ref)
             self.tab_uref = [self.get_uref(i) for i in range(len(self.params))]
+            self.load_uref = load_uref
             
     @abc.abstractmethod
     def _create_mesh(self,nb_vert):
@@ -115,23 +116,22 @@ class FEMSolver(abc.ABC):
         assert not self.pb_considered.ana_sol
         params = self.params[i]
         
-        u = df.TrialFunction(self.V_ex)
-        v = df.TestFunction(self.V_ex)
+        u = df.TrialFunction(self.V_ref)
+        v = df.TestFunction(self.V_ref)
         
         # Declaration of the variationnal problem
-        A,L = self._define_fem_system(params,u,v,self.V_ex)
+        A,L = self._define_fem_system(params,u,v,self.V_ref)
 
         # Resolution of the linear system
-        sol = df.Function(self.V_ex)
-        df.solve(A,sol.vector(),L, solver_parameters={"linear_solver": "cg","preconditioner":"hypre_amg"})
+        sol = df.Function(self.V_ref)
+        df.solve(A,sol.vector(),L, "cg","hypre_amg")
 
         return sol
     
-    def get_uref(self,i):       
+    def get_uref(self, i, ):       
         filename = self.save_uref[i]
-
-        load_ref = True
-        if not load_ref or not os.path.exists(filename):
+        
+        if not self.load_uref or not os.path.exists(filename):
             print("Computing reference solution")
             u_ref = self.run_uref(i)
             vct_u_ref = u_ref.vector().get_local()

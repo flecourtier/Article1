@@ -52,7 +52,8 @@ class TestCase2(TestCase2D):
         self.geometry = Square1() 
         self.nb_parameters = 2
         self.parameter_domain = [[-0.5, 0.500001],[-0.50000, 0.500001]]
-
+        self.ana_sol = True
+        
     def u_ex(self, pre, xy, mu):
         x,y=xy
         mu1,mu2 = mu
@@ -109,26 +110,27 @@ class TestCase3(TestCase2D):
     def g(self, pre, xy, mu):
         return 0.0
         
-# class TestCase4:
-#     def __init__(self,v=1):
-#         self.geometry = Donut1() 
-#         self.version = v 
-#         assert self.version == 1
-#         self.nb_parameters = 2
-#         self.parameter_domain = [[-0.5, 0.500001],[-0.50000, 0.500001]]
+class TestCase4:
+    def __init__(self,v=1):
+        self.geometry = Donut1() 
+        self.version = v 
+        assert self.version == 1
+        self.nb_parameters = 2
+        self.parameter_domain = [[-0.5, 0.500001],[-0.50000, 0.500001]]
+        self.ana_sol = True
+   
+    def u_ex(self, pre, xy, mu):
+        x,y = xy
+        mu1,mu2 = mu
+        return 1.0/(2*pre.pi)*pre.exp(-1.0/2.0*((x-mu1)**2+(y-mu2)**2))*pre.sin(-1.0/4.0 * (x**2 + y**2 - 1.0))
 
-#     def u_ex(self, pre, xy, mu):
-#         x,y = xy
-#         mu1,mu2 = mu
-#         return 1.0/(2*pre.pi)*pre.exp(-1.0/2.0*((x-mu1)**2+(y-mu2)**2))*pre.sin(-1.0/4.0 * (x**2 + y**2 - 1.0))
-
-#     def f(self, pre, xy, mu):
-#         x,y = xy
-#         mu1,mu2 = mu
-#         return -0.5*(0.25*x**2*pre.sin(0.25*(x**2 + y**2 - 1)) - x*(mu1 - x)*pre.cos(0.25*(x**2 + y**2 - 1)) - ((mu1 - x)**2 - 1)*pre.sin(0.25*(x**2 + y**2 - 1)) - 0.5*pre.cos(0.25*(x**2 + y**2 - 1)))*pre.exp(-0.5*(-mu1 + x)**2 - 0.5*(-mu2 + y)**2)/pre.pi - 0.5*(0.25*y**2*pre.sin(0.25*(x**2 + y**2 - 1)) - y*(mu2 - y)*pre.cos(0.25*(x**2 + y**2 - 1)) - ((mu2 - y)**2 - 1)*pre.sin(0.25*(x**2 + y**2 - 1)) - 0.5*pre.cos(0.25*(x**2 + y**2 - 1)))*pre.exp(-0.5*(-mu1 + x)**2 - 0.5*(-mu2 + y)**2)/pre.pi
+    def f(self, pre, xy, mu):
+        x,y = xy
+        mu1,mu2 = mu
+        return -0.5*(0.25*x**2*pre.sin(0.25*(x**2 + y**2 - 1)) - x*(mu1 - x)*pre.cos(0.25*(x**2 + y**2 - 1)) - ((mu1 - x)**2 - 1)*pre.sin(0.25*(x**2 + y**2 - 1)) - 0.5*pre.cos(0.25*(x**2 + y**2 - 1)))*pre.exp(-0.5*(-mu1 + x)**2 - 0.5*(-mu2 + y)**2)/pre.pi - 0.5*(0.25*y**2*pre.sin(0.25*(x**2 + y**2 - 1)) - y*(mu2 - y)*pre.cos(0.25*(x**2 + y**2 - 1)) - ((mu2 - y)**2 - 1)*pre.sin(0.25*(x**2 + y**2 - 1)) - 0.5*pre.cos(0.25*(x**2 + y**2 - 1)))*pre.exp(-0.5*(-mu1 + x)**2 - 0.5*(-mu2 + y)**2)/pre.pi
     
-#     def g(self, pre, xy, mu):
-#         return self.u_ex(pre, xy, mu)      
+    def g(self, pre, xy, mu):
+        return self.u_ex(pre, xy, mu)      
         
 
 # class TestCase5:

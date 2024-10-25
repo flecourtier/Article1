@@ -8,3 +8,6 @@ def get_solver_type(testcase,version):
         return EllipticDirSquareFEMSolver
     else:
         pass
+    
+# TODO
+# def run_reference_solutions():
