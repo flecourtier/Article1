@@ -7,6 +7,7 @@ class TestCase2D(abc.ABC):
     def __init__(self,testcase,version):
         self.testcase = testcase
         self.version = version
+        self.dim = 2
         
         @property
         @abc.abstractmethod

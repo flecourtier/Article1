@@ -1,7 +1,6 @@
 import pandas as pd
 import os
-from modfenics.utils import get_param,compute_slope
-from testcases.utils import create_tree
+from testcases.utils import create_tree,select_param,compute_slope
 from modfenics.error_estimations.utils import get_solver_type
 import matplotlib.pyplot as plt
 
@@ -14,11 +13,11 @@ def read_csv(csv_file):
     return df_FEM,tab_nb_vert_FEM, tab_h_FEM, tab_err_FEM
 
 def compute_error_estimations_fem_deg(param_num,problem,degree,high_degree,error_degree=4,new_run=False,result_dir="./"):
+    dim = problem.dim
     testcase = problem.testcase
     version = problem.version
-    parameter_domain = problem.parameter_domain
-    params = [get_param(param_num,parameter_domain)]
-    solver_type = get_solver_type(testcase,version)
+    params = [select_param(problem,param_num)]     
+    solver_type = get_solver_type(dim,testcase,version)
     
     save_uref = None
     if not problem.ana_sol:
@@ -53,8 +52,7 @@ def compute_error_estimations_fem_deg(param_num,problem,degree,high_degree,error
 def compute_error_estimations_fem_all(param_num,problem,high_degree,error_degree=4,new_run=False,result_dir="./",plot_cvg=False):
     testcase = problem.testcase
     version = problem.version
-    parameter_domain = problem.parameter_domain
-    params = [get_param(param_num,parameter_domain)]
+    params = [select_param(problem,param_num)]
     
     if plot_cvg:
         plt.figure(figsize=(5, 5))

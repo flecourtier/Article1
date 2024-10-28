@@ -1,9 +1,9 @@
 import pandas as pd
 import os
-from modfenics.utils import get_param,compute_slope
-from testcases.utils import create_tree
+from testcases.utils import create_tree,select_param,compute_slope
 from modfenics.error_estimations.utils import get_solver_type
 from modfenics.error_estimations.fem import read_csv as read_csv_FEM
+from modfenics.error_estimations.add import read_csv_Corr as read_csv_Corr
 import matplotlib.pyplot as plt
 
 def read_csv_Mult(csv_file):
@@ -15,11 +15,11 @@ def read_csv_Mult(csv_file):
     return df_Mult,tab_nb_vert_Mult, tab_h_Mult, tab_err_Mult
 
 def compute_error_estimations_Mult_deg(param_num,problem,degree,high_degree,u_theta,M=0.0,error_degree=4,new_run=False,result_dir="./"):
+    dim = problem.dim
     testcase = problem.testcase
     version = problem.version
-    parameter_domain = problem.parameter_domain
-    params = [get_param(param_num,parameter_domain)]
-    solver_type = get_solver_type(testcase,version)
+    params = [select_param(problem,param_num)]
+    solver_type = get_solver_type(dim,testcase,version)
     
     save_uref = None
     if not problem.ana_sol:
@@ -55,8 +55,7 @@ def compute_error_estimations_Mult_deg(param_num,problem,degree,high_degree,u_th
 def compute_error_estimations_Mult_all(param_num,problem,high_degree,u_theta,M=0.0,error_degree=4,new_run=False,result_dir="./",plot_cvg=False):
     testcase = problem.testcase
     version = problem.version
-    parameter_domain = problem.parameter_domain
-    params = [get_param(param_num,parameter_domain)]
+    params = [select_param(problem,param_num)]
     
     if plot_cvg:
         plt.figure(figsize=(5, 5))
@@ -92,31 +91,3 @@ def compute_error_estimations_Mult_all(param_num,problem,high_degree,u_theta,M=0
 
     csv_file_all = result_dir+f'Mult_case{testcase}_v{version}_param{param_num}.csv'
     df_deg.to_csv(csv_file_all, index=False)
-    
-def plot_Mult_vs_FEM(param_num,problem,M=0.0,result_dir="./"):
-    testcase = problem.testcase
-    version = problem.version
-    parameter_domain = problem.parameter_domain
-    params = [get_param(param_num,parameter_domain)]
-    
-    plt.figure(figsize=(5, 5))
-
-    # plot FEM error (L2 norm) as a function of h
-    for d in [1, 2, 3]:
-        csv_file = result_dir+f'FEM_case{testcase}_v{version}_param{param_num}_degree{d}.csv' 
-        df_FEM,_,_,_ = read_csv_FEM(csv_file)
-        plt.loglog(df_FEM['nb_vert'], df_FEM['err'], "+-", label='FEM P'+str(d))
-
-    # plot Mult error (L2 norm) as a function of h
-    for d in [1, 2, 3]:
-        csv_file = result_dir+f'Mult_case{testcase}_v{version}_param{param_num}_degree{d}_M{M}.csv'
-        df_Mult,_,_,_ = read_csv_Mult(csv_file)
-        plt.loglog(df_Mult['nb_vert'], df_Mult['err'], ".--", label='Mult P'+str(d))
-
-    plt.xticks(df_Mult['nb_vert'], df_Mult['nb_vert'].round(3).astype(str), minor=False)
-    plt.xlabel("N")
-    plt.ylabel('L2 norm')
-    plt.legend()
-    plt.title(f'FEM + Mult case{testcase} v{version} param{param_num} : {params[0]} (M={M})')
-    plt.savefig(result_dir+f'FEM-Mult_case{testcase}_v{version}_param{param_num}_M{M}.png')
-    plt.show()
