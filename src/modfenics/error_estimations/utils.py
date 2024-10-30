@@ -1,5 +1,5 @@
 from modfenics.solver_fem.PoissonDirFEMSolver import PoissonDirSquareFEMSolver,PoissonDirDonutFEMSolver,PoissonDirLineFEMSolver
-from modfenics.solver_fem.EllipticDirFEMSolver import EllipticDirSquareFEMSolver
+from modfenics.solver_fem.EllipticDirFEMSolver import EllipticDirSquareFEMSolver,Elliptic1DDirLineFEMSolver
 from modfenics.solver_fem.PoissonMixteFEMSolver import PoissonMixteDonutFEMSolver
 from modfenics.solver_fem.PoissonModNeuFEMSolver import PoissonModNeuDonutFEMSolver
 
@@ -7,6 +7,8 @@ def get_solver_type(dim,testcase,version):
     if dim==1:
         if testcase == 1:
             return PoissonDirLineFEMSolver
+        elif testcase == 2:
+            return Elliptic1DDirLineFEMSolver
         else:
             pass
     elif dim==2:
@@ -24,6 +26,3 @@ def get_solver_type(dim,testcase,version):
             pass
     else:
         pass
-    
-# TODO
-# def run_reference_solutions():

@@ -1,4 +1,5 @@
 print_time = False
+relative_error = True
 
 ###########
 # Imports #
@@ -12,6 +13,7 @@ import abc
 import os
 import time
 import numpy as np
+import matplotlib.pyplot as plt
 from pathlib import Path
 
 df.parameters["ghost_mode"] = "shared_facet"
@@ -81,7 +83,7 @@ class FEMSolver(abc.ABC):
         pass
     
     @abc.abstractmethod
-    def _define_corr_mult_system(self,params,u,v,u_PINNs,V_solve,M):
+    def _define_corr_mult_system(self,params,u,v,u_PINNs,V_solve,M,impose_bc):
         pass
     
     def set_meshsize(self,nb_cell):
@@ -147,9 +149,33 @@ class FEMSolver(abc.ABC):
         u_ref_Vex = df.interpolate(u_ref,self.V_ex)
         
         return u_ref_Vex
-
-    def fem(self, i):
-        print("feeeeeeeeeemmmm")
+    
+    def _plot_results_fem(self, u_ex_V, sol_V, V_solve, plot_result=False, filename=None):
+        assert self.pb_considered.dim == 1
+        
+        plt.figure(figsize=(6,3))
+        
+        plt.subplot(1,2,1)
+        df.plot(sol_V,label="sol")
+        df.plot(u_ex_V,label="u_ex")
+        plt.title("solution of FEM")
+        plt.legend()
+        
+        plt.subplot(1,2,2)
+        error_sol = df.Function(V_solve)
+        error_sol.vector()[:] = abs(sol_V.vector()[:] - u_ex_V.vector()[:])
+        df.plot(error_sol)
+        plt.title("error on sol")
+        
+        if plot_result:
+            plt.show()
+            
+        if filename is not None:
+            plt.savefig(filename)
+            
+        plt.close()
+        
+    def fem(self, i, plot_result=False, filename=None):
         assert self.N is not None
         params = self.params[i]
         
@@ -183,16 +209,59 @@ class FEMSolver(abc.ABC):
         else:
             uex_Vex = self.tab_uref[i]
         sol_Vex = df.interpolate(sol,self.V_ex)
-        norme_L2 = (df.assemble((((uex_Vex - sol_Vex)) ** 2) * self.dx) ** (0.5)) / (df.assemble((((uex_Vex)) ** 2) * self.dx) ** (0.5))
+        norme_L2 = (df.assemble((((uex_Vex - sol_Vex)) ** 2) * self.dx) ** (0.5)) 
+        if relative_error:
+            norme_L2 = norme_L2 / (df.assemble((((uex_Vex)) ** 2) * self.dx) ** (0.5))
         end = time.time()
         
         if print_time:
             print("Time to compute the error :",end-start)
         self.times_fem[self.N]["error"] = end-start
         
+        if plot_result or filename is not None:
+            u_ex_V = df.interpolate(u_ex,self.V)
+            self._plot_results_fem(u_ex_V, sol, self.V, plot_result, filename)
+        
         return sol,norme_L2
+    
+    def _plot_results_corr(self, u_ex_V, u_theta_V, C_ex_V, C_tild_V, sol_V, V_solve, plot_result=False, filename=None):
+        assert self.pb_considered.dim == 1
+        
+        plt.figure(figsize=(12,3))
+        
+        plt.subplot(1,4,1)
+        df.plot(u_ex_V,label="u_ex",color="orange")
+        df.plot(u_theta_V,label="u_theta")
+        plt.title("prediction")
+        plt.legend()
+        
+        plt.subplot(1,4,2)
+        df.plot(C_ex_V,label="C_ex",color="orange")
+        df.plot(C_tild_V,label="C_tild")
+        plt.title("correction")
+        plt.legend()
+        
+        plt.subplot(1,4,3)
+        df.plot(sol_V,label="sol")
+        df.plot(u_ex_V,label="u_ex")
+        plt.title("solution after correction")
+        plt.legend()
+        
+        plt.subplot(1,4,4)
+        error_sol = df.Function(V_solve)
+        error_sol.vector()[:] = abs(sol_V.vector()[:] - u_ex_V.vector()[:])
+        df.plot(error_sol)
+        plt.title("error on sol (corrected)")
+        
+        if plot_result:
+            plt.show()
+            
+        if filename is not None:
+            plt.savefig(filename)
+            
+        plt.close()
 
-    def corr_add(self, i, u_PINNs): #phi_tild, lap_phi_tild):
+    def corr_add(self, i, u_PINNs, plot_result=False, filename=None):
         assert self.N is not None
         params = self.params[i]
         
@@ -234,16 +303,24 @@ class FEMSolver(abc.ABC):
         sol_Vex = df.Function(self.V_ex)
         sol_Vex.vector()[:] = (C_Vex.vector()[:])+u_theta_Vex.vector()[:]
         
-        norme_L2 = (df.assemble((((uex_Vex - sol_Vex)) ** 2) * self.dx) ** (0.5)) / (df.assemble((((uex_Vex)) ** 2) * self.dx) ** (0.5))
+        norme_L2 = (df.assemble((((uex_Vex - sol_Vex)) ** 2) * self.dx) ** (0.5)) 
+        if relative_error:
+            norme_L2 = norme_L2 / (df.assemble((((uex_Vex)) ** 2) * self.dx) ** (0.5))
         end = time.time()
         
         if print_time:
             print("Time to compute the error :",end-start)
         self.times_corr_add[self.N]["error"] = end-start
         
+        if plot_result or filename is not None:
+            u_ex_V = df.interpolate(u_ex,self.V)
+            C_ex = df.Function(self.V)
+            C_ex.vector()[:] = u_ex_V.vector()[:] - u_theta_V.vector()[:]
+            self._plot_results_corr(u_ex_V,u_theta_V,C_ex,C_tild,sol,self.V,filename=filename)
+        
         return sol,C_tild,norme_L2
 
-    def corr_mult(self, i, u_PINNs, M=0.0): #phi_tild, lap_phi_tild):
+    def corr_mult(self, i, u_PINNs, M=0.0, impose_bc=True, plot_result=False, filename=None):
         assert self.N is not None
         params = self.params[i]
         self.times_corr_mult[self.N][str(M)] = {}
@@ -253,7 +330,7 @@ class FEMSolver(abc.ABC):
         
         # Declaration of the variationnal problem
         start = time.time()
-        A,L = self._define_corr_mult_system(params,u,v,u_PINNs,self.V,M)
+        A,L = self._define_corr_mult_system(params,u,v,u_PINNs,self.V,M,impose_bc=impose_bc)
         end = time.time()
 
         if print_time:
@@ -288,11 +365,19 @@ class FEMSolver(abc.ABC):
         sol_Vex = df.Function(self.V_ex)
         sol_Vex.vector()[:] = C_Vex.vector()[:] * (u_theta_Vex.vector()[:] + M) - M
         
-        norme_L2 = (df.assemble((((uex_Vex - sol_Vex)) ** 2) * self.dx) ** (0.5)) / (df.assemble((((uex_Vex)) ** 2) * self.dx) ** (0.5))
+        norme_L2 = (df.assemble((((uex_Vex - sol_Vex)) ** 2) * self.dx) ** (0.5)) 
+        if relative_error:
+            norme_L2 = norme_L2 / (df.assemble((((uex_Vex)) ** 2) * self.dx) ** (0.5))
         end = time.time()
         
         if print_time:
             print("Time to compute the error :",end-start)
         self.times_corr_mult[self.N][str(M)]["error"] = end-start
+        
+        if plot_result or filename is not None:
+            u_ex_V = df.interpolate(u_ex,self.V)
+            C_ex = df.Function(self.V)
+            C_ex.vector()[:] = u_ex_V.vector()[:]/u_theta_V.vector()[:]
+            self._plot_results_corr(u_ex_V,u_theta_V,C_ex,C_tild,sol,self.V,filename=filename)
         
         return sol,C_tild,norme_L2

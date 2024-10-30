@@ -12,7 +12,7 @@ def read_csv(csv_file):
     
     return df_FEM,tab_nb_vert_FEM, tab_h_FEM, tab_err_FEM
 
-def compute_error_estimations_fem_deg(param_num,problem,degree,high_degree,error_degree=4,new_run=False,result_dir="./"):
+def compute_error_estimations_fem_deg(param_num,problem,degree,high_degree,error_degree=4,new_run=False,result_dir="./",save_result=False):
     dim = problem.dim
     testcase = problem.testcase
     version = problem.version
@@ -40,12 +40,18 @@ def compute_error_estimations_fem_deg(param_num,problem,degree,high_degree,error
         for nb_vert in tab_nb_vert_FEM:
             solver.set_meshsize(nb_cell=nb_vert-1)
             tab_h_FEM.append(solver.h)
-            _,norme_L2 = solver.fem(0)
+            fig_filename = None
+            if save_result:
+                result_dir_fig = result_dir + "FEM_plot/"
+                create_tree(result_dir_fig)
+                fig_filename = result_dir_fig + f'FEM_plot_case{testcase}_v{version}_param{param_num}_degree{degree}_N{nb_vert}.png'     
+            _,norme_L2 = solver.fem(0,plot_result=False,filename=fig_filename)
             print(f"nb_vert={nb_vert}, norme_L2={norme_L2}")
             tab_err_FEM.append(norme_L2)
             
         df_FEM = pd.DataFrame({'nb_vert': tab_nb_vert_FEM, 'h': tab_h_FEM, 'err': tab_err_FEM})
         df_FEM.to_csv(csv_file, index=False)
+        print(csv_file)
             
     return df_FEM,tab_nb_vert_FEM, tab_h_FEM, tab_err_FEM
 
@@ -88,3 +94,4 @@ def compute_error_estimations_fem_all(param_num,problem,high_degree,error_degree
 
     csv_file_all = result_dir+f'FEM_case{testcase}_v{version}_param{param_num}.csv'
     df_deg.to_csv(csv_file_all, index=False)
+    

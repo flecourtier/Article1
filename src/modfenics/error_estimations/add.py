@@ -13,7 +13,7 @@ def read_csv_Corr(csv_file):
     
     return df_Corr,tab_nb_vert_Corr, tab_h_Corr, tab_err_Corr
 
-def compute_error_estimations_Corr_deg(param_num,problem,degree,high_degree,u_theta,error_degree=4,new_run=False,result_dir="./"):
+def compute_error_estimations_Corr_deg(param_num,problem,degree,high_degree,u_theta,error_degree=4,new_run=False,result_dir="./",save_result=False):
     dim = problem.dim
     testcase = problem.testcase
     version = problem.version
@@ -42,7 +42,12 @@ def compute_error_estimations_Corr_deg(param_num,problem,degree,high_degree,u_th
         for nb_vert in tab_nb_vert_Corr:
             solver.set_meshsize(nb_cell=nb_vert-1)
             tab_h_Corr.append(solver.h)
-            _,_,norme_L2 = solver.corr_add(0,u_theta)            
+            fig_filename = None
+            if save_result:
+                result_dir_fig = result_dir + "Corr_plot/"
+                create_tree(result_dir_fig)
+                fig_filename = result_dir_fig + f'Corr_plot_case{testcase}_v{version}_param{param_num}_degree{degree}_N{nb_vert}.png'
+            _,_,norme_L2 = solver.corr_add(0,u_theta,plot_result=False,filename=fig_filename)         
             print(f"nb_vert={nb_vert}, norme_L2={norme_L2}")
             tab_err_Corr.append(norme_L2)
             

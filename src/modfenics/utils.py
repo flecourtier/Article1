@@ -55,23 +55,22 @@ def get_laputheta_fenics_fromV(V_test,params,u_PINNs):
 
 def get_gradutheta_fenics_fromV(V_test,params,u_PINNs):
     X_test,mu_test = get_test_sample_fromV(V_test,params)
+    dim = X_test.x.shape[1]
     
     pred = u_PINNs.setup_w_dict(X_test, mu_test)
     u_PINNs.get_first_derivatives(pred, X_test)
     
     phi_tild_x = pred["w_x"][:,0].cpu().detach().numpy()
-    phi_tild_y = pred["w_y"][:,0].cpu().detach().numpy()
+    if dim == 2:
+        phi_tild_y = pred["w_y"][:,0].cpu().detach().numpy()
     
-    # u_theta_x = df.Function(V_test)
-    # u_theta_x.vector()[:] = phi_tild_x.copy()
-    
-    # u_theta_y = df.Function(V_test)
-    # u_theta_y.vector()[:] = phi_tild_y.copy()
-    
-    V_test_2D = df.VectorFunctionSpace(V_test.mesh(),V_test.ufl_element().family(),V_test.ufl_element().degree(),dim=2)
+    V_test_2D = df.VectorFunctionSpace(V_test.mesh(),V_test.ufl_element().family(),V_test.ufl_element().degree(),dim=dim)
     grad_utheta = df.Function(V_test_2D)
-    grad_utheta.sub(0).vector()[:] = phi_tild_x.copy()
-    grad_utheta.sub(1).vector()[:] = phi_tild_y.copy()
+    if dim == 1:
+        grad_utheta.vector()[:] = phi_tild_x.copy()
+    elif dim == 2:
+        grad_utheta.sub(0).vector()[:] = phi_tild_x.copy()
+        grad_utheta.sub(1).vector()[:] = phi_tild_y.copy()
     
     return grad_utheta
 

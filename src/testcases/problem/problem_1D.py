@@ -72,6 +72,7 @@ class TestCase2(TestCase1D):
         self.nb_parameters = 2
         self.parameter_domain = [[1.0, 2.0],[10.0, 100.0]]
         self.ana_sol = True
+        self.set_params = [[1.2,40.0],[1.5,90.0]]
 
     def u_ex(self, pre, xy, mu):
         if pre is dolfin:

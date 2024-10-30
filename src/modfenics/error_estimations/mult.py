@@ -14,7 +14,8 @@ def read_csv_Mult(csv_file):
     
     return df_Mult,tab_nb_vert_Mult, tab_h_Mult, tab_err_Mult
 
-def compute_error_estimations_Mult_deg(param_num,problem,degree,high_degree,u_theta,M=0.0,error_degree=4,new_run=False,result_dir="./"):
+def compute_error_estimations_Mult_deg(param_num,problem,degree,high_degree,u_theta,M=0.0,error_degree=4,new_run=False,result_dir="./",impose_bc=True,save_result=False):
+    # impose_bc: strong imposition of boundary conditions
     dim = problem.dim
     testcase = problem.testcase
     version = problem.version
@@ -29,7 +30,10 @@ def compute_error_estimations_Mult_deg(param_num,problem,degree,high_degree,u_th
         save_uref = [filename]
         print(filename)
 
-    csv_file = result_dir+f'Mult_case{testcase}_v{version}_param{param_num}_degree{degree}_M{M}.csv'
+    csv_file = result_dir+f'Mult_case{testcase}_v{version}_param{param_num}_degree{degree}_M{M}'
+    if not impose_bc:
+        csv_file += '_weak'
+    csv_file += '.csv'
     if not new_run and os.path.exists(csv_file):
         print(f"## Read csv file {csv_file}")
         df_Mult,tab_nb_vert_Mult, tab_h_Mult, tab_err_Mult = read_csv_Mult(csv_file)
@@ -43,7 +47,18 @@ def compute_error_estimations_Mult_deg(param_num,problem,degree,high_degree,u_th
         for nb_vert in tab_nb_vert_Mult:
             solver.set_meshsize(nb_cell=nb_vert-1)
             tab_h_Mult.append(solver.h)
-            _,_,norme_L2 = solver.corr_mult(0,u_theta,M=M)            
+            fig_filename = None
+            if save_result:
+                result_dir_fig = result_dir + "Mult_plot"
+                if not impose_bc:
+                    result_dir_fig += "_weak"
+                result_dir_fig += "/"
+                create_tree(result_dir_fig)
+                fig_filename = result_dir_fig + f'Mult_plot_case{testcase}_v{version}_param{param_num}_degree{degree}_N{nb_vert}_M{M}'
+                if not impose_bc:
+                    fig_filename += '_weak'
+                fig_filename += '.png'
+            _,_,norme_L2 = solver.corr_mult(0,u_theta,M=M,impose_bc=impose_bc,plot_result=False,filename=fig_filename)           
             print(f"nb_vert={nb_vert}, norme_L2={norme_L2}")
             tab_err_Mult.append(norme_L2)
             
