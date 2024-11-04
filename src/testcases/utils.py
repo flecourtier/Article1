@@ -15,14 +15,27 @@ def create_tree(path):
             os.mkdir(start+subdir)
             
 def get_random_param(i,parameter_domain):
-    # pick 1 random parameter
+    # pick 1 random parameter at a given index
+    dim_params = len(parameter_domain)
     np.random.seed(0)
     for j in range(i):
         param = []
-        for k in range(len(parameter_domain)):
+        for k in range(dim_params):
             param.append(np.random.uniform(parameter_domain[k][0], parameter_domain[k][1]))
     param = np.round(param, 2)
     return param
+
+def get_random_params(n_params,parameter_domain):
+    # pick n random parameters
+    dim_params = len(parameter_domain)
+
+    np.random.seed(0)
+    params = []
+    for i in range(dim_params):
+        parami = np.random.uniform(parameter_domain[i][0], parameter_domain[i][1], n_params)
+        params.append(parami)
+    params = np.array(params).T
+    return params
 
 def select_param(problem,param_num):
     try:

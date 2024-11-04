@@ -4,7 +4,7 @@ print_time = True
 # Imports #
 ###########
 
-from modfenics.fenics_expressions.fenics_expressions import FExpr,UexExpr,AnisotropyExpr
+from modfenics.fenics_expressions.fenics_expressions import get_f_expr,AnisotropyExpr
 from modfenics.solver_fem.FEMSolver import FEMSolver
 from modfenics.utils import get_divmatgradutheta_fenics_fromV, get_utheta_fenics_onV,get_gradutheta_fenics_fromV,get_laputheta_fenics_fromV
 import dolfin as df
@@ -38,7 +38,7 @@ class EllipticDirFEMSolver(FEMSolver):
         dx = df.Measure("dx", domain=V_solve.mesh())
         
         mat = AnisotropyExpr(params, degree=self.high_degree, domain=V_solve.mesh(), pb_considered=self.pb_considered) 
-        f_expr = FExpr(params, degree=self.high_degree, domain=V_solve.mesh(), pb_considered=self.pb_considered)
+        f_expr = get_f_expr(params, degree=self.high_degree, domain=V_solve.mesh(), pb_considered=self.pb_considered)
         a = df.inner(mat*df.grad(u), df.grad(v)) * dx
         l = f_expr * v * dx
 
@@ -52,10 +52,10 @@ class EllipticDirFEMSolver(FEMSolver):
         divmatgradutheta = get_divmatgradutheta_fenics_fromV(self.V_theta,params,u_PINNs,self.pb_considered.anisotropy_matrix)
         
         boundary = "on_boundary"
-        f_expr = FExpr(params, degree=self.high_degree, domain=V_solve.mesh(), pb_considered=self.pb_considered)
-        fexpr_inter = df.interpolate(f_expr,self.V_theta)
+        f_expr = get_f_expr(params, degree=self.high_degree, domain=V_solve.mesh(), pb_considered=self.pb_considered)
+        get_f_expr_inter = df.interpolate(f_expr,self.V_theta)
         f_tild = df.Function(self.V_theta)
-        f_tild.vector()[:] = fexpr_inter.vector()[:] + divmatgradutheta.vector()[:] # div(mat*grad(phi_tild))
+        f_tild.vector()[:] = get_f_expr_inter.vector()[:] + divmatgradutheta.vector()[:] # div(mat*grad(phi_tild))
 
         dx = df.Measure("dx", domain=V_solve.mesh())
 
@@ -80,7 +80,7 @@ class EllipticDirFEMSolver(FEMSolver):
         u_theta_M_Vtheta.vector()[:] = u_theta_Vtheta.vector()[:] + M
         
         boundary = "on_boundary"
-        f_expr = FExpr(params, degree=self.high_degree, domain=V_solve.mesh(), pb_considered=self.pb_considered)
+        f_expr = get_f_expr(params, degree=self.high_degree, domain=V_solve.mesh(), pb_considered=self.pb_considered)
         dx = df.Measure("dx", domain=V_solve.mesh())
 
         g = df.Constant(1.0)
@@ -105,7 +105,7 @@ class EllipticDirFEMSolver(FEMSolver):
     #     grad_u_theta_V = get_gradutheta_fenics_fromV(V_solve,params,u_PINNs) # same as grad_u_theta_M_V
         
     #     boundary = "on_boundary"
-    #     f_expr = FExpr(params, degree=self.high_degree, domain=V_solve.mesh(), pb_considered=self.pb_considered)
+    #     f_expr = get_f_expr(params, degree=self.high_degree, domain=V_solve.mesh(), pb_considered=self.pb_considered)
     #     dx = df.Measure("dx", domain=V_solve.mesh())
 
     #     g = df.Constant(1.0)
@@ -152,9 +152,9 @@ class Elliptic1DDirFEMSolver(FEMSolver):
         u_theta_xx = get_laputheta_fenics_fromV(self.V_theta,params,u_PINNs)
         
         f_expr = df.Constant(r)
-        fexpr_inter = df.interpolate(f_expr,self.V_theta)
+        get_f_expr_inter = df.interpolate(f_expr,self.V_theta)
         f_tild = df.Function(self.V_theta)
-        f_tild.vector()[:] = fexpr_inter.vector()[:] - u_theta_x.vector()[:] + 1.0/Pe * u_theta_xx.vector()[:] 
+        f_tild.vector()[:] = get_f_expr_inter.vector()[:] - u_theta_x.vector()[:] + 1.0/Pe * u_theta_xx.vector()[:] 
 
         dx = df.Measure("dx", domain=V_solve.mesh())
 

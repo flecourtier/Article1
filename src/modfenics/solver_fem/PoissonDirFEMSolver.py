@@ -4,7 +4,7 @@ print_time = True
 # Imports #
 ###########
 
-from modfenics.fenics_expressions.fenics_expressions import FExpr,UexExpr
+from modfenics.fenics_expressions.fenics_expressions import get_f_expr,get_uex_expr
 from modfenics.solver_fem.FEMSolver import FEMSolver
 from modfenics.utils import get_laputheta_fenics_fromV,get_utheta_fenics_onV
 from testcases.geometry.geometry_2D import Square,Donut
@@ -32,11 +32,10 @@ from modfenics.solver_fem.GeometryFEMSolver import LineFEMSolver,SquareFEMSolver
 class PoissonDirFEMSolver(FEMSolver):    
     def _define_fem_system(self,params,u,v,V_solve):
         boundary = "on_boundary"
-        print(self.pb_considered.geometry)
         if isinstance(self.pb_considered.geometry, (Square,Line)):
             g = df.Constant("0.0")
         elif isinstance(self.pb_considered.geometry, Donut):
-            u_ex = UexExpr(params, degree=self.high_degree, domain=V_solve.mesh(), pb_considered=self.pb_considered)
+            u_ex = get_uex_expr(params, degree=self.high_degree, domain=V_solve.mesh(), pb_considered=self.pb_considered)
             g = df.interpolate(u_ex,V_solve)
         else:
             raise ValueError("Geometry not recognized")
@@ -44,7 +43,7 @@ class PoissonDirFEMSolver(FEMSolver):
         
         dx = df.Measure("dx", domain=V_solve.mesh())
         
-        f_expr = FExpr(params, degree=self.high_degree, domain=V_solve.mesh(), pb_considered=self.pb_considered)
+        f_expr = get_f_expr(params, degree=self.high_degree, domain=V_solve.mesh(), pb_considered=self.pb_considered)
         a = df.inner(df.grad(u), df.grad(v)) * dx
         l = f_expr * v * dx
 
@@ -58,17 +57,17 @@ class PoissonDirFEMSolver(FEMSolver):
         lap_utheta = get_laputheta_fenics_fromV(self.V_theta,params,u_PINNs)
         
         boundary = "on_boundary"
-        f_expr = FExpr(params, degree=self.high_degree, domain=V_solve.mesh(), pb_considered=self.pb_considered)
-        fexpr_inter = df.interpolate(f_expr,self.V_theta)
+        f_expr = get_f_expr(params, degree=self.high_degree, domain=V_solve.mesh(), pb_considered=self.pb_considered)
+        get_f_expr_inter = df.interpolate(f_expr,self.V_theta)
         f_tild = df.Function(self.V_theta)
-        f_tild.vector()[:] = fexpr_inter.vector()[:] + lap_utheta.vector()[:] # div(grad(phi_tild))
+        f_tild.vector()[:] = get_f_expr_inter.vector()[:] + lap_utheta.vector()[:] # div(grad(phi_tild))
 
         dx = df.Measure("dx", domain=V_solve.mesh())
 
         if isinstance(self.pb_considered.geometry, (Square,Line)):
             g = df.Constant("0.0")
         elif isinstance(self.pb_considered.geometry, Donut):
-            u_ex = UexExpr(params, degree=self.high_degree, domain=V_solve.mesh(), pb_considered=self.pb_considered)
+            u_ex = get_uex_expr(params, degree=self.high_degree, domain=V_solve.mesh(), pb_considered=self.pb_considered)
             u_ex_V = df.interpolate(u_ex,V_solve)
             u_theta_V = get_utheta_fenics_onV(V_solve,params,u_PINNs)
             g = u_ex_V - u_theta_V
@@ -92,7 +91,7 @@ class PoissonDirFEMSolver(FEMSolver):
         u_theta_M_V.vector()[:] = u_theta_V.vector()[:] + M
         
         boundary = "on_boundary"
-        f_expr = FExpr(params, degree=self.high_degree, domain=V_solve.mesh(), pb_considered=self.pb_considered)
+        f_expr = get_f_expr(params, degree=self.high_degree, domain=V_solve.mesh(), pb_considered=self.pb_considered)
         dx = df.Measure("dx", domain=V_solve.mesh())
 
         g = df.Constant(1.0)

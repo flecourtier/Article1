@@ -5,7 +5,7 @@ relative_error = True
 # Imports #
 ###########
 
-from modfenics.fenics_expressions.fenics_expressions import UexExpr
+from modfenics.fenics_expressions.fenics_expressions import get_uex_expr
 from modfenics.utils import get_utheta_fenics_onV
 import dolfin as df
 
@@ -96,7 +96,7 @@ class FEMSolver(abc.ABC):
         # To compute the solution with FEM (standard/correction)
         self.mesh,self.V,self.dx = self._create_FEM_domain(self.N+1,self.degree,save_times=True)
         self.h = self.mesh.hmax()
-        print("Mesh created with ",self.N+1," vertices : h =",self.h)
+        print("V created with ",self.N+1," vertices and degree ",self.error_degree," : h =",self.h)
         
         self.V_theta = df.FunctionSpace(self.mesh, "CG", self.high_degree)
         
@@ -204,7 +204,7 @@ class FEMSolver(abc.ABC):
         # Compute the error
         start = time.time()
         if self.pb_considered.ana_sol:
-            u_ex = UexExpr(params, degree=self.high_degree, domain=self.mesh, pb_considered=self.pb_considered)
+            u_ex = get_uex_expr(params, degree=self.high_degree, domain=self.mesh_ex, pb_considered=self.pb_considered)
             uex_Vex = df.interpolate(u_ex,self.V_ex)
         else:
             uex_Vex = self.tab_uref[i]
@@ -261,6 +261,24 @@ class FEMSolver(abc.ABC):
             
         plt.close()
 
+    def pinns(self, i, u_PINNs):
+        assert self.N is not None
+        params = self.params[i]
+        
+        u_theta_Vex = get_utheta_fenics_onV(self.V_ex,self.params[i],u_PINNs)
+        
+        if self.pb_considered.ana_sol:
+            u_ex = get_uex_expr(params, degree=self.high_degree, domain=self.mesh_ex, pb_considered=self.pb_considered)
+            uex_Vex = df.interpolate(u_ex,self.V_ex)
+        else:
+            uex_Vex = self.tab_uref[i]
+        
+        norme_L2 = (df.assemble((((uex_Vex - u_theta_Vex)) ** 2) * self.dx) ** (0.5)) 
+        if relative_error:
+            norme_L2 = norme_L2 / (df.assemble((((uex_Vex)) ** 2) * self.dx) ** (0.5))
+        
+        return norme_L2
+        
     def corr_add(self, i, u_PINNs, plot_result=False, filename=None):
         assert self.N is not None
         params = self.params[i]
@@ -295,7 +313,7 @@ class FEMSolver(abc.ABC):
         start = time.time()
         u_theta_Vex = get_utheta_fenics_onV(self.V_ex,self.params[i],u_PINNs)
         if self.pb_considered.ana_sol:
-            u_ex = UexExpr(params, degree=self.high_degree, domain=self.mesh, pb_considered=self.pb_considered)
+            u_ex = get_uex_expr(params, degree=self.high_degree, domain=self.mesh, pb_considered=self.pb_considered)
             uex_Vex = df.interpolate(u_ex,self.V_ex) 
         else:
             uex_Vex = self.tab_uref[i]
@@ -357,7 +375,7 @@ class FEMSolver(abc.ABC):
         start = time.time()
         u_theta_Vex = get_utheta_fenics_onV(self.V_ex,self.params[i],u_PINNs)
         if self.pb_considered.ana_sol:
-            u_ex = UexExpr(params, degree=self.high_degree, domain=self.mesh, pb_considered=self.pb_considered)
+            u_ex = get_uex_expr(params, degree=self.high_degree, domain=self.mesh, pb_considered=self.pb_considered)
             uex_Vex = df.interpolate(u_ex,self.V_ex) 
         else:
             uex_Vex = self.tab_uref[i]

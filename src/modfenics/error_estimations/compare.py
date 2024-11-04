@@ -119,45 +119,61 @@ def plot_Mult_vs_Add_vs_FEM(param_num,problem,degree,tab_M,result_dir="./"):
     plt.savefig(result_dir+f'FEM-Add-Mult_case{testcase}_v{version}_param{param_num}.png')
     plt.show()
     
-def save_tab(param_num,problem,degree,tab_M,result_dir="./"):
+def save_tab(param_num,problem,degree,tab_M=None,result_dir="./"):
     testcase = problem.testcase
     version = problem.version
     # params = [select_param(problem,param_num)]
+    tab_vals = []
+    iterables = []
     
-    csv_file = result_dir+f'FEM_case{testcase}_v{version}_param{param_num}_degree{degree}.csv' 
-    _,tab_nb_vert_FEM,_,tab_err_FEM = read_csv_FEM(csv_file)
-    tab_err_FEM = np.array(tab_err_FEM)
+    try:
+        csv_file = result_dir+f'FEM_case{testcase}_v{version}_param{param_num}_degree{degree}.csv' 
+        _,tab_nb_vert_FEM,_,tab_err_FEM = read_csv_FEM(csv_file)
+        tab_err_FEM = np.array(tab_err_FEM)
+        tab_vals.append(tab_err_FEM)
+        iterables.append(("FEM","error"))
+    except:
+        print(f'FEM P{degree} not found')
     
-    csv_file = result_dir+f'Corr_case{testcase}_v{version}_param{param_num}_degree{degree}.csv'
-    _,_,_,tab_err_Add = read_csv_Add(csv_file)
-    tab_err_Add = np.array(tab_err_Add)
-    facteurs_Add = tab_err_FEM/tab_err_Add
-    
-    tab_vals = [tab_err_FEM, tab_err_Add, facteurs_Add]
-    iterables = [("FEM","error"), ("Corr","error"), ("Corr","facteurs")]
-
-    # plot Mult error (L2 norm) as a function of h
-    for M in tab_M:
-        csv_file = result_dir+f'Mult_case{testcase}_v{version}_param{param_num}_degree{degree}_M{M}.csv'
-        _,_,_,tab_err_Mult = read_csv_Mult(csv_file)
-        tab_err_Mult = np.array(tab_err_Mult)
-        facteurs_Mult = tab_err_FEM/tab_err_Mult
-        tab_vals.append(tab_err_Mult)
-        tab_vals.append(facteurs_Mult)
-        iterables.append(("Mult"+str(M),"error"))
-        iterables.append(("Mult"+str(M),"facteurs"))
+    try:
+        csv_file = result_dir+f'Corr_case{testcase}_v{version}_param{param_num}_degree{degree}.csv'
+        _,_,_,tab_err_Add = read_csv_Add(csv_file)
+        tab_err_Add = np.array(tab_err_Add)
+        facteurs_Add = tab_err_FEM/tab_err_Add
         
-        try:
-            csv_file = result_dir+f'Mult_case{testcase}_v{version}_param{param_num}_degree{degree}_M{M}_weak.csv'
-            _,_,_,tab_err_Mult = read_csv_Mult(csv_file)
-            tab_err_Mult = np.array(tab_err_Mult)
-            facteurs_Mult = tab_err_FEM/tab_err_Mult
-            tab_vals.append(tab_err_Mult)
-            tab_vals.append(facteurs_Mult)
-            iterables.append(("Mult"+str(M)+"w","error"))
-            iterables.append(("Mult"+str(M)+"w","facteurs"))
-        except:
-            print(f'Mult weak P{degree} M{M} not found')
+        tab_vals.append(tab_err_Add)
+        tab_vals.append(facteurs_Add)
+        iterables.append(("Corr","error"))
+        iterables.append(("Corr","facteurs"))
+    except:
+        print(f'Corr P{degree} not found')
+        
+    # plot Mult error (L2 norm) as a function of h
+    if tab_M is not None:
+        for M in tab_M:
+            try:
+                csv_file = result_dir+f'Mult_case{testcase}_v{version}_param{param_num}_degree{degree}_M{M}.csv'
+                _,_,_,tab_err_Mult = read_csv_Mult(csv_file)
+                tab_err_Mult = np.array(tab_err_Mult)
+                facteurs_Mult = tab_err_FEM/tab_err_Mult
+                tab_vals.append(tab_err_Mult)
+                tab_vals.append(facteurs_Mult)
+                iterables.append(("Mult"+str(M),"error"))
+                iterables.append(("Mult"+str(M),"facteurs"))
+            except:
+                print(f'Mult strong P{degree} M{M} not found')
+            
+            try:
+                csv_file = result_dir+f'Mult_case{testcase}_v{version}_param{param_num}_degree{degree}_M{M}_weak.csv'
+                _,_,_,tab_err_Mult = read_csv_Mult(csv_file)
+                tab_err_Mult = np.array(tab_err_Mult)
+                facteurs_Mult = tab_err_FEM/tab_err_Mult
+                tab_vals.append(tab_err_Mult)
+                tab_vals.append(facteurs_Mult)
+                iterables.append(("Mult"+str(M)+"w","error"))
+                iterables.append(("Mult"+str(M)+"w","facteurs"))
+            except:
+                print(f'Mult weak P{degree} M{M} not found')
 
     index = pd.MultiIndex.from_tuples(iterables, names=["method", "type"])
     df = pd.DataFrame(tab_vals, index=index, columns=tab_nb_vert_FEM).T

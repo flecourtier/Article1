@@ -4,7 +4,7 @@ print_time = True
 # Imports #
 ###########
 
-from modfenics.fenics_expressions.fenics_expressions import FExpr,UexExpr
+from modfenics.fenics_expressions.fenics_expressions import get_f_expr,get_uex_expr
 from modfenics.solver_fem.FEMSolver import FEMSolver
 from modfenics.utils import get_laputheta_fenics_fromV,get_utheta_fenics_onV,get_gradutheta_fenics_fromV
 import dolfin as df
@@ -29,7 +29,7 @@ from modfenics.solver_fem.GeometryFEMSolver import DonutFEMSolver
 
 class PoissonMixteFEMSolver(FEMSolver):    
     def _define_fem_system(self,params,u,v,V_solve):
-        u_ex = UexExpr(params, degree=self.high_degree, domain=V_solve.mesh(), pb_considered=self.pb_considered)
+        u_ex = get_uex_expr(params, degree=self.high_degree, domain=V_solve.mesh(), pb_considered=self.pb_considered)
         
         # Impose Dirichlet boundary conditions
         # g_E = GExpr(params, degree=self.high_degree, domain=V_solve.mesh(), pb_considered=self.pb_considered)
@@ -53,7 +53,7 @@ class PoissonMixteFEMSolver(FEMSolver):
                 
         dx = df.Measure("dx", domain=V_solve.mesh())
         
-        f_expr = FExpr(params, degree=self.high_degree, domain=V_solve.mesh(), pb_considered=self.pb_considered)
+        f_expr = get_f_expr(params, degree=self.high_degree, domain=V_solve.mesh(), pb_considered=self.pb_considered)
         a = df.inner(df.grad(u),df.grad(v)) * dx + u*v*ds_int
         l = f_expr * v * dx + h_I * v * ds_int
 
@@ -64,13 +64,13 @@ class PoissonMixteFEMSolver(FEMSolver):
         return A,L
     
     def _define_corr_add_system(self,params,u,v,u_PINNs,V_solve):
-        u_ex = UexExpr(params, degree=self.high_degree, domain=V_solve.mesh(), pb_considered=self.pb_considered)
+        u_ex = get_uex_expr(params, degree=self.high_degree, domain=V_solve.mesh(), pb_considered=self.pb_considered)
         lap_utheta = get_laputheta_fenics_fromV(self.V_theta,params,u_PINNs)
         
-        f_expr = FExpr(params, degree=self.high_degree, domain=V_solve.mesh(), pb_considered=self.pb_considered)
-        fexpr_inter = df.interpolate(f_expr,self.V_theta)
+        f_expr = get_f_expr(params, degree=self.high_degree, domain=V_solve.mesh(), pb_considered=self.pb_considered)
+        get_f_expr_inter = df.interpolate(f_expr,self.V_theta)
         f_tild = df.Function(self.V_theta)
-        f_tild.vector()[:] = fexpr_inter.vector()[:] + lap_utheta.vector()[:] # div(grad(phi_tild))
+        f_tild.vector()[:] = get_f_expr_inter.vector()[:] + lap_utheta.vector()[:] # div(grad(phi_tild))
 
         # Impose Dirichlet boundary conditions (g_tild = 0 sur Gamma_D)
         u_ex_V = df.interpolate(u_ex, self.V) 

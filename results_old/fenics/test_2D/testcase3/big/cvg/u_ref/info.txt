@@ -1,0 +1,8 @@
+P3 1000*1000
+
+solver_parameters={"linear_solver": "cg","preconditioner":"hypre_amg"}
+
+Tolérance :
+prm = parameters["krylov_solver"]
+prm["absolute_tolerance"] = 1e-13
+prm["relative_tolerance"] = 1e-13
