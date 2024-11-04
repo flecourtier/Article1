@@ -3,7 +3,7 @@
 # ###########
 
 # from dolfin import *
-# import dolfin as dol
+import dolfin as dol
 from dolfin.function.expression import (
     BaseExpression,
     _select_element,

@@ -60,7 +60,8 @@ class PoissonDirFEMSolver(FEMSolver):
         f_expr = get_f_expr(params, degree=self.high_degree, domain=V_solve.mesh(), pb_considered=self.pb_considered)
         get_f_expr_inter = df.interpolate(f_expr,self.V_theta)
         f_tild = df.Function(self.V_theta)
-        f_tild.vector()[:] = get_f_expr_inter.vector()[:] + lap_utheta.vector()[:] # div(grad(phi_tild))
+        # u_theta_Vtheta = get_utheta_fenics_onV(self.V_theta,params,u_PINNs)
+        f_tild.vector()[:] = get_f_expr_inter.vector()[:] + lap_utheta.vector()[:] # df.div(df.grad(u_theta_Vtheta)) 
 
         dx = df.Measure("dx", domain=V_solve.mesh())
 

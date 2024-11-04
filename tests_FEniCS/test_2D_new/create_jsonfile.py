@@ -53,7 +53,7 @@ def check_config(config):
     assert "dimension" in config, "dimension is missing in the config file"
     assert "testcase" in config, "testcase is missing in the config file"
     assert "version" in config, "version is missing in the config file"
-    assert "param_num" in config, "param_num is missing in the config file"
+    # assert "param_num" in config, "param_num is missing in the config file"
     
     assert config["dimension"] in choice_dimension(), "dimension is invalid"
     assert config["testcase"] in choice_testcase(config["dimension"])[0], "testcase is invalid"

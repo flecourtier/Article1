@@ -119,7 +119,7 @@ def plot_Mult_vs_Add_vs_FEM(param_num,problem,degree,tab_M,result_dir="./"):
     plt.savefig(result_dir+f'FEM-Add-Mult_case{testcase}_v{version}_param{param_num}.png')
     plt.show()
     
-def save_tab(param_num,problem,degree,tab_M=None,result_dir="./"):
+def save_tab_deg(param_num,problem,degree,tab_M=None,result_dir="./"):
     testcase = problem.testcase
     version = problem.version
     # params = [select_param(problem,param_num)]
@@ -198,3 +198,7 @@ def save_tab(param_num,problem,degree,tab_M=None,result_dir="./"):
     # Et au format PNG
 
     dfi.export(formatted_df, result_dir+f'Tab_case{testcase}_v{version}_param{param_num}_degree{degree}.png', dpi=300)
+    
+def save_tab_all(param_num,problem,tab_M=None,result_dir="./"):
+    for d in [1, 2, 3]:
+        save_tab_deg(param_num,problem,d,tab_M,result_dir)
