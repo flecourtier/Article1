@@ -197,7 +197,10 @@ def save_tab_deg(param_num,problem,degree,tab_M=None,result_dir="./"):
     formatted_df.to_csv(result_dir+f'Tab_case{testcase}_v{version}_param{param_num}_degree{degree}.csv')
     # Et au format PNG
 
-    dfi.export(formatted_df, result_dir+f'Tab_case{testcase}_v{version}_param{param_num}_degree{degree}.png', dpi=300)
+    # table_conversion = "chrome"
+    table_conversion = "matplotlib"
+
+    dfi.export(formatted_df, result_dir+f'Tab_case{testcase}_v{version}_param{param_num}_degree{degree}.png', dpi=300, table_conversion=table_conversion)
     
 def save_tab_all(param_num,problem,tab_M=None,result_dir="./"):
     for d in [1, 2, 3]:

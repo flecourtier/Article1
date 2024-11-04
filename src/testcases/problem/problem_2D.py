@@ -107,16 +107,16 @@ class TestCase3(TestCase2D):
         if self.version != "new":
             return pre.exp(-((x - c1) ** 2 + (y - c2) ** 2) / (0.025 * sigma**2))
         else:
+            print("f is considered for new version")
             return 10 * pre.exp(-((x - c1) ** 2 + (y - c2) ** 2) / (0.025 * sigma**2))
         
     def g(self, pre, xy, mu):
         return 0.0
         
 class TestCase4(TestCase2D):
-    def __init__(self,v=1):
-        super().__init__(4,v)
+    def __init__(self,version=1):
+        super().__init__(4,version)
         self.geometry = Donut1() 
-        self.version = v 
         assert self.version == 1
         self.nb_parameters = 2
         self.parameter_domain = [[-0.5, 0.500001],[-0.50000, 0.500001]]

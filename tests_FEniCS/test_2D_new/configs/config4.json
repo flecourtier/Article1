@@ -1,0 +1,11 @@
+{
+    "dimension": 2,
+    "testcase": 4,
+    "version": 1,
+    "error_estimations":{
+        "param_num": 1
+    },
+    "gains": {
+        "n_params": 50
+    }
+}
