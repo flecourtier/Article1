@@ -3,7 +3,7 @@
     "testcase": 3,
     "version": "big",
     "error_estimations":{
-        "param_num": 2
+        "param_num": 1
     },
     "gains": {
         "n_params": 50

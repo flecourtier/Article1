@@ -21,7 +21,8 @@ def compute_error_estimations_fem_deg(param_num,problem,degree,high_degree,error
     
     save_uref = None
     if not problem.ana_sol:
-        savedir = result_dir + "u_ref/"
+        result_dir_cvg = result_dir.split("/param")[0]
+        savedir = result_dir_cvg + "u_ref/"
         create_tree(savedir)
         filename = savedir + f"u_ref_{param_num}.npy"
         save_uref = [filename]

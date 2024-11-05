@@ -7,7 +7,7 @@ import numpy as np
 import dataframe_image as dfi
 import pandas as pd
 
-def plot_Corr_vs_FEM(param_num,problem,result_dir="./"):
+def plot_Corr_vs_FEM_alldeg(param_num,problem,result_dir="./"):
     testcase = problem.testcase
     version = problem.version
     params = [select_param(problem,param_num)]
@@ -40,7 +40,7 @@ def plot_Corr_vs_FEM(param_num,problem,result_dir="./"):
     plt.savefig(result_dir+f'FEM-Corr_case{testcase}_v{version}_param{param_num}.png')
     plt.show()
     
-def plot_Mult_vs_FEM(param_num,problem,M=0.0,result_dir="./"):
+def plot_Mult_vs_FEM_alldeg_M(param_num,problem,M=0.0,result_dir="./"):
     testcase = problem.testcase
     version = problem.version
     params = [select_param(problem,param_num)]
@@ -73,7 +73,11 @@ def plot_Mult_vs_FEM(param_num,problem,M=0.0,result_dir="./"):
     plt.savefig(result_dir+f'FEM-Mult_case{testcase}_v{version}_param{param_num}_M{M}.png')
     plt.show()
     
-def plot_Mult_vs_Add_vs_FEM(param_num,problem,degree,tab_M,result_dir="./"):
+def plot_Mult_vs_FEM_alldeg_allM(param_num,problem,tab_M,result_dir="./"):
+    for M in tab_M:
+        plot_Mult_vs_FEM_alldeg_M(param_num,problem,M,result_dir)
+    
+def plot_Mult_vs_Add_vs_FEM_deg_allM(param_num,problem,degree,tab_M,result_dir="./"):
     testcase = problem.testcase
     version = problem.version
     params = [select_param(problem,param_num)]
@@ -119,7 +123,11 @@ def plot_Mult_vs_Add_vs_FEM(param_num,problem,degree,tab_M,result_dir="./"):
     plt.savefig(result_dir+f'FEM-Add-Mult_case{testcase}_v{version}_param{param_num}.png')
     plt.show()
     
-def save_tab_deg(param_num,problem,degree,tab_M=None,result_dir="./"):
+def plot_Mult_vs_Add_vs_FEM_alldeg_allM(param_num,problem,tab_M,result_dir="./"):
+    for d in [1, 2, 3]:
+        plot_Mult_vs_Add_vs_FEM_deg_allM(param_num,problem,d,tab_M,result_dir)
+    
+def save_tab_deg_allM(param_num,problem,degree,tab_M=None,result_dir="./"):
     testcase = problem.testcase
     version = problem.version
     # params = [select_param(problem,param_num)]
@@ -202,6 +210,6 @@ def save_tab_deg(param_num,problem,degree,tab_M=None,result_dir="./"):
 
     dfi.export(formatted_df, result_dir+f'Tab_case{testcase}_v{version}_param{param_num}_degree{degree}.png', dpi=300, table_conversion=table_conversion)
     
-def save_tab_all(param_num,problem,tab_M=None,result_dir="./"):
+def save_tab_alldeg_allM(param_num,problem,tab_M=None,result_dir="./"):
     for d in [1, 2, 3]:
-        save_tab_deg(param_num,problem,d,tab_M,result_dir)
+        save_tab_deg_allM(param_num,problem,d,tab_M,result_dir)
