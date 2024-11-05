@@ -1,4 +1,4 @@
-print_time = True
+print_time = False
 relative_error = True
 
 ###########

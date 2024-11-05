@@ -38,7 +38,7 @@ class PoissonMixteFEMSolver(FEMSolver):
         R_mid = (self.pb_considered.geometry.bigcircle.radius+self.pb_considered.geometry.hole.radius)/2.0
         def boundary_D(x,on_boundary):
             return on_boundary and x[0]**2+x[1]**2>R_mid**2 
-        bc_ext = df.DirichletBC(self.V, g_E, boundary_D)       
+        bc_ext = df.DirichletBC(V_solve, g_E, boundary_D)       
         
         # Impose Robin boundary conditions
         # h_I = GRExpr(params, degree=self.high_degree, domain=V_solve.mesh(), pb_considered=self.pb_considered)

@@ -148,6 +148,8 @@ def get_expr_from_sympy(params, degree, domain, fct):
     x, y = sp.symbols('xx yy')
     xy = [x, y]
     mu = sp.symbols(' '.join(params_dict.keys()))
+    if nb_parameters == 1:
+        mu = (mu,)
     
     fct_sympy = fct(sp, xy, mu)
     
@@ -155,7 +157,7 @@ def get_expr_from_sympy(params, degree, domain, fct):
     expression_params = {str(symbol): value for symbol, value in zip(mu, params_dict.values())}
     
     # Remplace 'xx' par 'x[0]' et 'yy' par 'x[1]' pour l'expression dans df.Expression
-    fct_fe = df.Expression(sp.ccode(fct_sympy).replace('xx', 'x[0]').replace('yy', 'x[1]'),degree=degree, domain=domain, **expression_params)
+    fct_fe = df.Expression(sp.ccode(fct_sympy).replace('log','std::log').replace('xx', 'x[0]').replace('yy', 'x[1]'),degree=degree, domain=domain, **expression_params)
     
     return fct_fe
 

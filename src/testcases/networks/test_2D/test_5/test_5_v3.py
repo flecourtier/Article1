@@ -69,7 +69,7 @@ def create_fulldomain(geometry):
 
 class Poisson_2D(pdes.AbstractPDEx):
     def __init__(self):
-        self.problem = TestCase5(v=1)        
+        self.problem = TestCase5(version=3)        
         assert isinstance(self.problem.geometry, Donut)
         
         space_domain,_,_ = create_fulldomain(self.problem.geometry)

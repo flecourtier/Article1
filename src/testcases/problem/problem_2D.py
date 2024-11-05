@@ -2,6 +2,7 @@ from testcases.geometry.geometry_2D import Square1, UnitSquare, UnitCircle, Donu
 from math import *
 import torch
 import abc
+import sympy
 
 class TestCase2D(abc.ABC):
     def __init__(self,testcase,version):
@@ -115,9 +116,9 @@ class TestCase3(TestCase2D):
         
 class TestCase4(TestCase2D):
     def __init__(self,version=1):
+        assert self.version == 1
         super().__init__(4,version)
         self.geometry = Donut1() 
-        assert self.version == 1
         self.nb_parameters = 2
         self.parameter_domain = [[-0.5, 0.500001],[-0.50000, 0.500001]]
         self.ana_sol = True
@@ -136,56 +137,57 @@ class TestCase4(TestCase2D):
         return self.u_ex(pre, xy, mu)      
         
 
-# class TestCase5:
-#     def __init__(self,v=1):
-#         self.version = v 
-#         assert self.version in [1,2,3]
-#         self.geometry = Donut2()
-#         self.nb_parameters = 1
-#         self.parameter_domain = [[0.50000, 0.500001]]
+class TestCase5(TestCase2D):
+    def __init__(self,version=1):
+        assert version in [1,2,3]
+        super().__init__(5,version)
+        self.geometry = Donut2()
+        self.nb_parameters = 1
+        self.parameter_domain = [[0.50000, 0.500001]]
+        self.ana_sol = True
 
-#     def u_ex(self, pre, xy, mu):
-#         x,y = xy
-#         if pre is torch:
-#             ln = pre.log
-#         else:
-#             ln = pre.ln
-#         return 1.0 - ln(pre.sqrt(x**2 + y**2))/log(4.0)
+    def u_ex(self, pre, xy, mu):
+        x,y = xy
+        if pre is torch:
+            ln = pre.log
+        else:
+            ln = pre.ln
+        return 1.0 - ln(pre.sqrt(x**2 + y**2))/log(4.0)
     
-#     def grad_uex(self, pre, xy, mu):
-#         x,y = xy
-#         coeff = -1.0/log(4.0)
-#         s = x**2 + y**2
-#         return coeff*x/s, coeff*y/s
+    def grad_uex(self, pre, xy, mu):
+        x,y = xy
+        coeff = -1.0/log(4.0)
+        s = x**2 + y**2
+        return coeff*x/s, coeff*y/s
     
-#     def grad2_uex(self, pre, xy, mu):
-#         x,y = xy
-#         coeff = -1.0/log(4.0)
-#         s = x**2 + y**2
-#         return coeff * (s - 2*x**2)/s**2, coeff * (s - 2*y**2)/s**2
+    def grad2_uex(self, pre, xy, mu):
+        x,y = xy
+        coeff = -1.0/log(4.0)
+        s = x**2 + y**2
+        return coeff * (s - 2*x**2)/s**2, coeff * (s - 2*y**2)/s**2
     
-#     def grad3_uex(self, pre, xy, mu):
-#         x,y = xy
-#         coeff = -1.0/log(4.0)
-#         s = x**2 + y**2
-#         return coeff * 2 * x * (x**2 - 3 * y **2)/s**3, coeff * 2 * y * (y**2 - 3 * x **2)/s**3
+    def grad3_uex(self, pre, xy, mu):
+        x,y = xy
+        coeff = -1.0/log(4.0)
+        s = x**2 + y**2
+        return coeff * 2 * x * (x**2 - 3 * y **2)/s**3, coeff * 2 * y * (y**2 - 3 * x **2)/s**3
     
-#     def f(self, pre, xy, mu):
-#         x,y = xy
-#         return 0.0
+    def f(self, pre, xy, mu):
+        x,y = xy
+        return 0.0
     
-#     def h_int(self, pre, xy, mu): # robin
-#         assert self.version in [1,2,3]
-#         return 4.0/log(4.0) + 2.0
+    def h_int(self, pre, xy, mu): # robin
+        assert self.version in [1,2,3]
+        return 4.0/log(4.0) + 2.0
     
-#     def h_ext(self, pre, xy, mu): # dirichlet
-#         return 1.0
+    def h_ext(self, pre, xy, mu): # dirichlet
+        return 1.0
     
-#     def gr(self, pre, xy, mu): # robin
-#         return self.h_int(pre, xy, mu)
+    def gr(self, pre, xy, mu): # robin
+        return self.h_int(pre, xy, mu)
     
-#     def g(self, pre, xy, mu): # dirichlet
-#         return self.h_ext(pre, xy, mu)  
+    def g(self, pre, xy, mu): # dirichlet
+        return self.h_ext(pre, xy, mu)  
     
     
     
