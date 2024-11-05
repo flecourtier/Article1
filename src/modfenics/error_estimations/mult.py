@@ -104,5 +104,5 @@ def compute_error_estimations_Mult_all(param_num,problem,high_degree,u_theta,M=0
     # to save 
     df_deg = pd.DataFrame(dict)
 
-    csv_file_all = result_dir+f'Mult_case{testcase}_v{version}_param{param_num}.csv'
+    csv_file_all = result_dir+f'Mult_case{testcase}_v{version}_param{param_num}_M{M}.csv'
     df_deg.to_csv(csv_file_all, index=False)

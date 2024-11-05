@@ -1,9 +1,9 @@
 {
     "dimension": 2,
     "testcase": 3,
-    "version": "new",
+    "version": "big",
     "error_estimations":{
-        "param_num": 1
+        "param_num": 2
     },
     "gains": {
         "n_params": 50
