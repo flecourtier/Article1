@@ -36,18 +36,18 @@ class TestCase1(TestCase1D):
         self.set_params = [[0.3, 0.2, 0.1], [0.4, 0.6, 0.3], [0.7, 0.4, 0.6], [0.8, 0.5, 0.8]]
         
     def u_ex(self, pre, xy, mu):
-        if pre is dolfin:
-            x=xy[0]
-        else:
-            x=xy
+        # if pre is dolfin:
+        #     x=xy[0]
+        # else:
+        x=xy
         alpha,beta,gamma = mu
         return alpha*pre.sin(2.0*pre.pi*x) + beta*pre.sin(4.0*pre.pi*x) + gamma*pre.sin(6.0*pre.pi*x)
 
     def du_ex_dx(self, pre, xy, mu):
-        if pre is dolfin:
-            x=xy[0]
-        else:
-            x=xy
+        # if pre is dolfin:
+        #     x=xy[0]
+        # else:
+        x=xy
         alpha,beta,gamma = mu
         return 2.0*pre.pi*alpha*pre.cos(2.0*pre.pi*x) + 4.0*pre.pi*beta*pre.cos(4.0*pre.pi*x) + 6.0*pre.pi*gamma*pre.cos(6.0*pre.pi*x)
     
@@ -55,10 +55,10 @@ class TestCase1(TestCase1D):
         return -self.f(pre, xy, mu)
 
     def f(self, pre, xy, mu):
-        if pre is dolfin:
-            x=xy[0]
-        else:
-            x=xy
+        # if pre is dolfin:
+        #     x=xy[0]
+        # else:
+        x=xy
         alpha,beta,gamma = mu
         return pre.pi**2 * (4.0*alpha*pre.sin(2.0*pre.pi*x) + 16.0*beta*pre.sin(4.0*pre.pi*x) + 36.0*gamma*pre.sin(6.0*pre.pi*x))
 
@@ -75,10 +75,10 @@ class TestCase2(TestCase1D):
         self.set_params = [[1.2,40.0],[1.5,90.0]]
 
     def u_ex(self, pre, xy, mu):
-        if pre is dolfin:
-            x=xy[0]
-        else:
-            x=xy
+        # if pre is dolfin:
+        #     x=xy[0]
+        # else:
+        x=xy
         r,Pe = mu
         return r * (x - 1.0/(pre.exp(Pe)-1.0)*(pre.exp(Pe*x)-1.0) )
 

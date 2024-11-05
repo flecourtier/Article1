@@ -1,4 +1,4 @@
-print_time = False
+print_time = True
 relative_error = True
 
 ###########
@@ -219,6 +219,7 @@ class FEMSolver(abc.ABC):
         self.times_fem[self.N]["error"] = end-start
         
         if plot_result or filename is not None:
+            assert self.pb_considered.dim == 1 # to modify for 2D
             u_ex_V = df.interpolate(u_ex,self.V)
             self._plot_results_fem(u_ex_V, sol, self.V, plot_result, filename)
         
@@ -334,6 +335,7 @@ class FEMSolver(abc.ABC):
         self.times_corr_add[self.N]["error"] = end-start
         
         if plot_result or filename is not None:
+            assert self.pb_considered.dim == 1 # to modify for 2D
             u_ex_V = df.interpolate(u_ex,self.V)
             C_ex = df.Function(self.V)
             C_ex.vector()[:] = u_ex_V.vector()[:] - u_theta_V.vector()[:]
@@ -396,6 +398,7 @@ class FEMSolver(abc.ABC):
         self.times_corr_mult[self.N][str(M)]["error"] = end-start
         
         if plot_result or filename is not None:
+            assert self.pb_considered.dim == 1 # to modify for 2D
             u_ex_V = df.interpolate(u_ex,self.V)
             C_ex = df.Function(self.V)
             C_ex.vector()[:] = u_ex_V.vector()[:]/u_theta_V.vector()[:]

@@ -72,8 +72,9 @@ class EllipticDirFEMSolver(FEMSolver):
         
         return A,L
     
-    def _define_corr_mult_system(self,params,u,v,u_PINNs,V_solve,M):
+    def _define_corr_mult_system(self,params,u,v,u_PINNs,V_solve,M,impose_bc):
         assert isinstance(self.pb_considered.geometry, Square)
+        assert impose_bc
         
         u_theta_Vtheta = get_utheta_fenics_onV(self.V_theta,params,u_PINNs) 
         u_theta_M_Vtheta = df.Function(self.V_theta)

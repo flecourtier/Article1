@@ -2,8 +2,6 @@ import pandas as pd
 import os
 from testcases.utils import create_tree,select_param,compute_slope
 from modfenics.error_estimations.utils import get_solver_type
-from modfenics.error_estimations.fem import read_csv as read_csv_FEM
-from modfenics.error_estimations.add import read_csv_Corr as read_csv_Corr
 import matplotlib.pyplot as plt
 
 def read_csv_Mult(csv_file):

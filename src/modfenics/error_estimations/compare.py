@@ -84,6 +84,7 @@ def plot_Mult_vs_Add_vs_FEM_deg_allM(param_num,problem,degree,tab_M,result_dir="
     
     plt.figure(figsize=(5, 5))
 
+    df_FEM = None
     # plot FEM error (L2 norm) as a function of h
     try:
         csv_file = result_dir+f'FEM_case{testcase}_v{version}_param{param_num}_degree{degree}.csv' 
@@ -92,17 +93,20 @@ def plot_Mult_vs_Add_vs_FEM_deg_allM(param_num,problem,degree,tab_M,result_dir="
     except:
         print(f'FEM P{degree} not found')
     
+    df_Add = None
     try:    
         csv_file = result_dir+f'Corr_case{testcase}_v{version}_param{param_num}_degree{degree}.csv'
         df_Add,_,_,_ = read_csv_Add(csv_file)
         plt.loglog(df_Add['nb_vert'], df_Add['err'], ".--", label='Add P'+str(degree))
     except:
         print(f'Add P{degree} not found')
-        
+    
+    df_Mult = None
     # plot Mult error (L2 norm) as a function of h
     for M in tab_M:
         try:
             csv_file = result_dir+f'Mult_case{testcase}_v{version}_param{param_num}_degree{degree}_M{M}.csv'
+            print(csv_file)
             df_Mult,_,_,_ = read_csv_Mult(csv_file)
             plt.loglog(df_Mult['nb_vert'], df_Mult['err'], ".--", label='Mult_s P'+str(degree)+' M = '+str(M))
         except:
@@ -114,14 +118,19 @@ def plot_Mult_vs_Add_vs_FEM_deg_allM(param_num,problem,degree,tab_M,result_dir="
             plt.loglog(df_Mult['nb_vert'], df_Mult['err'], ".--", label='Mult_w P'+str(degree)+' M = '+str(M))
         except:
             print(f'Mult weak P{degree} M{M} not found')
-        
-    plt.xticks(df_Mult['nb_vert'], df_Mult['nb_vert'].round(3).astype(str), minor=False)
-    plt.xlabel("N")
-    plt.ylabel('L2 norm')
-    plt.legend()
-    plt.title(f'FEM + Add + Mult case{testcase} v{version} param{param_num} deg{degree} : {params[0]}')
-    plt.savefig(result_dir+f'FEM-Add-Mult_case{testcase}_v{version}_param{param_num}.png')
-    plt.show()
+            
+    # si une des dataframe existe
+    if df_FEM is not None or df_Add is not None or df_Mult is not None:   
+        plt.xticks(df_FEM['nb_vert'], df_FEM['nb_vert'].round(3).astype(str), minor=False)
+        plt.xlabel("N")
+        plt.ylabel('L2 norm')
+        plt.legend()
+        plt.title(f'FEM + Add + Mult case{testcase} v{version} param{param_num} deg{degree} : {params[0]}')
+        plt.savefig(result_dir+f'FEM-Add-Mult_case{testcase}_v{version}_param{param_num}_degree{degree}.png')
+        plt.show()
+    else:
+        print(f'No data found for param{param_num} deg{degree}')
+        plt.close()
     
 def plot_Mult_vs_Add_vs_FEM_alldeg_allM(param_num,problem,tab_M,result_dir="./"):
     for d in [1, 2, 3]:
@@ -134,12 +143,14 @@ def save_tab_deg_allM(param_num,problem,degree,tab_M=None,result_dir="./"):
     tab_vals = []
     iterables = []
     
+    tab_nb_vert_FEM_ = None
     try:
         csv_file = result_dir+f'FEM_case{testcase}_v{version}_param{param_num}_degree{degree}.csv' 
         _,tab_nb_vert_FEM,_,tab_err_FEM = read_csv_FEM(csv_file)
         tab_err_FEM = np.array(tab_err_FEM)
         tab_vals.append(tab_err_FEM)
         iterables.append(("FEM","error"))
+        tab_nb_vert_FEM_ = tab_nb_vert_FEM
     except:
         print(f'FEM P{degree} not found')
     
@@ -184,7 +195,7 @@ def save_tab_deg_allM(param_num,problem,degree,tab_M=None,result_dir="./"):
                 print(f'Mult weak P{degree} M{M} not found')
 
     index = pd.MultiIndex.from_tuples(iterables, names=["method", "type"])
-    df = pd.DataFrame(tab_vals, index=index, columns=tab_nb_vert_FEM).T
+    df = pd.DataFrame(tab_vals, index=index, columns=tab_nb_vert_FEM_).T
 
     # Appliquer des formats spécifiques en fonction du type
     def custom_formatting(df):
@@ -197,18 +208,21 @@ def save_tab_deg_allM(param_num,problem,degree,tab_M=None,result_dir="./"):
         df[factor_cols] = df[factor_cols].applymap(lambda x: f'{round(x,2)}')
 
         return df
+    
+    # Si le DataFrame est vide, ne pas le sauvegarder
+    if not df.empty:
 
-    # Appliquer la fonction de mise en forme
-    formatted_df = custom_formatting(df)
+        # Appliquer la fonction de mise en forme
+        formatted_df = custom_formatting(df)
+        
+        # Sauvegarder le DataFrame formaté au format CSV
+        formatted_df.to_csv(result_dir+f'Tab_case{testcase}_v{version}_param{param_num}_degree{degree}.csv')
+        
+        # Et au format PNG
 
-    # Sauvegarder le DataFrame formaté au format CSV
-    formatted_df.to_csv(result_dir+f'Tab_case{testcase}_v{version}_param{param_num}_degree{degree}.csv')
-    # Et au format PNG
-
-    # table_conversion = "chrome"
-    table_conversion = "matplotlib"
-
-    dfi.export(formatted_df, result_dir+f'Tab_case{testcase}_v{version}_param{param_num}_degree{degree}.png', dpi=300, table_conversion=table_conversion)
+        # table_conversion = "chrome"
+        table_conversion = "matplotlib"
+        dfi.export(formatted_df, result_dir+f'Tab_case{testcase}_v{version}_param{param_num}_degree{degree}.png', dpi=300, table_conversion=table_conversion)
     
 def save_tab_alldeg_allM(param_num,problem,tab_M=None,result_dir="./"):
     for d in [1, 2, 3]:

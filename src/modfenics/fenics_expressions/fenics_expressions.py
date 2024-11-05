@@ -145,8 +145,19 @@ def get_expr_from_sympy(params, degree, domain, fct):
     nb_parameters = len(params)
     params_dict = {f'p{i+1}': params[i] for i in range(nb_parameters)}
     
-    x, y = sp.symbols('xx yy')
-    xy = [x, y]
+    dim = domain.geometric_dimension()
+    
+    if dim == 1:
+        x = sp.symbols('xx')
+        xy = x
+    elif dim == 2:
+        x, y = sp.symbols('xx yy')
+        xy = [x, y]
+    elif dim == 3:
+        x, y, z = sp.symbols('xx yy zz')
+        xy = [x, y, z]
+    else:
+        raise ValueError("Invalid dimension")
     mu = sp.symbols(' '.join(params_dict.keys()))
     if nb_parameters == 1:
         mu = (mu,)

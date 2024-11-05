@@ -60,6 +60,6 @@ def compute_error_Corr_deg(n_params,problem,degree,high_degree,u_theta,error_deg
 
     return df_Corr, tab_nb_vert_Corr, tab_h_Corr, tab_err_Corr
 
-def compute_error_Corr_all(param_num,problem,high_degree,error_degree=4,new_run=False,result_dir="./"):
+def compute_error_Corr_all(n_params,problem,high_degree,u_theta,error_degree=4,new_run=False,result_dir="./"):
     for d in [1, 2, 3]:
-        _, _, _, _ = compute_error_Corr_deg(param_num,problem,d,high_degree,error_degree=error_degree,new_run=new_run,result_dir=result_dir)    
+        _, _, _, _ = compute_error_Corr_deg(n_params,problem,d,high_degree,u_theta,error_degree=error_degree,new_run=new_run,result_dir=result_dir)    
