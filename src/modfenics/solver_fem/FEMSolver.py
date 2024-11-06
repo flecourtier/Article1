@@ -42,6 +42,7 @@ class FEMSolver(abc.ABC):
         self.error_degree = error_degree # degree of the error space
         self.high_degree = high_degree # degree of the expression space for f
         self.save_uref = save_uref # directory to save results
+        print(self.save_uref)
         self.tab_uref = None
         
         # To evaluate computational time

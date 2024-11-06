@@ -21,8 +21,7 @@ def compute_error_estimations_fem_deg(param_num,problem,degree,high_degree,error
     
     save_uref = None
     if not problem.ana_sol:
-        result_dir_cvg = result_dir.split("/param")[0]
-        savedir = result_dir_cvg + "u_ref/"
+        savedir = result_dir + "u_ref/"
         create_tree(savedir)
         filename = savedir + f"u_ref_{param_num}.npy"
         save_uref = [filename]
@@ -34,7 +33,7 @@ def compute_error_estimations_fem_deg(param_num,problem,degree,high_degree,error
         df_FEM,tab_nb_vert_FEM, tab_h_FEM, tab_err_FEM = read_csv(csv_file)
     else:
         print(f"## Run error estimation with FEM for degree={degree}")
-        tab_nb_vert_FEM = [2**i for i in range(4,9)]
+        tab_nb_vert_FEM = [16]#[2**i for i in range(4,9)]
         tab_h_FEM = []
         tab_err_FEM = []
         solver = solver_type(params=params, problem=problem, degree=degree, error_degree=error_degree, high_degree=high_degree, save_uref=save_uref)
