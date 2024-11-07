@@ -54,9 +54,9 @@ class CompareGainsMethods:
             tab_errors["Corr"] = None
             raise FileNotFoundError(f'Corr P{degree} not found')
         
+        dict_Mult = {}
+        dict_Mult_weak = {}
         if tab_M is not None:
-            dict_Mult = {}
-            dict_Mult_weak = {}
             for M in tab_M:
                 try:
                     csv_file = self.gef.results_dir+f'Mult_errors_case{self.gef.testcase}_v{self.gef.version}_degree{degree}_M{M}.csv'
@@ -72,8 +72,8 @@ class CompareGainsMethods:
                 except:
                     print(f'Mult weak P{degree} M{M} not found')
         
-        assert len(dict_Mult) in [0,len(tab_M)], "Number of Mult methods is not correct"
-        assert len(dict_Mult_weak) in [0,len(tab_M)], "Number of Mult weak methods is not correct"
+            assert len(dict_Mult) in [0,len(tab_M)], "Number of Mult methods is not correct"
+            assert len(dict_Mult_weak) in [0,len(tab_M)], "Number of Mult weak methods is not correct"
 
         tab_errors["Mult"] = dict_Mult
         tab_errors["Mult_weak"] = dict_Mult_weak
@@ -253,3 +253,7 @@ class CompareGainsMethods:
         dfi.export(df_stats_round,result_file+".png",dpi=1000,table_conversion=table_conversion)
         
         return df_stats_round
+    
+    def save_stats_alldeg_allM(self,tab_M=None):
+        for degree in self.gef.tab_degree:
+            self.save_stats_deg_allM(degree,tab_M=tab_M)

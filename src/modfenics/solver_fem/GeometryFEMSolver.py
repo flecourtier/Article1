@@ -74,13 +74,11 @@ class DonutFEMSolver(FEMSolver):
             H = self.H_start
         mesh = mshr.generate_mesh(domain,H)
         h = mesh.hmax()
-        iter = 0
         while h > h_macro:
             H += 1
             start2 = time.time()
             mesh = mshr.generate_mesh(domain,H)
             end2 = time.time()
             h = mesh.hmax()
-            iter += 1
         
         return mesh, end2-start2
