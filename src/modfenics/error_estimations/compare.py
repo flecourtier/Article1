@@ -1,7 +1,3 @@
-# from testcases.utils import select_param
-# from modfenics.error_estimations.fem import read_csv as read_csv_FEM
-# from modfenics.error_estimations.add import read_csv_Corr as read_csv_Add
-# from modfenics.error_estimations.mult import read_csv_Mult
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd

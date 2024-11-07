@@ -1,4 +1,4 @@
-print_time = True
+print_time = False
 relative_error = True
 
 ###########
@@ -42,7 +42,6 @@ class FEMSolver(abc.ABC):
         self.error_degree = error_degree # degree of the error space
         self.high_degree = high_degree # degree of the expression space for f
         self.save_uref = save_uref # directory to save results
-        print(self.save_uref)
         self.tab_uref = None
         
         # To evaluate computational time
@@ -314,12 +313,9 @@ class FEMSolver(abc.ABC):
         # Compute the error
         start = time.time()
         u_theta_Vex = get_utheta_fenics_onV(self.V_ex,self.params[i],u_PINNs)
-        print("u_theta_Vex")
         if self.pb_considered.ana_sol:
             u_ex = get_uex_expr(params, degree=self.high_degree, domain=self.mesh, pb_considered=self.pb_considered)
-            print("u_ex")
             uex_Vex = df.interpolate(u_ex,self.V_ex) 
-            print("uex_Vex")
         else:
             uex_Vex = self.tab_uref[i]
         C_Vex = df.interpolate(C_tild,self.V_ex)

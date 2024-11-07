@@ -19,8 +19,8 @@ import dolfin as df
 def get_expr_from_sympy(params, degree, domain, fct):
     # Crée les symboles pour les variables
     dim = domain.geometric_dimension()
-    symbols_list = sp.symbols(' '.join(['xx', 'yy', 'zz'][:dim]))
-    xy = symbols_list if dim > 1 else symbols_list[0]
+    xy = sp.symbols(' '.join(['xx', 'yy', 'zz'][:dim]))
+    # xy = symbols_list if dim > 1 else symbols_list[0]
     
     # Crée les symboles pour les paramètres
     nb_parameters = len(params)

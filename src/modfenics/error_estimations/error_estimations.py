@@ -24,6 +24,7 @@ class ErrorEstimations:
                     version_str += "_largenet"
         
         self.results_dir = repo_dir + f"/results/fenics/test_{self.dim}D/testcase{self.testcase}/{version_str}/cvg/param{param_num}/"
+        create_tree(self.results_dir)
         
         print(f"## Results directory: {self.results_dir}")
         
