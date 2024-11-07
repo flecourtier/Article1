@@ -116,7 +116,7 @@ class TestCase3(TestCase2D):
         
 class TestCase4(TestCase2D):
     def __init__(self,version=1):
-        assert self.version == 1
+        assert version == 1
         super().__init__(4,version)
         self.geometry = Donut1() 
         self.nb_parameters = 2
