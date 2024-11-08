@@ -1,7 +1,7 @@
 import torch
 import dolfin as df
 from scimba.equations.domain import SpaceTensor
-# import numpy as np
+import numpy as np
 import matplotlib.pyplot as plt
 
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
@@ -69,8 +69,13 @@ def get_gradutheta_fenics_fromV(V_test,params,u_PINNs):
     if dim == 1:
         grad_utheta.vector()[:] = phi_tild_x.copy()
     elif dim == 2:
-        grad_utheta.sub(0).vector()[:] = phi_tild_x.copy()
-        grad_utheta.sub(1).vector()[:] = phi_tild_y.copy()
+        # grad_utheta.sub(0).vector()[:] = phi_tild_x.copy()
+        # grad_utheta.sub(1).vector()[:] = phi_tild_y.copy()
+        grad_values = np.zeros(grad_utheta.vector().size())
+        grad_values[0::2] = phi_tild_x.copy()
+        grad_values[1::2] = phi_tild_y.copy()
+        
+        grad_utheta.vector()[:] = grad_values
     
     return grad_utheta
 

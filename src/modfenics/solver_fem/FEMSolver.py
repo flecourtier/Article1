@@ -96,7 +96,7 @@ class FEMSolver(abc.ABC):
         # To compute the solution with FEM (standard/correction)
         self.mesh,self.V,self.dx = self._create_FEM_domain(self.N+1,self.degree,save_times=True)
         self.h = self.mesh.hmax()
-        print("V created with ",self.N+1," vertices and degree ",self.error_degree," : h =",self.h)
+        print("V created with ",self.N+1," vertices and degree ",self.degree," : h =",self.h)
         
         self.V_theta = df.FunctionSpace(self.mesh, "CG", self.high_degree)
         

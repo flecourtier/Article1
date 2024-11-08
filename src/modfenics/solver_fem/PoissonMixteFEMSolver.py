@@ -84,10 +84,10 @@ class PoissonMixteFEMSolver(FEMSolver):
         # Impose Robin boundary conditions
         ########## A REVOIR
         normals = df.FacetNormal(V_solve.mesh())
-        normals_V = df.interpolate(normals,V_solve)
+        # normals_V = df.interpolate(normals,V_solve)
         grad_utheta_V = get_gradutheta_fenics_fromV(V_solve,params,u_PINNs)
         h_I = df.inner(df.grad(u_ex),normals) + u_ex
-        h_tild = h_I - (df.inner(grad_utheta_V,normals_V) + u_theta_V)
+        h_tild = h_I - (df.inner(grad_utheta_V,normals) + u_theta_V)
         class BoundaryN(df.SubDomain):
             def inside(self, x, on_boundary):
                 return on_boundary and x[0]**2+x[1]**2<R_mid**2
