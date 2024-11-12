@@ -86,7 +86,7 @@ class FEMSolver(abc.ABC):
     def _define_corr_mult_system(self,params,u,v,u_PINNs,V_solve,M,impose_bc):
         pass
     
-    def set_meshsize(self,nb_cell):
+    def set_meshsize(self,nb_cell,plot_mesh=False,filename=None):
         self.N = nb_cell # number of cells
         
         self.times_fem[self.N] = {}
@@ -99,6 +99,24 @@ class FEMSolver(abc.ABC):
         print("V created with ",self.N+1," vertices and degree ",self.degree," : h =",self.h)
         
         self.V_theta = df.FunctionSpace(self.mesh, "CG", self.high_degree)
+        
+        if plot_mesh or filename is not None:
+            assert self.pb_considered.dim in [1,2] # to modify for 2D
+            self.__plot_mesh(plot_mesh, filename)
+        
+    def __plot_mesh(self,plot_mesh=False,filename=None):
+        plt.figure()
+        df.plot(self.mesh)
+        plt.suptitle("Mesh with nb_vert="+str(self.N+1))
+    
+        if filename is not None:
+            plt.savefig(filename)
+            
+        if plot_mesh:
+            plt.show()
+            
+        plt.close()
+        
         
     def _create_FEM_domain(self,nb_vert,degree,save_times=False):        
         # Construct a cartesian mesh with nb_vert-1 cells in each direction
@@ -150,28 +168,55 @@ class FEMSolver(abc.ABC):
         
         return u_ref_Vex
     
-    def _plot_results_fem(self, u_ex_V, sol_V, V_solve, plot_result=False, filename=None):
-        assert self.pb_considered.dim == 1
+    def _plot_results_fem(self, u_ex_V, sol_V, V_solve, norme_L2 = None, plot_result=False, filename=None):
+        assert self.pb_considered.dim in [1,2]
         
-        plt.figure(figsize=(6,3))
+        if self.pb_considered.dim == 1:
         
-        plt.subplot(1,2,1)
-        df.plot(sol_V,label="sol")
-        df.plot(u_ex_V,label="u_ex")
-        plt.title("solution of FEM")
-        plt.legend()
-        
-        plt.subplot(1,2,2)
-        error_sol = df.Function(V_solve)
-        error_sol.vector()[:] = abs(sol_V.vector()[:] - u_ex_V.vector()[:])
-        df.plot(error_sol)
-        plt.title("error on sol")
-        
-        if plot_result:
-            plt.show()
+            plt.figure(figsize=(6,3))
+            
+            plt.subplot(1,2,1)
+            df.plot(sol_V,label="sol")
+            df.plot(u_ex_V,label="u_ex")
+            plt.title("solution of FEM")
+            plt.legend()
+            
+            plt.subplot(1,2,2)
+            error_sol = df.Function(V_solve)
+            error_sol.vector()[:] = abs(sol_V.vector()[:] - u_ex_V.vector()[:])
+            df.plot(error_sol)
+            plt.title("error on sol")
+            
+        else:
+            colormap = "jet"
+            plt.figure(figsize=(9,3))
+            
+            plt.subplot(1,3,1)
+            c = df.plot(sol_V, cmap=colormap)
+            plt.colorbar(c)
+            plt.title("solution of FEM")
+            
+            plt.subplot(1,3,2)
+            c = df.plot(u_ex_V, cmap=colormap)
+            plt.colorbar(c)
+            plt.title("u_ex")
+            
+            plt.subplot(1,3,3)
+            error_sol = df.Function(V_solve)
+            error_sol.vector()[:] = abs(sol_V.vector()[:] - u_ex_V.vector()[:])
+            c = df.plot(error_sol, cmap=colormap)
+            plt.colorbar(c)
+            plt.title("error on sol")
+            
+        if norme_L2 is not None:
+            # write error in scientific notation
+            plt.suptitle("L2 norm of the error : {:.2e}".format(norme_L2))
             
         if filename is not None:
             plt.savefig(filename)
+            
+        if plot_result:
+            plt.show()
             
         plt.close()
         
@@ -219,9 +264,9 @@ class FEMSolver(abc.ABC):
         self.times_fem[self.N]["error"] = end-start
         
         if plot_result or filename is not None:
-            assert self.pb_considered.dim == 1 # to modify for 2D
+            assert self.pb_considered.dim in [1,2] # to modify for 2D
             u_ex_V = df.interpolate(u_ex,self.V)
-            self._plot_results_fem(u_ex_V, sol, self.V, plot_result, filename)
+            self._plot_results_fem(u_ex_V, sol, self.V, norme_L2, plot_result, filename)
         
         return sol,norme_L2
     

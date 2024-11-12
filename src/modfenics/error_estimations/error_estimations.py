@@ -32,6 +32,8 @@ class ErrorEstimations:
         self.high_degree = kwargs.get('high_degree', 10)
         self.error_degree = kwargs.get('error_degree', 4)
         self.save_fig = kwargs.get('save_fig', False)
+        self.plot_result = kwargs.get('plot_result', False)
+        self.plot_mesh = kwargs.get('plot_mesh', False)
         self.tab_nb_vert = kwargs.get('tab_nb_vert', [2**i for i in range(4,9)])
         self.tab_degree = kwargs.get('tab_degree', [1,2,3])
         
@@ -43,7 +45,6 @@ class ErrorEstimations:
             filename = savedir + f"u_ref_{param_num}.npy"
             self.save_uref = [filename]
             
-        self.plot_result = kwargs.get('plot_result', False)
         
     def __infos_from_problem(self):
         self.dim = self.pb_considered.dim
@@ -94,13 +95,19 @@ class ErrorEstimations:
         tab_err_method = []
         solver = self.solver_type(params=self.params, problem=self.pb_considered, degree=degree, error_degree=self.error_degree, high_degree=self.high_degree, save_uref=self.save_uref)
         for nb_vert in self.tab_nb_vert:
-            solver.set_meshsize(nb_cell=nb_vert-1)
+            mesh_filename = None
+            if self.plot_mesh:
+                results_dir_mesh = self.results_dir + f"Mesh_plot/"
+                create_tree(results_dir_mesh)
+                mesh_filename = results_dir_mesh+f"Mesh_plot_case{self.testcase}_v{self.version}_N{nb_vert}.png"
+            solver.set_meshsize(nb_cell=nb_vert-1,plot_mesh=self.plot_mesh,filename=mesh_filename)
             tab_h_method.append(solver.h)
             fig_filename = None
+            
             if self.save_fig:
-                self.results_dir_fig = self.results_dir + f"{method}_plot/"
-                create_tree(self.results_dir_fig)
-                fig_filename = self.results_dir_fig+f"{method}_plot_case{self.testcase}_v{self.version}_param{self.param_num}_degree{degree}_N{nb_vert}"
+                results_dir_fig = self.results_dir + f"{method}_plot/"
+                create_tree(results_dir_fig)
+                fig_filename = results_dir_fig+f"{method}_plot_case{self.testcase}_v{self.version}_param{self.param_num}_degree{degree}_N{nb_vert}"
                 if method == "Mult":
                     fig_filename += f"_M{M}"
                     if not impose_bc:
