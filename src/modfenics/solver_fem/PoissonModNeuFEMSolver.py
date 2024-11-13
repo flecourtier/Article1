@@ -32,11 +32,8 @@ class PoissonModNeuFEMSolver(FEMSolver):
         u_ex = get_uex_expr(params, degree=self.high_degree, domain=V_solve.mesh(), pb_considered=self.pb_considered)
         
         # Impose Neumann boundary conditions
-        ########## A REVOIR
         normals = df.FacetNormal(V_solve.mesh())
-        normals_V = df.interpolate(normals,V_solve)
-        u_ex_V = df.interpolate(u_ex,V_solve)
-        h = df.inner(df.grad(u_ex_V),normals_V)
+        h = df.inner(df.grad(u_ex),normals)
                 
         dx = df.Measure("dx", domain=V_solve.mesh())
         ds = df.Measure("ds", domain=V_solve.mesh())
@@ -51,27 +48,30 @@ class PoissonModNeuFEMSolver(FEMSolver):
         return A,L
     
     def _define_corr_add_system(self,params,u,v,u_PINNs,V_solve):
-        u_ex = get_uex_expr(params, degree=self.high_degree, domain=V_solve.mesh(), pb_considered=self.pb_considered)
-        lap_utheta = get_laputheta_fenics_fromV(self.V_theta,params,u_PINNs)
-        
         f_expr = get_f_expr(params, degree=self.high_degree, domain=V_solve.mesh(), pb_considered=self.pb_considered)
-        get_f_expr_inter = df.interpolate(f_expr,self.V_theta)
+        u_ex = get_uex_expr(params, degree=self.high_degree, domain=V_solve.mesh(), pb_considered=self.pb_considered)
+        
+        f_expr_Vtheta = df.interpolate(f_expr,self.V_theta)
+        u_theta_Vtheta = get_utheta_fenics_onV(self.V_theta,params,u_PINNs)
+        lap_utheta_Vtheta = get_laputheta_fenics_fromV(self.V_theta,params,u_PINNs)
         f_tild = df.Function(self.V_theta)
-        f_tild.vector()[:] = get_f_expr_inter.vector()[:] + lap_utheta.vector()[:] # div(grad(phi_tild))
-
+        f_tild.vector()[:] = f_expr_Vtheta.vector()[:] + lap_utheta_Vtheta.vector()[:] - u_theta_Vtheta.vector()[:]
+        
         # Impose Neumann boundary conditions
-        normals = df.FacetNormal(self.mesh)
-        normals_V = df.interpolate(normals,V_solve)
-        u_ex_V = df.interpolate(u_ex,V_solve)
-        h = df.inner(df.grad(u_ex_V),normals_V)
-        grad_u_theta_V = get_gradutheta_fenics_fromV(self.V_theta,params,u_PINNs)
-        h_tild = h - df.inner(grad_u_theta_V,normals_V)
+        gradu_theta_Vtheta = df.grad(u_theta_Vtheta)
+        # gradu_theta_Vtheta = get_gradutheta_fenics_fromV(self.V_theta,params,u_PINNs)
+        normals = df.FacetNormal(V_solve.mesh())
+        h = df.inner(df.grad(u_ex),normals)
+        h_tild = h - df.inner(gradu_theta_Vtheta,normals)
+        
         
         dx = df.Measure("dx", domain=V_solve.mesh())
         ds = df.Measure("ds", domain=V_solve.mesh())
         
+        
         a = df.inner(df.grad(u),df.grad(v)) * dx + u*v*dx
         l = f_tild * v * dx + h_tild * v * ds
+
 
         A = df.assemble(a)
         L = df.assemble(l)

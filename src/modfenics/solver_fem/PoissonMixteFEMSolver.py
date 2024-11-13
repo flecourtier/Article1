@@ -42,7 +42,8 @@ class PoissonMixteFEMSolver(FEMSolver):
         
         # Impose Robin boundary conditions
         # h_I = GRExpr(params, degree=self.high_degree, domain=V_solve.mesh(), pb_considered=self.pb_considered)
-        h_I = df.inner(df.grad(u_ex),df.FacetNormal(V_solve.mesh())) + u_ex
+        normals = df.FacetNormal(V_solve.mesh())
+        h_I = df.inner(df.grad(u_ex),normals) + u_ex
         class BoundaryN(df.SubDomain):
             def inside(self, x, on_boundary):
                 return on_boundary and x[0]**2+x[1]**2<R_mid**2

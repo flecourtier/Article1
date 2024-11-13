@@ -191,42 +191,34 @@ class TestCase5(TestCase2D):
     
     
     
-# class TestCase6:
-#     def __init__(self,v=1):
-#         self.version = v 
-#         assert self.version in [1,2]
-#         self.geometry = Donut1()
-#         self.nb_parameters = 1
-#         self.parameter_domain = [[0.50000, 0.500001]]
+class TestCase6(TestCase2D):
+    def __init__(self,version=1):
+        assert version in [1,2]
+        super().__init__(6,version)
+        self.geometry = Donut1()
+        self.nb_parameters = 1
+        self.parameter_domain = [[0.50000, 0.500001]]
+        self.ana_sol = True
 
-#     def u_ex(self, pre, xy, mu):
-#         x,y = xy
-#         return pre.sin(x**2 + y**2)
+    def u_ex(self, pre, xy, mu):
+        x,y = xy
+        return pre.sin(x**2 + y**2)
     
-#     def grad_uex(self, pre, xy, mu):
-#         pass
+    def f(self, pre, xy, mu):
+        x,y = xy
+        return (4.0 * (x**2 + y**2) + 1) * pre.sin(x**2 + y**2) - 4.0 * pre.cos(x**2 + y**2)
     
-#     def grad2_uex(self, pre, xy, mu):
-#         pass
-    
-#     def grad3_uex(self, pre, xy, mu):
-#         pass
-    
-#     def f(self, pre, xy, mu):
-#         x,y = xy
-#         return (4.0 * (x**2 + y**2) + 1) * pre.sin(x**2 + y**2) - 4.0 * pre.cos(x**2 + y**2)
-    
-#     def grad_f(self, pre, xy, mu):
-#         x,y = xy
-#         df_dx =  x*((8.0*x**2 + 8.0*y**2 + 2)*pre.cos(x**2 + y**2) + 16.0*pre.sin(x**2 + y**2))
-#         df_dy =  y*((8.0*x**2 + 8.0*y**2 + 2)*pre.cos(x**2 + y**2) + 16.0*pre.sin(x**2 + y**2))
-#         return df_dx, df_dy 
+    # def grad_f(self, pre, xy, mu):
+    #     x,y = xy
+    #     df_dx =  x*((8.0*x**2 + 8.0*y**2 + 2)*pre.cos(x**2 + y**2) + 16.0*pre.sin(x**2 + y**2))
+    #     df_dy =  y*((8.0*x**2 + 8.0*y**2 + 2)*pre.cos(x**2 + y**2) + 16.0*pre.sin(x**2 + y**2))
+    #     return df_dx, df_dy 
         
-#     def h_int(self, pre, xy, mu):
-#         return -cos(1.0/4.0)
+    def h_int(self, pre, xy, mu):
+        return -cos(1.0/4.0)
     
-#     def h_ext(self, pre, xy, mu):
-#         return 2 * cos(1.0)
+    def h_ext(self, pre, xy, mu):
+        return 2 * cos(1.0)
     
 # class TestCase7:
 #     def __init__(self,v=1):
