@@ -50,15 +50,16 @@ class FEMSolver(abc.ABC):
         self.times_corr_mult = {}
         
         # To compute error (overrefined mesh)
-        self.N_ex = 500 #5*self.N
-        start = time.time()
-        self.mesh_ex,self.V_ex,self.dx_ex = self._create_FEM_domain(self.N_ex+1,self.error_degree) 
-        self.h_ex = self.mesh_ex.hmax()
-        end = time.time()
-        print("V_ex created with ",self.N_ex+1," vertices and degree ",self.error_degree," : h_ex =",self.h_ex)
-        if print_time:
-            print("Time to generate V_ex: ", end-start)
-        # self.V_ex = FunctionSpace(self.mesh, "CG", self.high_degree)
+        if self.error_degree is not None:
+            self.N_ex = 500 #5*self.N
+            start = time.time()
+            self.mesh_ex,self.V_ex,self.dx_ex = self._create_FEM_domain(self.N_ex+1,self.error_degree) 
+            self.h_ex = self.mesh_ex.hmax()
+            end = time.time()
+            print("V_ex created with ",self.N_ex+1," vertices and degree ",self.error_degree," : h_ex =",self.h_ex)
+            if print_time:
+                print("Time to generate V_ex: ", end-start)
+            # self.V_ex = FunctionSpace(self.mesh, "CG", self.high_degree)
         
         # To create reference solution
         if not self.pb_considered.ana_sol:
@@ -98,7 +99,8 @@ class FEMSolver(abc.ABC):
         self.h = self.mesh.hmax()
         print("V created with ",self.N+1," vertices and degree ",self.degree," : h =",self.h)
         
-        self.V_theta = df.FunctionSpace(self.mesh, "CG", self.high_degree)
+        if self.high_degree is not None:
+            self.V_theta = df.FunctionSpace(self.mesh, "CG", self.high_degree)
         
         if plot_mesh or filename is not None:
             assert self.pb_considered.dim in [1,2] # to modify for 2D

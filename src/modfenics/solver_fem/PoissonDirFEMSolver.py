@@ -27,7 +27,7 @@ current = Path(__file__).parent.parent
 # FEM #
 #######
 
-from modfenics.solver_fem.GeometryFEMSolver import LineFEMSolver,SquareFEMSolver,DonutFEMSolver
+from modfenics.solver_fem.GeometryFEMSolver import LineFEMSolver,SquareFEMSolver,DonutFEMSolver #,CubeFEMSolver
 
 class PoissonDirFEMSolver(FEMSolver):    
     def _define_fem_system(self,params,u,v,V_solve):
@@ -116,4 +116,7 @@ class PoissonDirSquareFEMSolver(PoissonDirFEMSolver,SquareFEMSolver):
 
 class PoissonDirDonutFEMSolver(PoissonDirFEMSolver,DonutFEMSolver):
     pass
+
+# class PoissonDirCubeFEMSolver(PoissonDirFEMSolver,CubeFEMSolver):
+#     pass
 

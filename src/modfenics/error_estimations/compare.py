@@ -2,12 +2,17 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import dataframe_image as dfi
+import os
 
 from modfenics.error_estimations.error_estimations import ErrorEstimations
 
 class CompareMethods:
     def __init__(self,error_estimations:ErrorEstimations):
         self.ee = error_estimations
+        
+    #########
+    # Plots #
+    #########
 
     def plot_method_vs_FEM_alldeg(self,method,**kwargs): 
         assert method in ["Corr","Mult"], f"method={method} can't be compared with FEM"  
@@ -17,7 +22,7 @@ class CompareMethods:
             impose_bc = kwargs.get('impose_bc')
         else:
             assert not 'M' in kwargs and not 'impose_bc' in kwargs, f"M and impose_bc are not required for {method}"
-             
+
         plt.figure(figsize=(5, 5))
 
         # plot FEM vs method error (L2 norm) as a function of h for all degrees
@@ -126,6 +131,10 @@ class CompareMethods:
         for degree in self.ee.tab_degree:
             self.plot_Mult_vs_Add_vs_FEM_deg_allM(degree,tab_M)
         
+    ##########
+    # Tables #
+    ##########
+    
     def save_tab_deg_allM(self,degree,tab_M=None):
         tab_vals = []
         iterables = []
@@ -200,15 +209,242 @@ class CompareMethods:
             # Appliquer la fonction de mise en forme
             formatted_df = custom_formatting(df)
             
-            # Sauvegarder le DataFrame formaté au format CSV
-            formatted_df.to_csv(self.ee.results_dir+f'Tab_case{self.ee.testcase}_v{self.ee.version}_param{self.ee.param_num}_degree{degree}.csv')
-            
-            # Et au format PNG
-
+            # Sauvegarder le DataFrame formaté au format CSV et PNG
+            filename = self.ee.results_dir+f'Tab_case{self.ee.testcase}_v{self.ee.version}_param{self.ee.param_num}_degree{degree}'
+            formatted_df.to_csv(filename+'.csv')
             # table_conversion = "chrome"
             table_conversion = "matplotlib"
-            dfi.export(formatted_df, self.ee.results_dir+f'Tab_case{self.ee.testcase}_v{self.ee.version}_param{self.ee.param_num}_degree{degree}.png', dpi=300, table_conversion=table_conversion)
+            dfi.export(formatted_df, filename+'.png', dpi=300, table_conversion=table_conversion)
         
     def save_tab_alldeg_allM(self,tab_M=None):
         for degree in self.ee.tab_degree:
             self.save_tab_deg_allM(degree,tab_M)
+            
+class CompareMethodsMeshSize(CompareMethods):
+    def __get_index(self,tab,val):
+        tab = np.array(tab)
+        if val < tab[-1]:
+            return len(tab)-1
+        if val > tab[0]:
+            return 1
+        return np.where(tab < val)[0][0]
+    
+    def __linear_interpolation_on_x(self,tab,given_y):
+        tab_x,tab_y = tab[:,0],tab[:,1]
+        index = self.__get_index(tab_y,given_y)
+        
+        tab_x = np.log(np.array(tab_x))
+        tab_y = np.log(np.array(tab_y)) 
+
+        x = tab_x[index-1:index+1]
+        y = tab_y[index-1:index+1]
+        given_y = np.log(given_y)
+        
+        pente = (y[1]-y[0])/(x[1]-x[0])
+        x_inter = x[0]+(given_y-y[0])/pente
+        
+        return np.exp(x_inter)
+    
+    def get_N_deg_M(self,method,given_precision,degree,M=None,impose_bc=True):
+        assert method in ["FEM","Corr","Mult"], f"method={method} is not implemented"
+        if method == "Mult":
+            assert M is not None, f"M is required for {method}"
+        
+        try:
+            csv_file = self.ee.results_dir+f'{method}_case{self.ee.testcase}_v{self.ee.version}_param{self.ee.param_num}_degree{degree}'
+            if method == "Mult":
+                csv_file += f"_M{M}"
+                csv_file += '_weak' if not impose_bc else ''
+            csv_file += ".csv"
+        except:
+            print(f'{method} P{degree} not found')
+        
+        
+        _,_,tab_err = self.ee.read_csv(csv_file)
+        tab_N = self.ee.tab_nb_vert
+        tab = np.column_stack((tab_N,tab_err))
+        
+        return self.__linear_interpolation_on_x(tab,given_precision)
+
+    def get_N_at_given_precision_deg_allM(self,given_precision,degree,tab_M=None):
+        tab_methods = ["FEM","Corr"]
+        if tab_M is not None:
+            tab_methods.append("Mult")
+        
+        tab_N = {}
+        for method in tab_methods:
+            if method == "Mult":
+                for M in tab_M:
+                    impose_bc = True
+                    N = self.get_N_deg_M(method,given_precision,degree,M,impose_bc)
+                    tab_N[method+str(M)] = N
+                    
+                    impose_bc = False
+                    N = self.get_N_deg_M(method,given_precision,degree,M,impose_bc)
+                    tab_N[method+str(M)+"_weak"] = N
+            else:
+                N = self.get_N_deg_M(method,given_precision,degree)
+                tab_N[method] = N
+        
+        return tab_N
+    
+    def save_tab_given_precisions_deg_allM(self,degree,tab_M=None,tab_given_precision = [1e-3,1e-4]):
+        result_dir = self.ee.results_dir + "TabN/"
+        if not os.path.exists(result_dir):
+            os.makedirs(result_dir)
+        
+        tab_N_prec = {}
+        for given_precision in tab_given_precision:
+            tab_N = self.get_N_at_given_precision_deg_allM(given_precision,degree,tab_M)
+            for key in tab_N.keys():
+                if not key in tab_N_prec:
+                    tab_N_prec[key] = []
+                tab_N_prec[key].append(tab_N[key])
+            tab_methods = list(tab_N.keys())
+        
+        df = pd.DataFrame(tab_N_prec, index=tab_given_precision, columns=tab_methods)
+        
+        # apply scientific formats for the index
+        df.index = df.index.map(lambda x: f'{x:.0e}')
+        
+        # Sauvegarder le DataFrame au format CSV et PNG
+        filename = result_dir+f'TabN_case{self.ee.testcase}_v{self.ee.version}_param{self.ee.param_num}_degree{degree}'
+        df.to_csv(filename+'.csv')
+        # table_conversion = "chrome"
+        table_conversion = "matplotlib"
+        dfi.export(df, filename+'.png', dpi=300, table_conversion=table_conversion)
+        
+        return df
+    
+    def save_tab_given_precisions_alldeg_allM(self,tab_M=None):
+        result_dir = self.ee.results_dir + "TabN/"
+        if not os.path.exists(result_dir):
+            os.makedirs(result_dir)
+            
+        df_all = {}
+        for degree in self.ee.tab_degree:
+            tab_given_precision = [10**-(degree+2),10**-(degree+3)]
+            df_deg = self.save_tab_given_precisions_deg_allM(degree,tab_M,tab_given_precision)
+            df_all[degree] = df_deg
+            
+        df = pd.concat(df_all)
+        
+        # Sauvegarder le DataFrame au format CSV et PNG
+        filename = result_dir+f'TabN_case{self.ee.testcase}_v{self.ee.version}_param{self.ee.param_num}'
+        df.to_csv(filename+'.csv')
+        # table_conversion = "chrome"
+        table_conversion = "matplotlib"
+        dfi.export(df, filename+'.png', dpi=300, table_conversion=table_conversion)
+        
+class CompareMethodsDoFs(CompareMethodsMeshSize):
+    def get_total_parameters_of_net(self,u_theta):
+        net = u_theta.net
+        
+        total_params = 0
+        for param in net.parameters():
+            total_params += param.numel()
+        
+        return total_params
+    
+    def get_dofs_at_given_precision_deg_allM(self,given_precision,degree,tab_M=None):
+        tab_N = self.get_N_at_given_precision_deg_allM(given_precision,degree,tab_M=tab_M)
+        # round the values to the upper integer
+        tab_N = {key:round(val) for key,val in tab_N.items()}
+
+        solver = self.ee.solver_type(params=self.ee.params, problem=self.ee.pb_considered, degree=degree, error_degree=None, high_degree=None, save_uref=False)
+        
+        tab_nb_dofs = []
+        for N in tab_N.values():
+            solver.set_meshsize(nb_cell=N-1)
+            nb_dofs = solver.V.dim()
+            tab_nb_dofs.append(nb_dofs)
+            
+        return tab_N,tab_nb_dofs  
+            
+    def save_tab_given_precisions_deg_allM(self,u_theta,degree,tab_M=None,tab_given_precision = [1e-3,1e-4],n_params=100):
+        result_dir = self.ee.results_dir + "TabDoFs/"
+        if not os.path.exists(result_dir):
+            os.makedirs(result_dir)
+        
+        tab_N_prec = {}
+        tab_DoFs_prec = {}
+        tab_DoFs_prec_nparams = {}
+        for given_precision in tab_given_precision:
+            print(f"# given_precision={given_precision}")
+            tab_N,tab_nb_dofs = self.get_dofs_at_given_precision_deg_allM(given_precision,degree,tab_M)
+            for (i,key) in enumerate(tab_N.keys()):
+                if not key in tab_DoFs_prec:
+                    tab_N_prec[key] = []
+                    tab_DoFs_prec[key] = []
+                    tab_DoFs_prec_nparams[key] = []
+                tab_N_prec[key].append(tab_N[key])
+                tab_DoFs_prec[key].append(tab_nb_dofs[i])
+                tab_DoFs_prec_nparams[key].append(tab_nb_dofs[i]*n_params)                
+            tab_methods = ["PINNs"]+list(tab_N.keys())
+            
+        total_dofs_PINNs = self.get_total_parameters_of_net(u_theta)
+        tab_DoFs_prec["PINNs"] = [total_dofs_PINNs]*len(tab_given_precision)
+        tab_N_prec["PINNs"] = [None]*len(tab_given_precision)
+                
+        df_N = pd.DataFrame(tab_N_prec, index=tab_given_precision, columns=tab_methods)
+        df_Dofs = pd.DataFrame(tab_DoFs_prec, index=tab_given_precision, columns=tab_methods)
+
+        df = pd.concat([df_N,df_Dofs],axis=1)
+        df.columns = pd.MultiIndex.from_product([["N","DoFs"],tab_methods],names=["type","method"])
+        
+        # Sauvegarder le DataFrame au format CSV et PNG
+        filename = result_dir+f'TabDoFs_case{self.ee.testcase}_v{self.ee.version}_param{self.ee.param_num}_degree{degree}'
+        df.to_csv(filename+'.csv')
+        # table_conversion = "chrome"
+        table_conversion = "matplotlib"
+        dfi.export(df, filename+'.png', dpi=300, table_conversion=table_conversion)
+        
+        # Compute for n_params
+
+        for method in tab_DoFs_prec_nparams:
+            if method != "FEM":
+                for i in range(len(tab_DoFs_prec_nparams[method])):
+                    tab_DoFs_prec_nparams[method][i] += total_dofs_PINNs
+    
+        df_dofs_nparams = pd.DataFrame(tab_DoFs_prec_nparams, index=tab_given_precision, columns=tab_methods[1:])
+        
+        # Sauvegarder le DataFrame au format CSV et PNG
+        filename = result_dir+f'TabDoFsParam_case{self.ee.testcase}_v{self.ee.version}_param{self.ee.param_num}_degree{degree}_nparams{n_params}'
+        df_dofs_nparams.to_csv(filename+'.csv')
+        # table_conversion = "chrome"
+        table_conversion = "matplotlib"
+        dfi.export(df_dofs_nparams, filename+'.png', dpi=300, table_conversion=table_conversion)
+        
+        return df,df_dofs_nparams
+
+    def save_tab_given_precisions_alldeg_allM(self,u_theta,tab_M=None,n_params=100):
+        result_dir = self.ee.results_dir + "TabDoFs/"
+        if not os.path.exists(result_dir):
+            os.makedirs(result_dir)
+        
+        df_all = {}
+        df_dofs_nparams_all = {}
+        for degree in self.ee.tab_degree:
+            print(f"## degree={degree}")
+            tab_given_precision = [10**-(degree+2),10**-(degree+3)]
+            df,df_dofs_nparams = self.save_tab_given_precisions_deg_allM(u_theta,degree,tab_M,tab_given_precision=tab_given_precision,n_params=n_params)
+            df_all[degree] = df
+            df_dofs_nparams_all[degree] = df_dofs_nparams
+            
+        df = pd.concat(df_all)
+        
+        # Sauvegarder le DataFrame au format CSV et PNG
+        filename = result_dir+f'TabDoFs_case{self.ee.testcase}_v{self.ee.version}_param{self.ee.param_num}'
+        df.to_csv(filename+'.csv')
+        # table_conversion = "chrome"
+        table_conversion = "matplotlib"
+        dfi.export(df, filename+'.png', dpi=300, table_conversion=table_conversion)
+        
+        df_dofs_nparams = pd.concat(df_dofs_nparams_all)
+        
+        # Sauvegarder le DataFrame au format CSV et PNG
+        filename = result_dir+f'TabDoFsParam_case{self.ee.testcase}_v{self.ee.version}_param{self.ee.param_num}_nparams{n_params}'
+        df_dofs_nparams.to_csv(filename+'.csv')
+        # table_conversion = "chrome"
+        table_conversion = "matplotlib"
+        dfi.export(df_dofs_nparams, filename+'.png', dpi=300, table_conversion=table_conversion)

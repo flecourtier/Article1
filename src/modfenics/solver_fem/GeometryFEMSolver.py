@@ -82,3 +82,19 @@ class DonutFEMSolver(FEMSolver):
             h = mesh.hmax()
         
         return mesh, end2-start2
+    
+###############
+# Geometry 3D #
+###############
+
+class CubeFEMSolver(FEMSolver):    
+    def _create_mesh(self,nb_vert):
+        # check if pb_considered is instance of Square class
+        assert isinstance(self.pb_considered.geometry, Square)
+        
+        start = time.time()
+        box = np.array(self.pb_considered.geometry.box)
+        mesh = df.BoxMesh(df.Point(box[0,0], box[1,0], box[2,0]), df.Point(box[0,1], box[1,1], box[2,1]), nb_vert - 1, nb_vert - 1, nb_vert - 1)
+        end = time.time()
+        
+        return mesh, end-start

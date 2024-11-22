@@ -7,7 +7,14 @@ from testcases.utils import create_tree,select_param,compute_slope
 from modfenics.error_estimations.utils import get_solver_type
 
 class ErrorEstimations:
+    """Class to run error estimations for a given problem and a given parameter.
+    """
     def __init__(self, param_num, pb_considered, **kwargs):
+        """Constructor of the class ErrorEstimations.
+
+        :param param_num: Number of the parameter to consider
+        :param pb_considered: Problem to consider
+        """
         # define the problem
         self.param_num = param_num
         self.pb_considered = pb_considered

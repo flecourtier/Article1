@@ -1,0 +1,4 @@
+type,N,N,N,DoFs,DoFs,DoFs
+method,PINNs,FEM,Corr,PINNs,FEM,Corr
+0.0001,,42,8,12461,6889,225
+1e-05,,89,17,12461,31329,1089
