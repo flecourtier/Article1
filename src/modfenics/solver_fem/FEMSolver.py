@@ -150,16 +150,16 @@ class FEMSolver(abc.ABC):
 
         return sol
     
-    def get_uref(self, i, ):       
+    def get_uref(self, i):       
         filename = self.save_uref[i]
         
         if not self.load_uref or not os.path.exists(filename):
-            print("Computing reference solution")
+            print("Computing reference solution for parameter ",i)
             u_ref = self.run_uref(i)
             vct_u_ref = u_ref.vector().get_local()
             np.save(filename, vct_u_ref)  
         else:
-            print("Load reference solution")
+            print("Load reference solution for parameter ",i)
             vct_u_ref = np.load(filename)
             u_ref = df.Function(self.V_ref)
             u_ref.vector()[:] = vct_u_ref

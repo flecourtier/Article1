@@ -85,6 +85,7 @@ class TestCase3(TestCase2D):
         elif self.version == "medium":
             self.parameter_domain = [[0.4, 0.6],[0.4, 0.6],[0.3, 0.6],[0.04, 0.25]] #c1,c2,sigma,eps
         else:
+            self.set_params = [[0.51,0.54,0.52,0.55]]
             self.parameter_domain = [[0.4, 0.6],[0.4, 0.6],[0.4, 0.8],[0.5, 1.0]] #c1,c2,sigma,eps
         self.ana_sol = False
         
