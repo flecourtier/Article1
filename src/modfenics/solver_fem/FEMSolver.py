@@ -101,6 +101,7 @@ class FEMSolver(abc.ABC):
         
         if self.high_degree is not None:
             self.V_theta = df.FunctionSpace(self.mesh, "CG", self.high_degree)
+            print("V_theta created with ",self.N+1," vertices and degree ",self.high_degree)
         
         if plot_mesh or filename is not None:
             assert self.pb_considered.dim in [1,2] # to modify for 2D
