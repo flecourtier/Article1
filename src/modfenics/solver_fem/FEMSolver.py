@@ -13,8 +13,12 @@ import abc
 import os
 import time
 import numpy as np
-import matplotlib.pyplot as plt
 from pathlib import Path
+import matplotlib.pyplot as plt
+from matplotlib import rc
+
+rc('font', **{'family': 'serif', 'serif': ['Computer Modern']})
+rc('text', usetex=True)
 
 df.parameters["ghost_mode"] = "shared_facet"
 df.parameters["form_compiler"]["cpp_optimize"] = True
@@ -173,22 +177,26 @@ class FEMSolver(abc.ABC):
     
     def _plot_results_fem(self, u_ex_V, sol_V, V_solve, norme_L2 = None, plot_result=False, filename=None):
         assert self.pb_considered.dim in [1,2]
+        # Définir les tailles pour les titres et les légendes
+        title_size = 24  # Taille des titres
+        legend_size = 20  # Taille des légendes
         
         if self.pb_considered.dim == 1:
         
-            plt.figure(figsize=(6,3))
+            plt.figure(figsize=(15,5))
             
-            plt.subplot(1,2,1)
-            df.plot(sol_V,label="sol")
-            df.plot(u_ex_V,label="u_ex")
-            plt.title("solution of FEM")
-            plt.legend()
+            plt.subplot(1,3,2)
+            df.plot(sol_V,label=r"$u_h$")
+            df.plot(u_ex_V,label=r"$u$")
+            plt.title("FEM solution",fontsize=title_size)
+            plt.legend(fontsize=legend_size)
             
-            plt.subplot(1,2,2)
+            plt.subplot(1,3,3)
             error_sol = df.Function(V_solve)
             error_sol.vector()[:] = abs(sol_V.vector()[:] - u_ex_V.vector()[:])
-            df.plot(error_sol)
-            plt.title("error on sol")
+            df.plot(error_sol,label=r"$|u-u_h|$")
+            plt.title("FEM error",fontsize=title_size)
+            plt.legend(fontsize=legend_size)
             
         else:
             colormap = "jet"
@@ -211,12 +219,12 @@ class FEMSolver(abc.ABC):
             plt.colorbar(c)
             plt.title("error on sol")
             
-        if norme_L2 is not None:
-            # write error in scientific notation
-            plt.suptitle("L2 norm of the error : {:.2e}".format(norme_L2))
+        # if norme_L2 is not None:
+        #     # write error in scientific notation
+        #     plt.suptitle("L2 norm of the error : {:.2e}".format(norme_L2))
             
         if filename is not None:
-            plt.savefig(filename)
+            plt.savefig(filename,dpi=1000)
             
         if plot_result:
             plt.show()
@@ -268,45 +276,64 @@ class FEMSolver(abc.ABC):
         
         if plot_result or filename is not None:
             assert self.pb_considered.dim in [1,2] # to modify for 2D
-            u_ex_V = df.interpolate(u_ex,self.V)
-            self._plot_results_fem(u_ex_V, sol, self.V, norme_L2, plot_result, filename)
+            u_ex_Vex = df.interpolate(u_ex,self.V_ex)
+            sol_Vex = df.interpolate(sol,self.V_ex)
+            self._plot_results_fem(u_ex_Vex, sol_Vex, self.V_ex, norme_L2, plot_result, filename)
         
         return sol,norme_L2
     
-    def _plot_results_corr(self, u_ex_V, u_theta_V, C_ex_V, C_tild_V, sol_V, V_solve, plot_result=False, filename=None):
+    def _plot_results_corr(self, u_ex_V, C_ex_V, C_tild_V, sol_V, V_solve, type, plot_result=False, filename=None, impose_bc=None):
         assert self.pb_considered.dim == 1
+        assert type in ["Add","Mult"]
+        if type == "Mult":
+            assert impose_bc is not None
+            supp = " (strong)" if impose_bc else " (weak)"
+        else:
+            supp = ""
         
-        plt.figure(figsize=(12,3))
+        # Définir les tailles pour les titres et les légendes
+        title_size = 24  # Taille des titres
+        legend_size = 20  # Taille des légendes
         
-        plt.subplot(1,4,1)
-        df.plot(u_ex_V,label="u_ex",color="orange")
-        df.plot(u_theta_V,label="u_theta")
-        plt.title("prediction")
-        plt.legend()
+        plt.figure(figsize=(15,5))
         
-        plt.subplot(1,4,2)
-        df.plot(C_ex_V,label="C_ex",color="orange")
-        df.plot(C_tild_V,label="C_tild")
-        plt.title("correction")
-        plt.legend()
+        plt.subplot(1,3,1)
+        if type == "Add":
+            df.plot(C_tild_V,label=r"$p_h^+$")
+            df.plot(C_ex_V,label=r"$u-u_\theta$")
+        else:
+            df.plot(C_tild_V,label=r"$p_h^\times$")
+            df.plot(C_ex_V,label=r"$u/u_\theta$")
+        plt.title(f"{type} correction{supp}",fontsize=title_size)
+        plt.legend(fontsize=legend_size)
         
-        plt.subplot(1,4,3)
-        df.plot(sol_V,label="sol")
-        df.plot(u_ex_V,label="u_ex")
-        plt.title("solution after correction")
-        plt.legend()
+        plt.subplot(1,3,2)
+        if type == "Add":
+            df.plot(sol_V,label=r"$u_h^+$")
+        else:
+            df.plot(sol_V,label=r"$u_h^\times$")
+        df.plot(u_ex_V,label=r"$u$")
+        plt.title(f"{type} solution{supp}",fontsize=title_size)
+        plt.legend(fontsize=legend_size)
         
-        plt.subplot(1,4,4)
-        error_sol = df.Function(V_solve)
-        error_sol.vector()[:] = abs(sol_V.vector()[:] - u_ex_V.vector()[:])
-        df.plot(error_sol)
-        plt.title("error on sol (corrected)")
+        plt.subplot(1,3,3)
+        if type == "Add":
+            error_sol = df.Function(V_solve)
+            error_sol.vector()[:] = abs(sol_V.vector()[:] - u_ex_V.vector()[:])
+            df.plot(error_sol,label=r"$|u-u_h^+|$")
+        else:
+            error_sol = df.Function(V_solve)
+            error_sol.vector()[:] = abs(sol_V.vector()[:] - u_ex_V.vector()[:])
+            df.plot(error_sol,label=r"$|u-u_h^\times|$")
+            
+        plt.title(f"{type} error{supp}",fontsize=title_size)
+        plt.legend(fontsize=legend_size)
         
         if plot_result:
             plt.show()
             
         if filename is not None:
-            plt.savefig(filename)
+            plt.savefig(filename,dpi=1000)
             
         plt.close()
 
@@ -381,10 +408,10 @@ class FEMSolver(abc.ABC):
         
         if plot_result or filename is not None:
             assert self.pb_considered.dim == 1 # to modify for 2D
-            u_ex_V = df.interpolate(u_ex,self.V)
-            C_ex = df.Function(self.V)
-            C_ex.vector()[:] = u_ex_V.vector()[:] - u_theta_V.vector()[:]
-            self._plot_results_corr(u_ex_V,u_theta_V,C_ex,C_tild,sol,self.V,filename=filename)
+            u_ex_Vex = df.interpolate(u_ex,self.V_ex)
+            C_ex_Vex = df.Function(self.V_ex)
+            C_ex_Vex.vector()[:] = u_ex_Vex.vector()[:] - u_theta_Vex.vector()[:]
+            self._plot_results_corr(u_ex_Vex,C_ex_Vex,C_Vex,sol_Vex,self.V_ex,type="Add",filename=filename)
         
         return sol,C_tild,norme_L2
 
@@ -444,9 +471,9 @@ class FEMSolver(abc.ABC):
         
         if plot_result or filename is not None:
             assert self.pb_considered.dim == 1 # to modify for 2D
-            u_ex_V = df.interpolate(u_ex,self.V)
-            C_ex = df.Function(self.V)
-            C_ex.vector()[:] = u_ex_V.vector()[:]/u_theta_V.vector()[:]
-            self._plot_results_corr(u_ex_V,u_theta_V,C_ex,C_tild,sol,self.V,filename=filename)
+            u_ex_Vex = df.interpolate(u_ex,self.V_ex)
+            C_ex_Vex = df.Function(self.V_ex)
+            C_ex_Vex.vector()[:] = np.divide(u_ex_Vex.vector()[:], u_theta_Vex.vector()[:], out=np.full_like(u_ex_Vex.vector()[:], np.nan), where=u_theta_Vex.vector()[:] != 0)
+            self._plot_results_corr(u_ex_Vex,C_ex_Vex,C_Vex,sol_Vex,self.V_ex,type="Mult",filename=filename,impose_bc=impose_bc)
         
         return sol,C_tild,norme_L2

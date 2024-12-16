@@ -112,7 +112,10 @@ class ErrorEstimations:
             fig_filename = None
             
             if self.save_fig:
-                results_dir_fig = self.results_dir + f"{method}_plot/"
+                results_dir_fig = self.results_dir + f"{method}_plot"
+                if method == "Mult" and not impose_bc:
+                    results_dir_fig += '_weak'
+                results_dir_fig += "/"
                 create_tree(results_dir_fig)
                 fig_filename = results_dir_fig+f"{method}_plot_case{self.testcase}_v{self.version}_param{self.param_num}_degree{degree}_N{nb_vert}"
                 if method == "Mult":

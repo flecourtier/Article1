@@ -80,7 +80,20 @@ class TestCase2(TestCase1D):
         # else:
         x=xy
         r,Pe = mu
-        return r * (x - 1.0/(pre.exp(Pe)-1.0)*(pre.exp(Pe*x)-1.0) )
+        return r * (x - (pre.exp(Pe*x)-1.0)/(pre.exp(Pe)-1.0) )
+    
+    def du_ex_dx(self, pre, xy, mu):
+        # if pre is dolfin:
+        #     x=xy[0]
+        # else:
+        x=xy
+        r,Pe = mu
+        return r * (1.0 - Pe*pre.exp(Pe*x)/(pre.exp(Pe)-1.0))
+        
+    def d2u_ex_dx2(self, pre, xy, mu):
+        x=xy
+        r,Pe = mu
+        return -r * Pe**2 * pre.exp(Pe*x)/(pre.exp(Pe)-1.0)      
 
     def g(self, pre, xy, mu):
         return 0.0
