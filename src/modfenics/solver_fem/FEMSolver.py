@@ -179,9 +179,9 @@ class FEMSolver(abc.ABC):
         assert self.pb_considered.dim in [1,2]
         # Définir les tailles pour les titres et les légendes
         title_size = 24  # Taille des titres
-        legend_size = 20  # Taille des légendes
         
         if self.pb_considered.dim == 1:
+            legend_size = 20  # Taille des légendes
         
             plt.figure(figsize=(15,5))
             
@@ -199,25 +199,30 @@ class FEMSolver(abc.ABC):
             plt.legend(fontsize=legend_size)
             
         else:
+            labelsize = 14
+            
             colormap = "jet"
-            plt.figure(figsize=(9,3))
+            plt.figure(figsize=(15,5))
             
             plt.subplot(1,3,1)
-            c = df.plot(sol_V, cmap=colormap)
-            plt.colorbar(c)
-            plt.title("solution of FEM")
+            c = df.plot(u_ex_V, cmap=colormap)
+            cbar = plt.colorbar(c)
+            cbar.ax.yaxis.set_tick_params(labelsize=labelsize)
+            plt.title(r"\begin{center} Analytical solution \\ $u$ \end{center}",fontsize=title_size, pad=40)
             
             plt.subplot(1,3,2)
-            c = df.plot(u_ex_V, cmap=colormap)
-            plt.colorbar(c)
-            plt.title("u_ex")
+            c = df.plot(sol_V, cmap=colormap)
+            cbar = plt.colorbar(c)
+            cbar.ax.yaxis.set_tick_params(labelsize=labelsize)
+            plt.title(r"\begin{center}FEM solution \\ $u_h$ \end{center}",fontsize=title_size, pad=40)
             
             plt.subplot(1,3,3)
             error_sol = df.Function(V_solve)
             error_sol.vector()[:] = abs(sol_V.vector()[:] - u_ex_V.vector()[:])
             c = df.plot(error_sol, cmap=colormap)
-            plt.colorbar(c)
-            plt.title("error on sol")
+            cbar = plt.colorbar(c)
+            cbar.ax.yaxis.set_tick_params(labelsize=labelsize)
+            plt.title(r"\begin{center}Error \\ $|u-u_h|$ \end{center}",fontsize=title_size, pad=40)
             
         # if norme_L2 is not None:
         #     # write error in scientific notation
@@ -283,7 +288,7 @@ class FEMSolver(abc.ABC):
         return sol,norme_L2
     
     def _plot_results_corr(self, u_ex_V, C_ex_V, C_tild_V, sol_V, V_solve, type, plot_result=False, filename=None, impose_bc=None):
-        assert self.pb_considered.dim == 1
+        assert self.pb_considered.dim in [1,2]
         assert type in ["Add","Mult"]
         if type == "Mult":
             assert impose_bc is not None
@@ -293,42 +298,91 @@ class FEMSolver(abc.ABC):
         
         # Définir les tailles pour les titres et les légendes
         title_size = 24  # Taille des titres
-        legend_size = 20  # Taille des légendes
         
-        plt.figure(figsize=(15,5))
-        
-        plt.subplot(1,3,1)
-        if type == "Add":
-            df.plot(C_tild_V,label=r"$p_h^+$")
-            df.plot(C_ex_V,label=r"$u-u_\theta$")
-        else:
-            df.plot(C_tild_V,label=r"$p_h^\times$")
-            df.plot(C_ex_V,label=r"$u/u_\theta$")
-        plt.title(f"{type} correction{supp}",fontsize=title_size)
-        plt.legend(fontsize=legend_size)
-        
-        plt.subplot(1,3,2)
-        if type == "Add":
-            df.plot(sol_V,label=r"$u_h^+$")
-        else:
-            df.plot(sol_V,label=r"$u_h^\times$")
-        df.plot(u_ex_V,label=r"$u$")
-        plt.title(f"{type} solution{supp}",fontsize=title_size)
-        plt.legend(fontsize=legend_size)
-        
-        plt.subplot(1,3,3)
-        if type == "Add":
-            error_sol = df.Function(V_solve)
-            error_sol.vector()[:] = abs(sol_V.vector()[:] - u_ex_V.vector()[:])
-            df.plot(error_sol,label=r"$|u-u_h^+|$")
-        else:
-            error_sol = df.Function(V_solve)
-            error_sol.vector()[:] = abs(sol_V.vector()[:] - u_ex_V.vector()[:])
-            df.plot(error_sol,label=r"$|u-u_h^\times|$")
+        if self.pb_considered.dim == 1:
+            legend_size = 20  # Taille des légendes
+            plt.figure(figsize=(15,5))
             
-        plt.title(f"{type} error{supp}",fontsize=title_size)
-        plt.legend(fontsize=legend_size)
-        
+            plt.subplot(1,3,1)
+            if type == "Add":
+                df.plot(C_tild_V,label=r"$p_h^+$")
+                df.plot(C_ex_V,label=r"$u-u_\theta$")
+            else:
+                df.plot(C_tild_V,label=r"$p_h^\times$")
+                df.plot(C_ex_V,label=r"$u/u_\theta$")
+            plt.title(f"{type} correction{supp}",fontsize=title_size)
+            plt.legend(fontsize=legend_size)
+            
+            plt.subplot(1,3,2)
+            if type == "Add":
+                df.plot(sol_V,label=r"$u_h^+$")
+            else:
+                df.plot(sol_V,label=r"$u_h^\times$")
+            df.plot(u_ex_V,label=r"$u$")
+            plt.title(f"{type} solution{supp}",fontsize=title_size)
+            plt.legend(fontsize=legend_size)
+            
+            plt.subplot(1,3,3)
+            if type == "Add":
+                error_sol = df.Function(V_solve)
+                error_sol.vector()[:] = abs(sol_V.vector()[:] - u_ex_V.vector()[:])
+                df.plot(error_sol,label=r"$|u-u_h^+|$")
+            else:
+                error_sol = df.Function(V_solve)
+                error_sol.vector()[:] = abs(sol_V.vector()[:] - u_ex_V.vector()[:])
+                df.plot(error_sol,label=r"$|u-u_h^\times|$")
+                
+            plt.title(f"{type} error{supp}",fontsize=title_size)
+            plt.legend(fontsize=legend_size)
+        else:
+            assert type == "Add"
+            labelsize = 14
+            
+            colormap = "jet"
+            plt.figure(figsize=(15,10))
+            
+            # Solution
+            plt.subplot(2,3,1)
+            c = df.plot(u_ex_V, cmap=colormap)
+            cbar = plt.colorbar(c)
+            cbar.ax.yaxis.set_tick_params(labelsize=labelsize)
+            plt.title(r"\begin{center} Analytical solution \\ $u$ \end{center}",fontsize=title_size, pad=40)
+            
+            plt.subplot(2,3,2)
+            c = df.plot(sol_V, cmap=colormap)
+            cbar = plt.colorbar(c)
+            cbar.ax.yaxis.set_tick_params(labelsize=labelsize)
+            plt.title(r"\begin{center} Add solution \\ $u_h^+$ \end{center}",fontsize=title_size, pad=40)
+            
+            plt.subplot(2,3,3)
+            error_sol = df.Function(V_solve)
+            error_sol.vector()[:] = abs(sol_V.vector()[:] - u_ex_V.vector()[:])
+            c = df.plot(error_sol, cmap=colormap)
+            cbar = plt.colorbar(c)
+            cbar.ax.yaxis.set_tick_params(labelsize=labelsize)
+            plt.title(r"\begin{center} Error \\ $|u-u_h^+|$ \end{center}",fontsize=title_size, pad=40)
+            
+            # Correction
+            plt.subplot(2,3,4)
+            c = df.plot(C_ex_V, cmap=colormap)
+            cbar = plt.colorbar(c)
+            cbar.ax.yaxis.set_tick_params(labelsize=labelsize)
+            plt.title(r"\begin{center} Analytical correction \\ $u - u_\theta$ \end{center}",fontsize=title_size, pad=40)
+            
+            plt.subplot(2,3,5)
+            c = df.plot(C_tild_V, cmap=colormap)
+            cbar = plt.colorbar(c)
+            cbar.ax.yaxis.set_tick_params(labelsize=labelsize)
+            plt.title(r"\begin{center} Add correction \\ $p_h^+$ \end{center}",fontsize=title_size, pad=40)
+            
+            plt.subplot(2,3,6)
+            error_C = df.Function(V_solve)
+            error_C.vector()[:] = abs(C_tild_V.vector()[:] - C_ex_V.vector()[:])
+            c = df.plot(error_C, cmap=colormap)
+            cbar = plt.colorbar(c)
+            cbar.ax.yaxis.set_tick_params(labelsize=labelsize)
+            plt.title(r"\begin{center} Error \\ $|(u-u_\theta)-p_h^+|$ \end{center}",fontsize=title_size, pad=40)
+            
         if plot_result:
             plt.show()
             
@@ -407,7 +461,6 @@ class FEMSolver(abc.ABC):
         self.times_corr_add[self.N]["error"] = end-start
         
         if plot_result or filename is not None:
-            assert self.pb_considered.dim == 1 # to modify for 2D
             u_ex_Vex = df.interpolate(u_ex,self.V_ex)
             C_ex_Vex = df.Function(self.V_ex)
             C_ex_Vex.vector()[:] = u_ex_Vex.vector()[:] - u_theta_Vex.vector()[:]

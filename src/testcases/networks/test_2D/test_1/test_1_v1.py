@@ -69,6 +69,17 @@ class Poisson_2D(pdes.AbstractPDEx):
         x1, x2 = x.get_coordinates()
         mu1, mu2= self.get_parameters(mu)
         return self.problem.u_ex(torch, [x1, x2], [mu1, mu2])
+    
+    # def reference_solution_derivative(self, x, mu):
+    #     x1, x2 = x.get_coordinates()
+    #     mu1, mu2= self.get_parameters(mu)
+    #     return self.problem.du_ex_dx(torch, [x1, x2], [mu1, mu2])
+
+    # def reference_solution_second_derivative(self, x, mu):
+    #     x1, x2 = x.get_coordinates()
+    #     mu1, mu2= self.get_parameters(mu)
+    #     return self.problem.d2u_ex_dx2(torch, [x1, x2], [mu1, mu2])
+
 
 
 def Run_laplacian2D(pde, bc_loss_bool=False, new_training = False, w_bc=0, w_res=1.0):
