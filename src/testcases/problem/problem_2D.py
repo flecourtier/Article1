@@ -46,6 +46,37 @@ class TestCase1(TestCase2D):
         mu1,mu2 = mu
         return -pre.exp(-((x - mu1)**2 + (y - mu2)**2)/2) * (((x**2 - 2*mu1*x + mu1**2 - 5)*pre.sin(2*x) + (4*mu1 - 4*x)*pre.cos(2*x)) * pre.sin(2*y) + pre.sin(2*x) * ((y**2 - 2*mu2*y + mu2**2 - 5)*pre.sin(2*y) + (4*mu2 - 4*y)*pre.cos(2*y)))
 
+    def gradf(self, pre, xy, mu):
+        x,y=xy
+        mu1,mu2 = mu
+        exp = pre.exp((-(y - mu2) ** 2 - (x - mu1) ** 2) / 2)
+        sin1 = pre.sin(2 * x)
+        sin2 = pre.sin(2 * y)
+        cos1 = pre.cos(2 * x)
+        cos2 = pre.cos(2 * y)
+
+        df_dx = -(mu1 - x) * exp * (
+            ((mu2 - y) ** 2 + (mu1 - x) ** 2 - 10) * sin1 * sin2
+            + 4 * (mu1 - x) * cos1 * sin2
+            + 4 * (mu2 - y) * sin1 * cos2
+        ) + exp * (
+            (4 - 2 * ((mu2 - y) ** 2 + (mu1 - x) ** 2 - 10)) * cos1 * sin2
+            + 10 * (mu1 - x) * sin1 * sin2
+            - 8 * (mu2 - y) * cos1 * cos2
+        )
+        
+        df_dy = -(mu2 - y) * exp * (
+            ((mu2 - y) ** 2 + (mu1 - x) ** 2 - 10) * sin1 * sin2
+            + 4 * (mu1 - x) * cos1 * sin2
+            + 4 * (mu2 - y) * sin1 * cos2
+        ) + exp * (
+            (4 - 2 * ((mu2 - y) ** 2 + (mu1 - x) ** 2 - 10)) * sin1 * cos2
+            + 10 * (mu2 - y) * sin1 * sin2
+            - 8 * (mu1 - x) * cos1 * cos2
+        )
+        
+        return df_dx, df_dy
+
     def g(self, pre, xy, mu):
         return 0.0
     
