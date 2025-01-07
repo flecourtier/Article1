@@ -271,8 +271,13 @@ class FEMSolver(abc.ABC):
             uex_Vex = self.tab_uref[i]
         sol_Vex = df.interpolate(sol,self.V_ex)
         norme_L2 = (df.assemble((((uex_Vex - sol_Vex)) ** 2) * self.dx) ** (0.5)) 
+        norme_H1 = df.errornorm(uex_Vex, sol_Vex, norm_type='H1')
+        # print("semi_norme_H1 = ",semi_norme_H1)
+        # norme_H1 = norme_L2 + semi_norme_H1
+        print("norme_H1 = ",norme_H1)
         if relative_error:
             norme_L2 = norme_L2 / (df.assemble((((uex_Vex)) ** 2) * self.dx) ** (0.5))
+            
         end = time.time()
         
         if print_time:
@@ -452,6 +457,8 @@ class FEMSolver(abc.ABC):
         sol_Vex.vector()[:] = (C_Vex.vector()[:])+u_theta_Vex.vector()[:]
         
         norme_L2 = (df.assemble((((uex_Vex - sol_Vex)) ** 2) * self.dx) ** (0.5)) 
+        norme_H1 = df.errornorm(uex_Vex, sol_Vex, norm_type='H1')
+        print("norme_H1 = ",norme_H1)
         if relative_error:
             norme_L2 = norme_L2 / (df.assemble((((uex_Vex)) ** 2) * self.dx) ** (0.5))
         end = time.time()
@@ -512,11 +519,15 @@ class FEMSolver(abc.ABC):
         C_Vex = df.interpolate(C_tild,self.V_ex)
         sol_Vex = df.Function(self.V_ex)
         sol_Vex.vector()[:] = C_Vex.vector()[:] * (u_theta_Vex.vector()[:] + M) - M
+        print("on fait du mult")
         
         norme_L2 = (df.assemble((((uex_Vex - sol_Vex)) ** 2) * self.dx) ** (0.5)) 
+        norme_H1 = df.errornorm(uex_Vex, sol_Vex, norm_type='H1')
+        print("norme_H1 = ",norme_H1)
         if relative_error:
             norme_L2 = norme_L2 / (df.assemble((((uex_Vex)) ** 2) * self.dx) ** (0.5))
         end = time.time()
+        
         
         if print_time:
             print("Time to compute the error :",end-start)
