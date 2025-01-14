@@ -76,7 +76,7 @@ class Poisson_2D(pdes.AbstractPDEx):
         dres_dy = u_xxy + u_yyy + df_dy
 
         return torch.sqrt(
-            res**2 + self.coeff_third_derivative**2 * (dres_dx**2 + dres_dy**2)
+            res**2 + self.coeff_third_derivative * (dres_dx**2 + dres_dy**2)
         )
 
     def post_processing(self, x, mu, w):
