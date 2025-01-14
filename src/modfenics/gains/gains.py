@@ -13,15 +13,7 @@ class GainsEnhancedFEM:
         self.pb_considered = pb_considered
         self.__infos_from_problem()
         repo_dir = kwargs.get('repo_dir', "./")
-        if self.testcase != 3:
-            version_str = f"version{self.version}"
-        else:
-            version_str = f"{self.version}"
-            if self.version == "medium":
-                assert largenet in kwargs, f"largenet is required for case{self.testcase} with version={self.version}"
-                largenet = kwargs.get('largenet')
-                if largenet:
-                    version_str += "_largenet"
+        version_str = f"version{self.version}"
         
         self.results_dir = repo_dir + f"/results/fenics/test_{self.dim}D/testcase{self.testcase}/{version_str}/gains/"
         create_tree(self.results_dir)

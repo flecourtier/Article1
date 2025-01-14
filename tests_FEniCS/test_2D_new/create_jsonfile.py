@@ -37,7 +37,7 @@ def choice_version(dimension,testcase):
         elif testcase == 2:
             return [1]
         elif testcase == 3:
-            return ["big","medium","medium_largenet","small","new"]
+            return [1]
         elif testcase == 4:
             return [1]
         elif testcase == 5:

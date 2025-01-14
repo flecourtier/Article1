@@ -8,6 +8,12 @@ class CompareGainsMethods:
     def __init__(self,gains_enhanced_fem:GainsEnhancedFEM):
         self.gef = gains_enhanced_fem
         self.params_str = self.create_params_str()
+        liste_de_listes = [list(map(float, element.split(','))) for element in self.params_str]
+
+        # max_par_coeff = [max(valeurs) for valeurs in zip(*liste_de_listes)]
+        # print("max :",max_par_coeff)
+        # min_par_coeff = [min(valeurs) for valeurs in zip(*liste_de_listes)]
+        # print("min :",min_par_coeff)
         self.__row_names = [str(i) + " : " + self.params_str[i] for i in range(self.gef.n_params)]
         
     def create_params_str(self):

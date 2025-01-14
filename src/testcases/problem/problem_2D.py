@@ -104,20 +104,12 @@ class TestCase2(TestCase2D):
         return 0.0
     
 class TestCase3(TestCase2D):
-    def __init__(self,version="big"):
-        assert version in ["big","small","medium","new"]
+    def __init__(self,version=1):
+        assert version in [1,2]
         super().__init__(3,version)
         self.geometry = UnitSquare() 
         self.nb_parameters = 4
-        if self.version == "big":
-            self.parameter_domain = [[0.4, 0.6],[0.4, 0.6],[0.1, 0.8],[0.01, 1.0]] #c1,c2,sigma,eps
-        elif self.version == "small":
-            self.parameter_domain = [[0.45, 0.55],[0.45, 0.55],[0.4, 0.6],[0.05, 0.2]] #c1,c2,sigma,eps
-        elif self.version == "medium":
-            self.parameter_domain = [[0.4, 0.6],[0.4, 0.6],[0.3, 0.6],[0.04, 0.25]] #c1,c2,sigma,eps
-        else:
-            self.set_params = [[0.51,0.54,0.52,0.55]]
-            self.parameter_domain = [[0.4, 0.6],[0.4, 0.6],[0.4, 0.8],[0.5, 1.0]] #c1,c2,sigma,eps
+        self.parameter_domain = [[0.4, 0.6],[0.4, 0.6],[0.1, 0.8],[0.01, 1.0]] #c1,c2,sigma,eps
         self.ana_sol = False
         
     def u_ex(self, pre, xy, mu):
@@ -137,11 +129,7 @@ class TestCase3(TestCase2D):
     def f(self, pre, xy, mu):
         x,y=xy
         c1,c2,sigma,eps = mu
-        if self.version != "new":
-            return pre.exp(-((x - c1) ** 2 + (y - c2) ** 2) / (0.025 * sigma**2))
-        else:
-            print("f is considered for new version")
-            return 10 * pre.exp(-((x - c1) ** 2 + (y - c2) ** 2) / (0.025 * sigma**2))
+        return pre.exp(-((x - c1) ** 2 + (y - c2) ** 2) / (0.025 * sigma**2))
         
     def g(self, pre, xy, mu):
         return 0.0
