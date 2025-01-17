@@ -1,6 +1,6 @@
 print_time = False
 relative_error = True
-
+compute_H1norm = False
 ###########
 # Imports #
 ###########
@@ -271,12 +271,15 @@ class FEMSolver(abc.ABC):
             uex_Vex = self.tab_uref[i]
         sol_Vex = df.interpolate(sol,self.V_ex)
         norme_L2 = (df.assemble((((uex_Vex - sol_Vex)) ** 2) * self.dx) ** (0.5)) 
-        norme_H1 = df.errornorm(uex_Vex, sol_Vex, norm_type='H1')
-        # print("semi_norme_H1 = ",semi_norme_H1)
-        # norme_H1 = norme_L2 + semi_norme_H1
-        print("norme_H1 = ",norme_H1)
+        if compute_H1norm:
+            norme_H1 = df.errornorm(uex_Vex, sol_Vex, norm_type='H1')
+            print("norme_H1 (abs) = ",norme_H1)
         if relative_error:
             norme_L2 = norme_L2 / (df.assemble((((uex_Vex)) ** 2) * self.dx) ** (0.5))
+            if compute_H1norm:
+                relH1 = df.norm(uex_Vex, norm_type='H1')
+                norme_H1 = norme_H1 / relH1
+                print("norme_H1 (rel) = ",norme_H1)
             
         end = time.time()
         
@@ -457,11 +460,17 @@ class FEMSolver(abc.ABC):
         sol_Vex.vector()[:] = (C_Vex.vector()[:])+u_theta_Vex.vector()[:]
         
         norme_L2 = (df.assemble((((uex_Vex - sol_Vex)) ** 2) * self.dx) ** (0.5)) 
-        norme_H1 = df.errornorm(uex_Vex, sol_Vex, norm_type='H1')
-        print("norme_H1 = ",norme_H1)
         if relative_error:
             norme_L2 = norme_L2 / (df.assemble((((uex_Vex)) ** 2) * self.dx) ** (0.5))
         end = time.time()
+        
+        if compute_H1norm:
+            norme_H1 = df.errornorm(uex_Vex, sol_Vex, norm_type='H1')
+            print("norme_H1 = ",norme_H1)
+            if relative_error:
+                relH1 = df.norm(uex_Vex, norm_type='H1')
+                norme_H1 = norme_H1 / relH1
+                print("norme_H1 (rel) = ",norme_H1)
         
         if print_time:
             print("Time to compute the error :",end-start)
@@ -522,12 +531,17 @@ class FEMSolver(abc.ABC):
         print("on fait du mult")
         
         norme_L2 = (df.assemble((((uex_Vex - sol_Vex)) ** 2) * self.dx) ** (0.5)) 
-        norme_H1 = df.errornorm(uex_Vex, sol_Vex, norm_type='H1')
-        print("norme_H1 = ",norme_H1)
         if relative_error:
             norme_L2 = norme_L2 / (df.assemble((((uex_Vex)) ** 2) * self.dx) ** (0.5))
         end = time.time()
         
+        if compute_H1norm:
+            norme_H1 = df.errornorm(uex_Vex, sol_Vex, norm_type='H1')
+            print("norme_H1 = ",norme_H1)
+            if relative_error:
+                relH1 = df.norm(uex_Vex, norm_type='H1')
+                norme_H1 = norme_H1 / relH1
+                print("norme_H1 (rel) = ",norme_H1)        
         
         if print_time:
             print("Time to compute the error :",end-start)

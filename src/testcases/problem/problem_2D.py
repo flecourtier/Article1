@@ -156,17 +156,12 @@ class TestCase4(TestCase2D):
     def g(self, pre, xy, mu):
         return self.u_ex(pre, xy, mu)      
         
-
 class TestCase5(TestCase2D):
     def __init__(self,version=1):
-        assert version in [1,2,3]
+        assert version in [1]
         super().__init__(5,version)
         self.geometry = Donut2()
         self.nb_parameters = 1
-        # if self.version != 3:
-        #     self.parameter_domain = [[0.50000, 0.500001]]
-        # else:
-        #     # self.parameter_domain = [[0.0, 1.000001]]
         self.parameter_domain = [[1.4, 1.600001]]
         self.ana_sol = True
 
@@ -176,47 +171,19 @@ class TestCase5(TestCase2D):
             ln = pre.log
         else:
             ln = pre.ln
-        
-        # if self.version != 3:
-        #     return 1.0 - ln(pre.sqrt(x**2 + y**2))/log(4.0)
-        # else:
+
         mu = mu[0]
-        print("LE PB EST PARAMETRIQUE !!!")
         return 1.0 - ln(mu * pre.sqrt(x**2 + y**2))/log(4.0)
-    
-    # def grad_uex(self, pre, xy, mu):
-    #     x,y = xy
-    #     coeff = -1.0/log(4.0)
-    #     s = x**2 + y**2
-    #     return coeff*x/s, coeff*y/s
-    
-    # def grad2_uex(self, pre, xy, mu):
-    #     x,y = xy
-    #     coeff = -1.0/log(4.0)
-    #     s = x**2 + y**2
-    #     return coeff * (s - 2*x**2)/s**2, coeff * (s - 2*y**2)/s**2
-    
-    # def grad3_uex(self, pre, xy, mu):
-    #     x,y = xy
-    #     coeff = -1.0/log(4.0)
-    #     s = x**2 + y**2
-    #     return coeff * 2 * x * (x**2 - 3 * y **2)/s**3, coeff * 2 * y * (y**2 - 3 * x **2)/s**3
     
     def f(self, pre, xy, mu):
         x,y = xy
         return 0.0
     
     def h_int(self, pre, xy, mu): # robin
-        # if self.version != 3:
-        #     return 4.0/log(4.0) + 2.0
-        # else:
         mu = mu[0]
         return (4.0-log(mu))/log(4.0) + 2.0
         
     def h_ext(self, pre, xy, mu): # dirichlet
-        # if self.version != 3:
-        #     return 1.0
-        # else:
         mu = mu[0]
         return 1.0 - log(mu)/log(4.0)
     
@@ -225,74 +192,3 @@ class TestCase5(TestCase2D):
     
     def g(self, pre, xy, mu): # dirichlet
         return self.h_ext(pre, xy, mu)  
-    
-    
-    
-class TestCase6(TestCase2D):
-    def __init__(self,version=1):
-        assert version in [1,2]
-        super().__init__(6,version)
-        self.geometry = Donut1()
-        self.nb_parameters = 1
-        self.parameter_domain = [[0.50000, 0.500001]]
-        self.ana_sol = True
-
-    def u_ex(self, pre, xy, mu):
-        x,y = xy
-        return pre.sin(x**2 + y**2)
-    
-    def f(self, pre, xy, mu):
-        x,y = xy
-        return (4.0 * (x**2 + y**2) + 1) * pre.sin(x**2 + y**2) - 4.0 * pre.cos(x**2 + y**2)
-    
-    # def grad_f(self, pre, xy, mu):
-    #     x,y = xy
-    #     df_dx =  x*((8.0*x**2 + 8.0*y**2 + 2)*pre.cos(x**2 + y**2) + 16.0*pre.sin(x**2 + y**2))
-    #     df_dy =  y*((8.0*x**2 + 8.0*y**2 + 2)*pre.cos(x**2 + y**2) + 16.0*pre.sin(x**2 + y**2))
-    #     return df_dx, df_dy 
-        
-    def h_int(self, pre, xy, mu):
-        return -cos(1.0/4.0)
-    
-    def h_ext(self, pre, xy, mu):
-        return 2 * cos(1.0)
-    
-# class TestCase7:
-#     def __init__(self,v=1):
-#         self.version = v 
-#         assert self.version == 1
-#         self.geometry = SquareDonut1()
-#         self.nb_parameters = 1
-#         self.parameter_domain = [[0.50000, 0.500001]]
-
-#     def u_ex(self, pre, xy, mu):
-#         x,y = xy
-#         PI = pre.pi
-#         return pre.sin(2*PI*x)*pre.sin(2*PI*y)
-    
-#     def grad_uex(self, pre, xy, mu):
-#         pass
-    
-#     def grad2_uex(self, pre, xy, mu):
-#         pass
-    
-#     def grad3_uex(self, pre, xy, mu):
-#         pass
-    
-#     def f(self, pre, xy, mu):
-#         x,y = xy
-#         PI = pre.pi
-#         return (1.0 + 8.0*PI**2)*pre.sin(2*PI*x)*pre.sin(2*PI*y)
-    
-#     def grad_f(self, pre, xy, mu):
-#         pass
-        
-#     def h_int(self, pre, xy, mu):
-#         x,y = xy
-#         PI = pre.pi
-#         return 2*( y*2*PI*pre.sin(2*PI*x) + x*2*PI*pre.sin(2*PI*y) )
-    
-#     def h_ext(self, pre, xy, mu):
-#         x,y = xy
-#         PI = pre.pi
-#         return y*2*PI*pre.sin(2*PI*x) + x*2*PI*pre.sin(2*PI*y)
