@@ -198,7 +198,7 @@ def Run_laplacian2D(pde,new_training=False,plot_bc=False):
         # trainer.train(epochs=1, n_collocation=8000, n_bc_collocation=8000)
 
     filename = current / "networks" / "test_2D" / "test_fe5.png"
-    trainer.plot(20000,filename=filename,reference_solution=True)
+    trainer.plot(20000,filename=filename,reference_solution=True,random=True)
     
     return trainer,pinn
 
@@ -242,7 +242,10 @@ def check_BC():
         nb_params = len(trainer.pde.parameter_domain)
         shape = (XY.shape[0],nb_params)
         ones = torch.ones(shape)
-        mu_test = (torch.Tensor([0.5]).to(device) * ones).to(device)
+        mu = (pde.problem.parameter_domain[0][0]+pde.problem.parameter_domain[0][1])/2
+        print(mu)
+        mu_test = torch.Tensor([mu]).to(device) * ones.to(device)
+        # (torch.Tensor([0.5]).to(device) * ones).to(device)
         
         u_theta = pinn.setup_w_dict(X_test, mu_test)["w"][:,0].reshape(-1,1)
         
@@ -263,9 +266,11 @@ def check_BC():
         
         from math import log
         if which == "big":
-            print("ex Dirichlet : ",1.0)
+            dir = pde.problem.g(torch, XY, [mu])
+            print("ex Dirichlet : ",dir)
         else:
-            print("ex Robin : ",4.0/log(4.0) + 2.0)
+            neu = pde.problem.gr(torch, XY, [mu])
+            print("ex Robin : ",neu)
         
     print("## Values for Neumann condition on big circle")
     check("big")

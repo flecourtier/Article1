@@ -163,10 +163,11 @@ class TestCase5(TestCase2D):
         super().__init__(5,version)
         self.geometry = Donut2()
         self.nb_parameters = 1
-        if self.version != 3:
-            self.parameter_domain = [[0.50000, 0.500001]]
-        else:
-            self.parameter_domain = [[0.0, 1.000001]]
+        # if self.version != 3:
+        #     self.parameter_domain = [[0.50000, 0.500001]]
+        # else:
+        #     # self.parameter_domain = [[0.0, 1.000001]]
+        self.parameter_domain = [[1.4, 1.600001]]
         self.ana_sol = True
 
     def u_ex(self, pre, xy, mu):
@@ -176,11 +177,12 @@ class TestCase5(TestCase2D):
         else:
             ln = pre.ln
         
-        if self.version != 3:
-            return 1.0 - ln(pre.sqrt(x**2 + y**2))/log(4.0)
-        else:
-            mu = mu[0]
-            return 1.0 - ln(mu * pre.sqrt(x**2 + y**2))/log(4.0)
+        # if self.version != 3:
+        #     return 1.0 - ln(pre.sqrt(x**2 + y**2))/log(4.0)
+        # else:
+        mu = mu[0]
+        print("LE PB EST PARAMETRIQUE !!!")
+        return 1.0 - ln(mu * pre.sqrt(x**2 + y**2))/log(4.0)
     
     # def grad_uex(self, pre, xy, mu):
     #     x,y = xy
@@ -205,18 +207,18 @@ class TestCase5(TestCase2D):
         return 0.0
     
     def h_int(self, pre, xy, mu): # robin
-        if self.version != 3:
-            return 4.0/log(4.0) + 2.0
-        else:
-            mu = mu[0]
-            return (4.0-log(mu))/log(4.0) + 2.0
+        # if self.version != 3:
+        #     return 4.0/log(4.0) + 2.0
+        # else:
+        mu = mu[0]
+        return (4.0-log(mu))/log(4.0) + 2.0
         
     def h_ext(self, pre, xy, mu): # dirichlet
-        if self.version != 3:
-            return 1.0
-        else:
-            mu = mu[0]
-            return 1.0 - log(mu)/log(4.0)
+        # if self.version != 3:
+        #     return 1.0
+        # else:
+        mu = mu[0]
+        return 1.0 - log(mu)/log(4.0)
     
     def gr(self, pre, xy, mu): # robin
         return self.h_int(pre, xy, mu)
