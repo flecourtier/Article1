@@ -30,11 +30,15 @@ class TestCase2D(abc.ABC):
 class TestCase1(TestCase2D):
     def __init__(self,version=1):
         super().__init__(1,version)
+        assert version in [1,2,3]
         self.geometry = Square1() 
         self.nb_parameters = 2
         self.parameter_domain = [[-0.5, 0.500001],[-0.50000, 0.500001]]
         self.ana_sol = True
-        
+        self.predexactBC = True
+        if version == 3:
+            self.predexactBC = False
+            
     def u_ex(self, pre, xy, mu):
         x,y=xy
         mu1,mu2 = mu
@@ -158,11 +162,12 @@ class TestCase4(TestCase2D):
         
 class TestCase5(TestCase2D):
     def __init__(self,version=1):
-        assert version in [1]
+        assert version in [1,2]
         super().__init__(5,version)
         self.geometry = Donut2()
         self.nb_parameters = 1
-        self.parameter_domain = [[1.4, 1.600001]]
+        # self.parameter_domain = [[1.4, 1.600001]]
+        self.parameter_domain = [[2.4, 2.600001]]
         self.ana_sol = True
 
     def u_ex(self, pre, xy, mu):
@@ -175,9 +180,31 @@ class TestCase5(TestCase2D):
         mu = mu[0]
         return 1.0 - ln(mu * pre.sqrt(x**2 + y**2))/log(4.0)
     
+    def gradu_ex(self, pre, xy, mu):
+        x,y=xy
+            
+        mu = mu[0]
+        du_dx = -x/((x**2 + y**2)*log(4))
+        du_dy = -y/((x**2 + y**2)*log(4))
+        return du_dx, du_dy
+    
+    def grad2u_ex(self, pre, xy, mu):
+        x,y=xy
+            
+        mu = mu[0]
+        
+        d2u_dx2 = -(y**2 - x**2)/((x**2 + y**2)**2*log(4))
+        d2u_dxy = 2*x*y/((x**2 + y**2)**2*log(4))
+        d2u_dy2 = -(x**2 - y**2)/((x**2 + y**2)**2*log(4))
+        return d2u_dx2, d2u_dxy, d2u_dy2
+    
     def f(self, pre, xy, mu):
         x,y = xy
         return 0.0
+    
+    def gradf(self, pre, xy, mu):
+        x,y = xy
+        return 0.0, 0.0
     
     def h_int(self, pre, xy, mu): # robin
         mu = mu[0]

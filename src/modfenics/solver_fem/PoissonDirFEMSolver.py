@@ -67,6 +67,12 @@ class PoissonDirFEMSolver(FEMSolver):
 
         if isinstance(self.pb_considered.geometry, (Square,Line)):
             g = df.Constant("0.0")
+            if self.pb_considered.predexactBC == False:
+                print("The PINN is not trained with the exact boundary conditions")
+                u_ex = get_uex_expr(params, degree=self.high_degree, domain=V_solve.mesh(), pb_considered=self.pb_considered)
+                u_ex_V = df.interpolate(u_ex,V_solve)
+                u_theta_V = get_utheta_fenics_onV(V_solve,params,u_PINNs)
+                g = u_ex_V - u_theta_V
         elif isinstance(self.pb_considered.geometry, Donut):
             u_ex = get_uex_expr(params, degree=self.high_degree, domain=V_solve.mesh(), pb_considered=self.pb_considered)
             u_ex_V = df.interpolate(u_ex,V_solve)
