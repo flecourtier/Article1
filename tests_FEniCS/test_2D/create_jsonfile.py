@@ -41,7 +41,7 @@ def choice_version(dimension,testcase):
         elif testcase == 4:
             return [1]
         elif testcase == 5:
-            return [1,2]
+            return [1,2,3]
         elif testcase == 6:
             return [1,2]
     else:

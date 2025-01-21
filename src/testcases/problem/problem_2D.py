@@ -162,12 +162,15 @@ class TestCase4(TestCase2D):
         
 class TestCase5(TestCase2D):
     def __init__(self,version=1):
-        assert version in [1,2]
+        assert version in [1,2,3]
         super().__init__(5,version)
         self.geometry = Donut2()
         self.nb_parameters = 1
         # self.parameter_domain = [[1.4, 1.600001]]
-        self.parameter_domain = [[2.4, 2.600001]]
+        if self.version != 3:
+            self.parameter_domain = [[2.4, 2.600001]]
+        else:
+            self.parameter_domain = [[2.0, 3.000001]]
         self.ana_sol = True
 
     def u_ex(self, pre, xy, mu):

@@ -150,7 +150,15 @@ class Poisson_2D(pdes.AbstractPDEx):
     def reference_solution(self, x, mu):
         x1, x2 = x.get_coordinates()
         return self.problem.u_ex(torch, [x1,x2], mu)
+    
+    def reference_solution_derivative(self, x, mu):
+        x1,x2 = x.get_coordinates()
+        return self.problem.gradu_ex(torch, [x1,x2], mu)
 
+    def reference_solution_second_derivative(self, x, mu):
+        x1,x2 = x.get_coordinates()
+        return self.problem.grad2u_ex(torch, [x1,x2], mu)
+        
 def Run_laplacian2D(pde,new_training=False,plot_bc=False):
     x_sampler = sampling_pde.XSampler(pde=pde)
     mu_sampler = sampling_parameters.MuSampler(
@@ -181,7 +189,7 @@ def Run_laplacian2D(pde,new_training=False,plot_bc=False):
     pinn = pinn_x.PINNx(network, pde)
 
     losses = pinn_losses.PinnLossesData(bc_loss_bool=False, w_res=1.0, w_bc=0.0)
-    optimizers = training_tools.OptimizerData(learning_rate=1.0e-2, decay=0.99)
+    optimizers = training_tools.OptimizerData(learning_rate=1e-2, decay=0.99, switch_to_LBFGS=True, switch_to_LBFGS_at=3000,LBFGS_switch_plateau=[3000,10])
 
     trainer = training_x.TrainerPINNSpace(
         pde=pde,
@@ -194,7 +202,7 @@ def Run_laplacian2D(pde,new_training=False,plot_bc=False):
     )
 
     if new_training:
-        trainer.train(epochs=1000, n_collocation=8000, n_bc_collocation=8000)
+        trainer.train(epochs=4000, n_collocation=6000, n_bc_collocation=8000)
         # trainer.train(epochs=1, n_collocation=8000, n_bc_collocation=8000)
 
     filename = current / "networks" / "test_2D" / "test_fe5.png"
@@ -279,6 +287,6 @@ def check_BC():
 
 if __name__ == "__main__":
     pde = Poisson_2D()
-    trainer, pinn = Run_laplacian2D(pde,new_training=False,plot_bc=False)
+    trainer, pinn = Run_laplacian2D(pde,new_training=True,plot_bc=False)
 
     check_BC()

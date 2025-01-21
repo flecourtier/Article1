@@ -6,6 +6,6 @@
         "param_num": 1
     },
     "gains": {
-        "n_params": 0
+        "n_params": 50
     }
 }
