@@ -229,7 +229,10 @@ class FEMSolver(abc.ABC):
         #     plt.suptitle("L2 norm of the error : {:.2e}".format(norme_L2))
             
         if filename is not None:
-            plt.savefig(filename,dpi=1000)
+            # plt.savefig(filename,dpi=1000)
+            plt.tight_layout()
+            plt.gca().set_rasterization_zorder(-1)
+            plt.savefig(filename,bbox_inches='tight',format="pdf")
             
         if plot_result:
             plt.show()
@@ -395,7 +398,9 @@ class FEMSolver(abc.ABC):
             plt.show()
             
         if filename is not None:
-            plt.savefig(filename,dpi=1000)
+            plt.tight_layout()
+            plt.gca().set_rasterization_zorder(-1)
+            plt.savefig(filename,bbox_inches='tight',format="pdf")
             
         plt.close()
 

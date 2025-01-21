@@ -114,7 +114,7 @@ class ErrorEstimations:
                     fig_filename += f"_M{M}"
                     if not impose_bc:
                         fig_filename += '_weak'
-                fig_filename += '.png'
+                fig_filename += '.pdf'
             
             if method == "FEM": 
                 _,norme_L2 = solver.fem(0,plot_result=self.plot_result,filename=fig_filename)
