@@ -33,7 +33,7 @@ class TestCase1(TestCase1D):
         self.parameter_domain = [[0.0, 1.0],[0.0, 1.0],[0.0, 1.0]]
         self.version = version
         self.ana_sol = True
-        self.set_params = [[0.3, 0.2, 0.1], [0.4, 0.6, 0.3], [0.7, 0.4, 0.6], [0.8, 0.5, 0.8]]
+        self.set_params = [[0.3, 0.2, 0.1], [0.8, 0.5, 0.8]]
         
     def u_ex(self, pre, xy, mu):
         # if pre is dolfin:
