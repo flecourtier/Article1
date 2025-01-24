@@ -91,6 +91,7 @@ class TestCase2(TestCase2D):
         self.nb_parameters = 2
         self.parameter_domain = [[-0.5, 0.500001],[-0.50000, 0.500001]]
         self.ana_sol = True
+        self.predexactBC = True
         
     def u_ex(self, pre, xy, mu):
         x,y=xy
@@ -115,6 +116,7 @@ class TestCase3(TestCase2D):
         self.nb_parameters = 4
         self.parameter_domain = [[0.4, 0.6],[0.4, 0.6],[0.1, 0.8],[0.01, 1.0]] #c1,c2,sigma,eps
         self.ana_sol = False
+        self.predexactBC = True
         
     def u_ex(self, pre, xy, mu):
         pass
@@ -146,6 +148,7 @@ class TestCase4(TestCase2D):
         self.nb_parameters = 2
         self.parameter_domain = [[-0.5, 0.500001],[-0.50000, 0.500001]]
         self.ana_sol = True
+        self.predexactBC = True
    
     def u_ex(self, pre, xy, mu):
         x,y = xy
@@ -172,6 +175,7 @@ class TestCase5(TestCase2D):
         else:
             self.parameter_domain = [[2.0, 3.000001]]
         self.ana_sol = True
+        self.predexactBC = True
 
     def u_ex(self, pre, xy, mu):
         x,y = xy
