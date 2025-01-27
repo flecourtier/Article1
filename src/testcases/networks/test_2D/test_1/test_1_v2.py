@@ -16,6 +16,10 @@ from testcases.geometry.geometry_2D import Square
 from testcases.problem.problem_2D import TestCase1
 
 current = Path(__file__).parent.parent.parent.parent.parent.parent
+current_filename = Path(__file__).name
+
+current_testcase = int(current_filename.split("test_")[1].split("_")[0])
+current_version = int(current_filename.split("_v")[1].split(".")[0])
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 print(f"torch loaded; device is {device}")
@@ -25,7 +29,7 @@ torch.set_default_device(device)
 
 class Poisson_2D(pdes.AbstractPDEx):
     def __init__(self):
-        self.problem = TestCase1(version=2)
+        self.problem = TestCase1(version=current_version)
         
         assert isinstance(self.problem.geometry, Square)
         
@@ -40,9 +44,6 @@ class Poisson_2D(pdes.AbstractPDEx):
 
         self.first_derivative = True
         self.second_derivative = True
-        self.third_derivative = True
-        
-        self.coeff_third_derivative = 0.1
 
     def make_data(self, n_data):
         pass
@@ -54,30 +55,10 @@ class Poisson_2D(pdes.AbstractPDEx):
     def residual(self, w, x, mu, **kwargs):
         x1, x2 = x.get_coordinates()
         mu1,mu2 = self.get_parameters(mu)
-
-        # compute residual
         u_xx = self.get_variables(w, "w_xx")
         u_yy = self.get_variables(w, "w_yy")
         f = self.problem.f(torch, [x1, x2], [mu1, mu2])
-        
-        res = u_xx + u_yy + f
-
-        # compute d/dx and d/dy residual
-        df_dx, df_dy = self.problem.gradf(torch, [x1, x2], [mu1, mu2])
-        
-        u_xxx = self.get_variables(w, "w_xxx")
-        u_xyy = self.get_variables(w, "w_xyy")
-
-        dres_dx = u_xxx + u_xyy + df_dx
-
-        u_xxy = self.get_variables(w, "w_xxy")
-        u_yyy = self.get_variables(w, "w_yyy")
-
-        dres_dy = u_xxy + u_yyy + df_dy
-
-        return torch.sqrt(
-            res**2 + self.coeff_third_derivative * (dres_dx**2 + dres_dy**2)
-        )
+        return u_xx + u_yy + f
 
     def post_processing(self, x, mu, w):
         x1, x2 = x.get_coordinates()
@@ -103,7 +84,7 @@ def Run_laplacian2D(pde, bc_loss_bool=False, new_training = False, w_bc=0, w_res
     )
     sampler = sampling_pde.PdeXCartesianSampler(x_sampler, mu_sampler)
 
-    file_name = current / "networks" / "test_2D" / "test_fe1_v2.pth"
+    file_name = current / "networks" / "test_2D" / f"test_fe{current_testcase}_v{current_version}.pth"
 
     if new_training:
         (
@@ -112,7 +93,7 @@ def Run_laplacian2D(pde, bc_loss_bool=False, new_training = False, w_bc=0, w_res
             / file_name
         ).unlink(missing_ok=True)
 
-    tlayers = [40, 60, 60, 60, 40]
+    tlayers = [40, 60, 80, 60, 40]
     network = pinn_x.MLP_x(pde=pde, layer_sizes=tlayers, activation_type="sine")
     pinn = pinn_x.PINNx(network, pde)
     losses = pinn_losses.PinnLossesData(
@@ -131,10 +112,16 @@ def Run_laplacian2D(pde, bc_loss_bool=False, new_training = False, w_bc=0, w_res
         batch_size=6000,
     )
 
-    if new_training:
-        trainer.train(epochs=5000, n_collocation=6000, n_data=0)
+    if not bc_loss_bool:
+        if new_training:
+            trainer.train(epochs=5000, n_collocation=6000, n_data=0)
+    else:
+        if new_training:
+            trainer.train(
+                epochs=12, n_collocation=5000, n_bc_collocation=2000, n_data=0
+            )
 
-    filename = current / "networks" / "test_2D" / "test_fe1_v2.png"
+    filename = current / "networks" / "test_2D" / f"test_fe{current_testcase}_v{current_version}.png"
     trainer.plot(20000, random=True,reference_solution=True, filename=filename)
     # trainer.plot_derivative_mu(n_visu=20000)
     
@@ -146,4 +133,4 @@ if __name__ == "__main__":
     
     pde = Poisson_2D()
 
-    Run_laplacian2D(pde,new_training = True)
+    Run_laplacian2D(pde,new_training = False)

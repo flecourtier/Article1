@@ -30,7 +30,7 @@ class TestCase2D(abc.ABC):
 class TestCase1(TestCase2D):
     def __init__(self,version=1):
         super().__init__(1,version)
-        assert version in [1,2,3]
+        # assert version in [1,2,3]
         self.geometry = Square1() 
         self.nb_parameters = 2
         self.parameter_domain = [[-0.5, 0.500001],[-0.50000, 0.500001]]
@@ -44,6 +44,22 @@ class TestCase1(TestCase2D):
         mu1,mu2 = mu
         ex = pre.exp(-((x-mu1)**2.0 +(y-mu2)**2.0)/2)
         return ex * pre.sin(2*x) * pre.sin(2*y)
+    
+    def gradu_ex(self, pre, xy, mu):
+        x,y=xy
+        mu1,mu2 = mu
+        du_dx = (-1.0*(-mu1 + x)**1.0*pre.sin(2*x) + 2.0*pre.cos(2*x))*pre.exp(-(-mu1 + x)**2.0/2 - (-mu2 + y)**2.0/2)*pre.sin(2*y)
+        du_dy = (-1.0*(-mu2 + y)**1.0*pre.sin(2*y) + 2.0*pre.cos(2*y))*pre.exp(-(-mu1 + x)**2.0/2 - (-mu2 + y)**2.0/2)*pre.sin(2*x)
+        return du_dx, du_dy
+
+    def grad2u_ex(self, pre, xy, mu):
+        x,y=xy
+        mu1,mu2 = mu
+        
+        d2u_dx2 = 1.0*(-4.0*(-mu1 + x)**1.0*pre.cos(2*x) + 1.0*(-mu1 + x)**2.0*pre.sin(2*x) - 5.0*pre.sin(2*x))*pre.exp(-(-mu1 + x)**2.0/2 - (-mu2 + y)**2.0/2)*pre.sin(2*y)
+        d2u_dxy = (1.0*(-mu1 + x)**1.0*(-mu2 + y)**1.0*pre.sin(2*x)*pre.sin(2*y) - 2.0*(-mu1 + x)**1.0*pre.sin(2*x)*pre.cos(2*y) - 2.0*(-mu2 + y)**1.0*pre.sin(2*y)*pre.cos(2*x) + 4*pre.cos(2*x)*pre.cos(2*y))*pre.exp(-(-mu1 + x)**2.0/2 - (-mu2 + y)**2.0/2)
+        d2u_dy2 = 1.0*(-4.0*(-mu2 + y)**1.0*pre.cos(2*y) + 1.0*(-mu2 + y)**2.0*pre.sin(2*y) - 5.0*pre.sin(2*y))*pre.exp(-(-mu1 + x)**2.0/2 - (-mu2 + y)**2.0/2)*pre.sin(2*x)
+        return d2u_dx2, d2u_dxy, d2u_dy2
 
     def f(self, pre, xy, mu):
         x,y=xy

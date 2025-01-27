@@ -16,6 +16,10 @@ from testcases.geometry.geometry_2D import Square
 from testcases.problem.problem_2D import TestCase1
 
 current = Path(__file__).parent.parent.parent.parent.parent.parent
+current_filename = Path(__file__).name
+
+current_testcase = int(current_filename.split("test_")[1].split("_")[0])
+current_version = int(current_filename.split("_v")[1].split(".")[0])
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 print(f"torch loaded; device is {device}")
@@ -25,7 +29,7 @@ torch.set_default_device(device)
 
 class Poisson_2D(pdes.AbstractPDEx):
     def __init__(self):
-        self.problem = TestCase1(version=2)
+        self.problem = TestCase1(version=current_version)
         
         assert isinstance(self.problem.geometry, Square)
         
@@ -94,7 +98,7 @@ def Run_laplacian2D(pde, new_training = False):
     )
     sampler = sampling_pde.PdeXCartesianSampler(x_sampler, mu_sampler)
 
-    file_name = current / "networks" / "test_2D" / "test_fe1_v3.pth"
+    file_name = current / "networks" / "test_2D" / f"test_fe{current_testcase}_v{current_version}.pth"
 
     if new_training:
         (
@@ -125,7 +129,7 @@ def Run_laplacian2D(pde, new_training = False):
     if new_training:
         trainer.train(epochs=5000, n_collocation=6000, n_bc_collocation=2000)
 
-    filename = current / "networks" / "test_2D" / "test_fe1_v3.png"
+    filename = current / "networks" / "test_2D" / f"test_fe{current_testcase}_v{current_version}.png"
     trainer.plot(20000, random=True,reference_solution=True, filename=filename)
     # trainer.plot_derivative_mu(n_visu=20000)
     
@@ -137,4 +141,4 @@ if __name__ == "__main__":
     
     pde = Poisson_2D()
 
-    Run_laplacian2D(pde,new_training = True)
+    Run_laplacian2D(pde,new_training = False)
