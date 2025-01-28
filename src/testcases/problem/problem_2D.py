@@ -30,7 +30,7 @@ class TestCase2D(abc.ABC):
 class TestCase1(TestCase2D):
     def __init__(self,version=1):
         super().__init__(1,version)
-        # assert version in [1,2,3]
+        assert version in [1,2,3]
         self.geometry = Square1() 
         self.nb_parameters = 2
         self.parameter_domain = [[-0.5, 0.500001],[-0.50000, 0.500001]]
