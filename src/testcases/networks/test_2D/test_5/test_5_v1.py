@@ -214,7 +214,7 @@ def Run_laplacian2D(pde,new_training=False,plot_bc=False):
     
     return trainer,pinn
 
-def check_BC():
+def check_BC(trainer):
     geometry = pde.problem.geometry
 
     bigcenter = geometry.bigcircle.center
@@ -293,4 +293,4 @@ if __name__ == "__main__":
     pde = Poisson_2D()
     trainer, pinn = Run_laplacian2D(pde,new_training=True,plot_bc=False)
 
-    check_BC()
+    check_BC(trainer)
