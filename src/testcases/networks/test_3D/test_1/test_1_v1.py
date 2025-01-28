@@ -89,7 +89,7 @@ def Run_laplacian3D(pde, new_training = False, w_res=1.0):
     )
     sampler = sampling_pde.PdeXCartesianSampler(x_sampler, mu_sampler)
 
-    file_name = current / "networks"  / "test_3D" / "test_fe1.pth"
+    file_name = current / "networks"  / "test_3D" / "test_fe1_v1.pth"
     
     if new_training:
         (
@@ -118,7 +118,7 @@ def Run_laplacian3D(pde, new_training = False, w_res=1.0):
         trainer.train(epochs=3000, n_collocation=3000, n_init_collocation=0, n_data=0)
 
     # trainer.plot(n_visu=50000,reference_solution=True)
-    filename = current / "networks" / "test_3D" / "test_fe1.png"
+    filename = current / "networks" / "test_3D" / "test_fe1_v1.png"
     trainer.plot(20000, random=True,reference_solution=True, filename=filename)
     # trainer.plot_derivative_mu(n_visu=500)
     # trainer.plot_derivative_xmu(n_visu=500)

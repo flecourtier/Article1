@@ -29,6 +29,10 @@ torch.set_default_device(device)
 PI = 3.14159265358979323846
 
 current = Path(__file__).parent.parent.parent.parent.parent.parent
+current_filename = Path(__file__).name
+
+current_testcase = int(current_filename.split("test_")[1].split("_")[0])
+current_version = int(current_filename.split("_v")[1].split(".")[0])
 
 def create_fulldomain(geometry):
     bigcenter = geometry.bigcircle.center
@@ -79,7 +83,7 @@ def create_fulldomain(geometry):
 
 class Poisson_2D(pdes.AbstractPDEx):
     def __init__(self):
-        self.problem = TestCase4(version=1)
+        self.problem = TestCase4(version=current_version)
         
         assert isinstance(self.problem.geometry, Donut)
         
@@ -155,7 +159,7 @@ def Run_laplacian2D(pde,new_training=False,plot_bc=False):
     )
     sampler = sampling_pde.PdeXCartesianSampler(x_sampler, mu_sampler)
 
-    file_name = current / "networks" / "test_2D" / "test_fe4.pth"
+    file_name = current / "networks" / "test_2D" / f"test_fe{current_testcase}_v{current_version}.pth"
     # new_training = True
 
     if new_training:
@@ -194,7 +198,7 @@ def Run_laplacian2D(pde,new_training=False,plot_bc=False):
     if new_training:
         trainer.train(epochs=1000, n_collocation=8000, n_bc_collocation=8000)
 
-    filename = current / "networks" / "test_2D" / "test_fe4.png"
+    filename = current / "networks" / "test_2D" / f"test_fe{current_testcase}_v{current_version}.png"
     trainer.plot(20000,filename=filename,reference_solution=True)
     
     return trainer,pinn

@@ -20,10 +20,14 @@ torch.set_default_dtype(torch.double)
 torch.set_default_device(device)
 
 current = Path(__file__).parent.parent.parent.parent.parent.parent
+current_filename = Path(__file__).name
+
+current_testcase = int(current_filename.split("test_")[1].split("_")[0])
+current_version = int(current_filename.split("_v")[1].split(".")[0])
 
 class Poisson_2D(pdes.AbstractPDEx):
     def __init__(self):
-        self.problem = TestCase3(version=1)
+        self.problem = TestCase3(version=current_version)
         
         assert isinstance(self.problem.geometry, Square)
         
@@ -72,7 +76,7 @@ def Run_laplacian2D(pde, new_training = False, largenet=False):
     )
     sampler = sampling_pde.PdeXCartesianSampler(x_sampler, mu_sampler)
 
-    file_name = current / "networks" / "test_2D" / "test_fe3.pth"
+    file_name = current / "networks" / "test_2D" / f"test_fe{current_testcase}_v{current_version}.pth"
 
     if new_training:
         (
@@ -102,7 +106,7 @@ def Run_laplacian2D(pde, new_training = False, largenet=False):
     if new_training:
         trainer.train(epochs=15000, n_collocation=8000, n_bc_collocation=0, n_data=0)
 
-    filename = current / "networks" / "test_2D" / "test_fe3.png"
+    filename = current / "networks" / "test_2D" / f"test_fe{current_testcase}_v{current_version}.png"
     trainer.plot(50000, random=True, filename=filename)
     
     return trainer, pinn

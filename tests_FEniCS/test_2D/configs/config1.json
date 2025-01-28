@@ -1,7 +1,7 @@
 {
     "dimension": 2,
     "testcase": 1,
-    "version": 2,
+    "version": 1,
     "error_estimations":{
         "param_num": 1
     },

@@ -16,7 +16,10 @@ from testcases.geometry.geometry_1D import Line
 from testcases.problem.problem_1D import TestCase1
 
 current = Path(__file__).parent.parent.parent.parent.parent.parent
-print(current)
+current_filename = Path(__file__).name
+
+current_testcase = int(current_filename.split("test_")[1].split("_")[0])
+current_version = int(current_filename.split("_v")[1].split(".")[0])
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 print(f"torch loaded; device is {device}")
@@ -87,7 +90,7 @@ def Run_laplacian1D(pde, bc_loss_bool=False, new_training = False):
     )
     sampler = sampling_pde.PdeXCartesianSampler(x_sampler, mu_sampler)
 
-    file_name = current / "networks" / "test_1D" / "test_fe1.pth"
+    file_name = current / "networks" / "test_1D" / f"test_fe{current_testcase}_v{current_version}.pth"
 
     if new_training:
         (
@@ -119,7 +122,7 @@ def Run_laplacian1D(pde, bc_loss_bool=False, new_training = False):
             epochs=10000, n_collocation=5000
         )
 
-    filename = current / "networks" / "test_1D" / "test_fe1.png"
+    filename = current / "networks" / "test_1D" / f"test_fe{current_testcase}_v{current_version}.png"
     trainer.plot(20000, random=True,reference_solution=True, filename=filename)
     # trainer.plot_derivative_mu(n_visu=20000)
     
