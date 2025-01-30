@@ -1,0 +1,5 @@
+method,FEM,Corr,Corr
+type,error,error,facteurs
+32,3.45e-03,1.83e-05,188.95
+64,8.55e-04,4.54e-06,188.35
+128,2.19e-04,1.16e-06,189.02

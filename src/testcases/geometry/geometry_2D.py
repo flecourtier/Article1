@@ -18,7 +18,13 @@ class Circle:
     def __init__(self,a,b,r):
         self.center = [a,b]
         self.radius = r
-        self.box = None
+        eps = 0.1
+        self.box = [[a-r-eps,a+r+eps],[b-r-eps,b+r+eps]]
+        self.H_start = 320
+        
+class Circle2(Circle):
+    def __init__(self):
+        super().__init__(0.5, 0.5, 1.0)
         
 class UnitCircle(Circle):
     def __init__(self):

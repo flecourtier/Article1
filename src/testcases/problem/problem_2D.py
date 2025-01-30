@@ -1,4 +1,4 @@
-from testcases.geometry.geometry_2D import Square1, UnitSquare, UnitCircle, Donut1, Donut2, SquareDonut1
+from testcases.geometry.geometry_2D import Square1, UnitSquare, UnitCircle, Circle2, Donut1, Donut2, SquareDonut1
 from math import *
 import torch
 import abc
@@ -242,3 +242,41 @@ class TestCase5(TestCase2D):
     
     def g(self, pre, xy, mu): # dirichlet
         return self.h_ext(pre, xy, mu)  
+    
+    
+class TestCase6(TestCase2D):
+    def __init__(self,version=1):
+        super().__init__(6,version)
+        assert version in [1]
+        self.geometry = Circle2() 
+        self.nb_parameters = 1
+        self.parameter_domain = [[0.5, 1]]
+        self.ana_sol = True
+        self.predexactBC = True
+        if version == 3:
+            self.predexactBC = False
+            
+    def u_ex(self, pre, xy, mu):
+        x,y=xy
+        mu1 = mu[0]
+        center = self.geometry.center
+        r = self.geometry.radius
+        phi = (x - center[0])**2 + (y - center[1])**2 - r**2
+            
+        return - 0.5 * mu1 * phi
+
+    def f(self, pre, xy, mu):
+        x,y=xy
+        mu1 = mu[0]
+
+        center = self.geometry.center
+        r = self.geometry.radius
+        
+        phi = (x - center[0]) ** 2 + (y - center[1]) ** 2 - r**2
+        rhs = mu1**3 * (phi+1.5*phi**2) + 2*mu1
+        
+        return rhs
+    
+    def g(self, pre, xy, mu):
+        return 0.0
+    
