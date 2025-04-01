@@ -1,6 +1,6 @@
 print_time = False
-relative_error = True
-compute_H1norm = False
+relative_error = False
+compute_H1norm = True
 ###########
 # Imports #
 ###########
@@ -259,7 +259,7 @@ class FEMSolver(abc.ABC):
         start = time.time()
         sol = df.Function(self.V)
         df.solve(A,sol.vector(),L)
-        end = time.time()
+        end = time.time()                
         
         if print_time:
             print("Time to solve the system :",end-start)
@@ -277,12 +277,33 @@ class FEMSolver(abc.ABC):
         if compute_H1norm:
             norme_H1 = df.errornorm(uex_Vex, sol_Vex, norm_type='H1')
             print("norme_H1 (abs) = ",norme_H1)
+            print("seminorme_H1 (abs) = ",norme_H1-norme_L2)
         if relative_error:
             norme_L2 = norme_L2 / (df.assemble((((uex_Vex)) ** 2) * self.dx) ** (0.5))
             if compute_H1norm:
                 relH1 = df.norm(uex_Vex, norm_type='H1')
                 norme_H1 = norme_H1 / relH1
                 print("norme_H1 (rel) = ",norme_H1)
+            
+        # import csv
+        # fichier_csv = "output.csv"
+        
+        # XXYY = self.V_ex.tabulate_dof_coordinates()
+        # tab_x,tab_y = XXYY[:,0],XXYY[:,1]
+        # tab_u = uex_Vex.vector()[:]
+        # tab_val = sol_Vex.vector()[:]
+
+        # # Sauvegarde des données au format CSV
+        # with open(fichier_csv, mode='w', newline='') as file:
+        #     writer = csv.writer(file)
+        #     # Écrire l'en-tête (optionnel)
+        #     writer.writerow(["x", "y", "u", "u_h"])
+        #     # Écrire les données ligne par ligne
+        #     for x, y, u, u_h in zip(tab_x, tab_y, tab_u, tab_val):
+        #         writer.writerow([x, y, u, u_h])
+
+        # print(f"Les données ont été sauvegardées dans le fichier {fichier_csv}")
+
             
         end = time.time()
         
@@ -292,7 +313,11 @@ class FEMSolver(abc.ABC):
         
         if plot_result or filename is not None:
             assert self.pb_considered.dim in [1,2] # to modify for 2D
-            u_ex_Vex = df.interpolate(u_ex,self.V_ex)
+            if self.pb_considered.ana_sol:
+                u_ex = get_uex_expr(params, degree=self.high_degree, domain=self.mesh, pb_considered=self.pb_considered)
+                u_ex_Vex = df.interpolate(u_ex,self.V_ex) 
+            else:
+                u_ex_Vex = self.tab_uref[i]
             sol_Vex = df.interpolate(sol,self.V_ex)
             self._plot_results_fem(u_ex_Vex, sol_Vex, self.V_ex, norme_L2, plot_result, filename)
         
@@ -482,10 +507,43 @@ class FEMSolver(abc.ABC):
         self.times_corr_add[self.N]["error"] = end-start
         
         if plot_result or filename is not None:
-            u_ex_Vex = df.interpolate(u_ex,self.V_ex)
+            if self.pb_considered.ana_sol:
+                u_ex = get_uex_expr(params, degree=self.high_degree, domain=self.mesh, pb_considered=self.pb_considered)
+                u_ex_Vex = df.interpolate(u_ex,self.V_ex) 
+            else:
+                u_ex_Vex = self.tab_uref[i]
+            # u_ex_Vex = df.interpolate(u_ex,self.V_ex)
             C_ex_Vex = df.Function(self.V_ex)
             C_ex_Vex.vector()[:] = u_ex_Vex.vector()[:] - u_theta_Vex.vector()[:]
             self._plot_results_corr(u_ex_Vex,C_ex_Vex,C_Vex,sol_Vex,self.V_ex,type="Add",filename=filename)
+            
+            
+        # import csv
+        # # Noms des fichiers
+        # input_file = "output.csv"  # Fichier CSV existant
+        # output_file = "output_updated.csv"  # Nouveau fichier avec la colonne ajoutée
+
+        # tab_uhplus = sol_Vex.vector()[:]
+        # tab_phplusex = C_ex_Vex.vector()[:]
+        # tab_phplus = C_Vex.vector()[:]
+
+        # # Lire le fichier existant et écrire le nouveau avec la colonne ajoutée
+        # with open(input_file, mode='r', newline='') as infile, open(output_file, mode='w', newline='') as outfile:
+        #     reader = csv.reader(infile)
+        #     writer = csv.writer(outfile)
+
+        #     for i, row in enumerate(reader):
+        #         if i == 0:  # Modifier l'en-tête
+        #             row.append("uhplus")  # Ajouter le nom de la nouvelle colonne
+        #             row.append("phplusex")
+        #             row.append("phplus")
+        #         else:  # Ajouter les nouvelles valeurs aux lignes suivantes
+        #             row.append(tab_uhplus[i - 1])  # Index -1 car la première ligne est l'en-tête
+        #             row.append(tab_phplusex[i - 1])
+        #             row.append(tab_phplus[i - 1])
+        #         writer.writerow(row)
+
+        # print(f"La nouvelle colonne a été ajoutée dans le fichier {output_file}")
         
         return sol,C_tild,norme_L2
 
@@ -536,14 +594,14 @@ class FEMSolver(abc.ABC):
         print("on fait du mult")
         
         norme_L2 = (df.assemble((((uex_Vex - sol_Vex)) ** 2) * self.dx) ** (0.5)) 
-        if relative_error:
-            norme_L2 = norme_L2 / (df.assemble((((uex_Vex)) ** 2) * self.dx) ** (0.5))
         end = time.time()
         
         if compute_H1norm:
             norme_H1 = df.errornorm(uex_Vex, sol_Vex, norm_type='H1')
-            print("norme_H1 = ",norme_H1)
+            print("norme_H1 (abs) = ",norme_H1)
+            print("seminorme_H1 (abs) = ",norme_H1-norme_L2)
             if relative_error:
+                norme_L2 = norme_L2 / (df.assemble((((uex_Vex)) ** 2) * self.dx) ** (0.5))
                 relH1 = df.norm(uex_Vex, norm_type='H1')
                 norme_H1 = norme_H1 / relH1
                 print("norme_H1 (rel) = ",norme_H1)        

@@ -49,6 +49,9 @@ def select_param(problem,param_num):
     else:
         parameter_domain = problem.parameter_domain
         param = get_random_param(param_num,parameter_domain)
+        if problem.testcase == 3 and param_num == 3:
+            print("ATTENTION : paramètre 3 choisi à la main")
+            param = [0.46,0.52,0.12,0.05]
         
     return param
 
